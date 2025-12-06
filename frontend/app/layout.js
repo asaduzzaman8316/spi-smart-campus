@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "./Provider";
+import CustomThemeProvider from "./CustomThemeProvider";
 import Header from "@/components/Ui/Header/Header";
 import { ToastContainer } from "react-toastify";
 import Script from "next/script";
@@ -83,7 +84,8 @@ export default function RootLayout({ children }) {
   };
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <meta name="google-site-verification" content="qivNvac31xAS1b7IeN183t0fKFja4DILfO07pN-U-1A" />
       <body className={`${font.className} antialiased`}>
         <Script
           id="json-ld-schema"
@@ -92,9 +94,11 @@ export default function RootLayout({ children }) {
           strategy="beforeInteractive"
         />
         <StoreProvider>
-          <Header />
-          {children}
-          <ToastContainer />
+          <CustomThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+            <Header />
+            {children}
+            <ToastContainer />
+          </CustomThemeProvider>
         </StoreProvider>
       </body>
     </html>

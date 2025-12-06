@@ -219,7 +219,7 @@ export default function RoutineDisplay() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
         <div className='size-36'>
           <DotLottieReact
             src="/loader1.lottie"
@@ -233,52 +233,51 @@ export default function RoutineDisplay() {
   }
 
   return (
-    <div className="min-h-screen relative   bg-gray-950 py-8 px-4">
+    <div className="min-h-screen relative   bg-gray-50 dark:bg-gray-950 py-8 px-4">
       <div className="container mx-auto pt-18 max-w-7xl">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent mb-2">
             Class Routine
           </h1>
-          <p className="text-gray-300 mb-4">View your personalized class schedule</p>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">View your personalized class schedule</p>
         </div>
 
         {/* Filters */}
-        <div className="bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-6 mb-8 border border-gray-700 shadow-2xl">
+        <div className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 mb-8 border border-gray-200 dark:border-gray-700 shadow-2xl">
           <div className="flex items-center gap-2 mb-4">
-            <Filter className="text-purple-400" size={20} />
-            <h2 className="text-xl font-semibold text-white">Filter Your Routine</h2>
+            <Filter className="text-purple-500 dark:text-purple-400" size={20} />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Filter Your Routine</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Department Filter */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-300">Department</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
               <select
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
+                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
               >
-                <option value="" className="text-gray-200">Select Department</option>
+                <option value="" className="text-gray-900 dark:text-gray-200">Select Department</option>
                 {departments.map(dept => (
-                  <option key={dept.id} value={dept.name} className="text-gray-200">
+                  <option key={dept.id} value={dept.name} className="text-gray-900 dark:text-gray-200">
                     {dept.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Semester Filter */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-300">Semester</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Semester</label>
               <select
                 value={selectedSemester}
                 onChange={(e) => setSelectedSemester(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
+                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
               >
-                <option value="" className="text-gray-200">Select Semester</option>
+                <option value="" className="text-gray-900 dark:text-gray-200">Select Semester</option>
                 {SEMESTERS.map(sem => (
-                  <option key={sem} value={sem} className="text-gray-200">
+                  <option key={sem} value={sem} className="text-gray-900 dark:text-gray-200">
                     Semester {sem}
                   </option>
                 ))}
@@ -287,15 +286,15 @@ export default function RoutineDisplay() {
 
             {/* Shift Filter */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-300">Shift</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Shift</label>
               <select
                 value={selectedShift}
                 onChange={(e) => setSelectedShift(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
+                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
               >
-                <option value="" className="text-gray-200">Select Shift</option>
+                <option value="" className="text-gray-900 dark:text-gray-200">Select Shift</option>
                 {SHIFTS.map(shift => (
-                  <option key={shift} value={shift} className="text-gray-200">
+                  <option key={shift} value={shift} className="text-gray-900 dark:text-gray-200">
                     {shift} Shift
                   </option>
                 ))}
@@ -304,19 +303,19 @@ export default function RoutineDisplay() {
 
             {/* Group Filter */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-300">Group</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Group</label>
               <select
                 value={selectedGroup}
                 onChange={(e) => setSelectedGroup(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
+                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
               >
-                <option value="" className="text-gray-200">Select Group</option>
+                <option value="" className="text-gray-900 dark:text-gray-200">Select Group</option>
                 {GROUPS.filter(grp => {
                   if (selectedShift === "1st") return ["A1", "B1"].includes(grp);
                   if (selectedShift === "2nd") return ["A2", "B2"].includes(grp);
                   return true;
                 }).map(grp => (
-                  <option key={grp} value={grp} className="text-gray-200">
+                  <option key={grp} value={grp} className="text-gray-900 dark:text-gray-200">
                     Group {grp}
                   </option>
                 ))}
@@ -327,19 +326,19 @@ export default function RoutineDisplay() {
 
         {/* Routine Table */}
         {!filteredRoutine ? (
-          <div className="bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-12 border border-gray-700 text-center">
-            <Calendar className="mx-auto mb-4 text-purple-400" size={64} />
-            <h3 className="text-2xl font-semibold text-white mb-2">No Routine Selected</h3>
-            <p className="text-gray-300">Please select all filters to view your routine</p>
+          <div className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 text-center">
+            <Calendar className="mx-auto mb-4 text-purple-500 dark:text-purple-400" size={64} />
+            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">No Routine Selected</h3>
+            <p className="text-gray-500 dark:text-gray-300">Please select all filters to view your routine</p>
           </div>
         ) : (
-          <div className="bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 shadow-2xl overflow-x-auto">
+          <div className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-2xl overflow-x-auto">
             <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h3 className="text-xl font-semibold text-white mb-1">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
                   {filteredRoutine.department} - Semester {filteredRoutine.semester}
                 </h3>
-                <p className="text-gray-300 text-sm">
+                <p className="text-gray-500 dark:text-gray-300 text-sm">
                   {filteredRoutine.shift} Shift • Group {filteredRoutine.group}
                 </p>
               </div>
@@ -371,8 +370,8 @@ export default function RoutineDisplay() {
                 </thead>
                 <tbody>
                   {DAYS.map((day, dayIndex) => (
-                    <tr key={day} className={dayIndex % 2 === 0 ? 'bg-gray-900/50' : 'bg-gray-800/50'}>
-                      <td className="border border-gray-700 px-4 py-3 font-semibold text-white">
+                    <tr key={day} className={dayIndex % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900/50' : 'bg-white dark:bg-gray-800/50'}>
+                      <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 font-semibold text-gray-900 dark:text-white">
                         {day}
                       </td>
                       {timeSlots.map((slot, slotIndex) => {
@@ -388,24 +387,24 @@ export default function RoutineDisplay() {
                           <td
                             key={slotIndex}
                             colSpan={colspan}
-                            className="border border-gray-700 px-3 py-3 text-center transition-all hover:bg-purple-900/30 hover:border-purple-500"
+                            className="border border-gray-200 dark:border-gray-700 px-3 py-3 text-center transition-all hover:bg-purple-50 dark:hover:bg-purple-900/30 hover:border-purple-500"
                           >
                             {classInfo ? (
                               <div className="space-y-1">
-                                <div className="font-bold text-purple-300 text-sm">
+                                <div className="font-bold text-purple-600 dark:text-purple-300 text-sm">
                                   {classInfo.subjectCode}
                                 </div>
-                                <div className="text-white text-xs font-medium">
+                                <div className="text-gray-900 dark:text-white text-xs font-medium">
                                   {classInfo.subject}
                                 </div>
                                 {classInfo.teacher && (
-                                  <div className="flex items-center justify-center gap-1 text-gray-300 text-xs">
+                                  <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-300 text-xs">
                                     <User size={10} />
                                     <span>{classInfo.teacher}</span>
                                   </div>
                                 )}
                                 {classInfo.room && (
-                                  <div className="flex items-center justify-center gap-1 text-gray-300 text-xs">
+                                  <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-300 text-xs">
                                     <MapPin size={10} />
                                     <span>{classInfo.room}</span>
                                   </div>

@@ -156,7 +156,7 @@ export default function TodayRoutine() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+            <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
                 <div className='size-36'>
                     <DotLottieReact
                         src="/loader1.lottie"
@@ -170,7 +170,7 @@ export default function TodayRoutine() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-950 pt-24 pb-8 px-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-24 pb-8 px-4">
             <div className="container mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="text-center  mb-8">
@@ -180,30 +180,30 @@ export default function TodayRoutine() {
                     <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent mb-2">
                         Today&apos;s Schedule
                     </h1>
-                    <p className="text-gray-300 text-lg mb-4">
+                    <p className="text-gray-600 dark:text-gray-300 text-lg mb-4">
                         {currentDay}, {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </p>
                 </div>
 
                 {/* Filters */}
-                <div className="bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-6 mb-8 border border-gray-700 shadow-2xl">
+                <div className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 mb-8 border border-gray-200 dark:border-gray-700 shadow-2xl">
                     <div className="flex items-center gap-2 mb-4">
-                        <Filter className="text-purple-400" size={20} />
-                        <h2 className="text-xl font-semibold text-white">Select Your Class</h2>
+                        <Filter className="text-purple-500 dark:text-purple-400" size={20} />
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Select Your Class</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {/* Department Filter */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-300">Department</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
                             <select
                                 value={selectedDepartment}
                                 onChange={(e) => setSelectedDepartment(e.target.value)}
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
+                                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
                             >
-                                <option value="" className="text-gray-200">Select Department</option>
+                                <option value="" className="text-gray-900 dark:text-gray-200">Select Department</option>
                                 {departments.map(dept => (
-                                    <option key={dept.id} value={dept.name} className="text-gray-200">
+                                    <option key={dept.id} value={dept.name} className="text-gray-900 dark:text-gray-200">
                                         {dept.name}
                                     </option>
                                 ))}
@@ -212,15 +212,15 @@ export default function TodayRoutine() {
 
                         {/* Semester Filter */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-300">Semester</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Semester</label>
                             <select
                                 value={selectedSemester}
                                 onChange={(e) => setSelectedSemester(e.target.value)}
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
+                                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
                             >
-                                <option value="" className="text-gray-200">Select Semester</option>
+                                <option value="" className="text-gray-900 dark:text-gray-200">Select Semester</option>
                                 {SEMESTERS.map(sem => (
-                                    <option key={sem} value={sem} className="text-gray-200">
+                                    <option key={sem} value={sem} className="text-gray-900 dark:text-gray-200">
                                         Semester {sem}
                                     </option>
                                 ))}
@@ -229,15 +229,15 @@ export default function TodayRoutine() {
 
                         {/* Shift Filter */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-300">Shift</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Shift</label>
                             <select
                                 value={selectedShift}
                                 onChange={(e) => setSelectedShift(e.target.value)}
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
+                                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
                             >
-                                <option value="" className="text-gray-200">Select Shift</option>
+                                <option value="" className="text-gray-900 dark:text-gray-200">Select Shift</option>
                                 {SHIFTS.map(shift => (
-                                    <option key={shift} value={shift} className="text-gray-200">
+                                    <option key={shift} value={shift} className="text-gray-900 dark:text-gray-200">
                                         {shift} Shift
                                     </option>
                                 ))}
@@ -246,19 +246,19 @@ export default function TodayRoutine() {
 
                         {/* Group Filter */}
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-300">Group</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Group</label>
                             <select
                                 value={selectedGroup}
                                 onChange={(e) => setSelectedGroup(e.target.value)}
-                                className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
+                                className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
                             >
-                                <option value="" className="text-gray-200">Select Group</option>
+                                <option value="" className="text-gray-900 dark:text-gray-200">Select Group</option>
                                 {GROUPS.filter(grp => {
                                     if (selectedShift === "1st") return ["A1", "B1"].includes(grp);
                                     if (selectedShift === "2nd") return ["A2", "B2"].includes(grp);
                                     return true;
                                 }).map(grp => (
-                                    <option key={grp} value={grp} className="text-gray-200">
+                                    <option key={grp} value={grp} className="text-gray-900 dark:text-gray-200">
                                         Group {grp}
                                     </option>
                                 ))}
@@ -269,29 +269,29 @@ export default function TodayRoutine() {
 
                 {/* Today's Classes Display */}
                 {!selectedDepartment || !selectedSemester || !selectedShift || !selectedGroup ? (
-                    <div className="bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-12 border border-gray-700 text-center">
-                        <Calendar className="mx-auto mb-4 text-purple-400" size={64} />
-                        <h3 className="text-2xl font-semibold text-white mb-2">Select Your Filters</h3>
-                        <p className="text-gray-300">Please select all filters to view today&apos;s schedule</p>
+                    <div className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 text-center">
+                        <Calendar className="mx-auto mb-4 text-purple-500 dark:text-purple-400" size={64} />
+                        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Select Your Filters</h3>
+                        <p className="text-gray-500 dark:text-gray-300">Please select all filters to view today&apos;s schedule</p>
                     </div>
                 ) : todayClasses.length === 0 ? (
-                    <div className="bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-12 border border-gray-700 text-center">
-                        <AlertCircle className="mx-auto mb-4 text-yellow-400" size={64} />
-                        <h3 className="text-2xl font-semibold text-white mb-2">No Classes Today</h3>
-                        <p className="text-gray-300">
+                    <div className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-12 border border-gray-200 dark:border-gray-700 text-center">
+                        <AlertCircle className="mx-auto mb-4 text-yellow-500 dark:text-yellow-400" size={64} />
+                        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">No Classes Today</h3>
+                        <p className="text-gray-500 dark:text-gray-300">
                             There are no scheduled classes for {currentDay}
                         </p>
                     </div>
                 ) : (
                     <div className="space-y-4">
                         {/* Class Info Header */}
-                        <div className="bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700">
+                        <div className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <div>
-                                    <h3 className="text-xl font-semibold text-white mb-1">
+                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
                                         {selectedDepartment} - Semester {selectedSemester}
                                     </h3>
-                                    <p className="text-gray-300 text-sm">
+                                    <p className="text-gray-500 dark:text-gray-300 text-sm">
                                         {selectedShift} Shift • Group {selectedGroup}
                                     </p>
                                 </div>
@@ -310,7 +310,7 @@ export default function TodayRoutine() {
                             {todayClasses.map((classInfo, index) => (
                                 <div
                                     key={index}
-                                    className="bg-linear-to-br from-gray-800 to-gray-900 rounded-2xl p-6 border border-gray-700 hover:border-purple-500 transition-all duration-300 hover:scale-102 hover:shadow-xl hover:shadow-purple-500/20"
+                                    className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-500 transition-all duration-300 hover:scale-102 hover:shadow-xl hover:shadow-purple-500/20"
                                 >
                                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                         {/* Time */}
@@ -319,10 +319,10 @@ export default function TodayRoutine() {
                                                 <Clock className="w-6 h-6 text-white" />
                                             </div>
                                             <div>
-                                                <div className="text-2xl font-bold text-white">
+                                                <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                                     {classInfo.startTime}
                                                 </div>
-                                                <div className="text-sm text-gray-400">
+                                                <div className="text-sm text-gray-500 dark:text-gray-400">
                                                     to {classInfo.endTime}
                                                 </div>
                                             </div>
@@ -331,17 +331,17 @@ export default function TodayRoutine() {
                                         {/* Subject Info */}
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <BookOpen className="w-5 h-5 text-purple-400" />
-                                                <h4 className="text-xl font-bold text-white">
+                                                <BookOpen className="w-5 h-5 text-purple-500 dark:text-purple-400" />
+                                                <h4 className="text-xl font-bold text-gray-900 dark:text-white">
                                                     {classInfo.subject}
                                                 </h4>
                                             </div>
-                                            <div className="text-purple-300 font-semibold mb-2">
+                                            <div className="text-purple-600 dark:text-purple-300 font-semibold mb-2">
                                                 {classInfo.subjectCode}
                                             </div>
                                             <div className="flex flex-wrap gap-4 text-sm">
                                                 {classInfo.teacher && (
-                                                    <div className="flex items-center gap-2 text-gray-300">
+                                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                                                         {(() => {
                                                             const teacher = teachers.find(t => t.name === classInfo.teacher);
                                                             return teacher && teacher.image ? (
@@ -353,15 +353,15 @@ export default function TodayRoutine() {
                                                                     className="w-6 h-6 rounded-full object-cover border border-purple-500/30"
                                                                 />
                                                             ) : (
-                                                                <User size={16} className="text-pink-400" />
+                                                                <User size={16} className="text-pink-500 dark:text-pink-400" />
                                                             );
                                                         })()}
                                                         <span>{classInfo.teacher}</span>
                                                     </div>
                                                 )}
                                                 {classInfo.room && (
-                                                    <div className="flex items-center gap-2 text-gray-300">
-                                                        <MapPin size={16} className="text-red-400" />
+                                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                                                        <MapPin size={16} className="text-red-500 dark:text-red-400" />
                                                         <span>Room {classInfo.room}</span>
                                                     </div>
                                                 )}
@@ -369,9 +369,9 @@ export default function TodayRoutine() {
                                         </div>
 
                                         {/* Duration Badge */}
-                                        <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg px-4 py-2 text-center">
-                                            <div className="text-sm text-gray-400">Duration</div>
-                                            <div className="text-lg font-bold text-purple-400">
+                                        <div className="bg-purple-100 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 rounded-lg px-4 py-2 text-center">
+                                            <div className="text-sm text-gray-500 dark:text-gray-400">Duration</div>
+                                            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
                                                 {(() => {
                                                     const [startHour, startMin] = classInfo.startTime.split(':').map(Number)
                                                     const [endHour, endMin] = classInfo.endTime.split(':').map(Number)
@@ -386,15 +386,15 @@ export default function TodayRoutine() {
                         </div>
 
                         {/* Summary */}
-                        <div className="bg-linear-to-r from-purple-900/20 via-pink-900/20 to-red-900/20 rounded-2xl p-6 border border-gray-700">
+                        <div className="bg-linear-to-r from-purple-100 via-pink-100 to-red-100 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-red-900/20 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <Calendar className="w-6 h-6 text-purple-400" />
-                                    <span className="text-white font-semibold">
+                                    <Calendar className="w-6 h-6 text-purple-500 dark:text-purple-400" />
+                                    <span className="text-gray-900 dark:text-white font-semibold">
                                         Total Classes Today: {todayClasses.length}
                                     </span>
                                 </div>
-                                <div className="text-gray-400 text-sm">
+                                <div className="text-gray-500 dark:text-gray-400 text-sm">
                                     {currentDay}
                                 </div>
                             </div>

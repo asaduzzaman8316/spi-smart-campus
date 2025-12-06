@@ -8,6 +8,7 @@ export const metadata = {
         description: "Don't miss a class! View today's live schedule for your department and group.",
         images: ['/sy.png'],
     },
+    keywords: ["Today's Routine", "SPI Class Schedule", "Daily Routine", "Sylhet Polytechnic Live Routine", "Class Timestamp"],
 };
 
 export default function TodayPage() {

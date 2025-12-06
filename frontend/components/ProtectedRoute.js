@@ -26,7 +26,7 @@ export default function ProtectedRoute({ children }) {
     // Show loading while checking
     if (isChecking || !isLoggedIn) {
         return (
-            <div className="flex items-center bg-gray-800 justify-center min-h-screen ">
+            <div className="flex items-center bg-gray-50 dark:bg-gray-900 justify-center min-h-screen transition-colors duration-300">
                 <div className='size-36'>
                     <DotLottieReact
                         src="/Loading.lottie"

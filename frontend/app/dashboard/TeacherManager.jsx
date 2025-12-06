@@ -173,22 +173,22 @@ export default function TeacherManager({ onBack }) {
     };
 
     return (
-        <div className="min-h-screen bg-slate-900 py-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
             <div className="max-w-7xl mx-auto px-4">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8 bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <div className="flex items-center justify-between mb-8 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={onBack}
-                            className="p-2 hover:bg-slate-700 rounded-full transition-colors"
+                            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                         >
-                            <ArrowLeft className="text-white" size={24} />
+                            <ArrowLeft className="text-gray-900 dark:text-white" size={24} />
                         </button>
                         <div className="flex items-center gap-3">
-                            <div className="bg-emerald-500/10 p-3 rounded-xl">
-                                <Users className="text-emerald-500" size={28} />
+                            <div className="bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-100 dark:border-transparent">
+                                <Users className="text-emerald-600 dark:text-emerald-500" size={28} />
                             </div>
-                            <h1 className="text-3xl font-bold hidden lg:block text-white">Teacher Management</h1>
+                            <h1 className="text-3xl font-bold hidden lg:block text-gray-900 dark:text-white">Teacher Management</h1>
                         </div>
                     </div>
                     <button
@@ -203,19 +203,19 @@ export default function TeacherManager({ onBack }) {
                 {/* Search and Filter */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" size={20} />
                         <input
                             type="text"
                             placeholder="Search by name, email, or shift..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500"
+                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-sm dark:shadow-none"
                         />
                     </div>
                     <select
                         value={departmentFilter}
                         onChange={(e) => setDepartmentFilter(e.target.value)}
-                        className="px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                        className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 shadow-sm dark:shadow-none"
                     >
                         <option value="">All Departments</option>
                         {departments.map(dept => (
@@ -238,9 +238,9 @@ export default function TeacherManager({ onBack }) {
                         </div>
                     </div>
                 ) : filteredTeachers.length === 0 ? (
-                    <div className="text-center py-16 bg-slate-800 rounded-xl border border-slate-700">
-                        <Users className="mx-auto text-slate-600 mb-4" size={64} />
-                        <p className="text-slate-400 text-lg">No teachers found</p>
+                    <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
+                        <Users className="mx-auto text-gray-400 dark:text-slate-600 mb-4" size={64} />
+                        <p className="text-gray-500 dark:text-slate-400 text-lg">No teachers found</p>
                         <button
                             onClick={handleAddTeacher}
                             className="mt-4 text-emerald-500 hover:underline"
@@ -253,7 +253,7 @@ export default function TeacherManager({ onBack }) {
                         {filteredTeachers.map(teacher => (
                             <div
                                 key={teacher.docId || teacher.id}
-                                className="bg-white/5 backdrop-blur-lg group border border-white/10 rounded-lg p-6 hover:bg-white/10 transition-all duration-200"
+                                className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-emerald-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
                             >
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-4">
@@ -264,18 +264,18 @@ export default function TeacherManager({ onBack }) {
                                                 alt={teacher.name}
                                                 width={64}
                                                 height={64}
-                                                className="w-16 h-16 object-cover rounded-full"
+                                                className="w-16 h-16 object-cover rounded-full border-2 border-slate-100 dark:border-transparent"
                                             />
                                         ) : (
-                                            <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center border-2 border-emerald-500/30">
-                                                <User className="text-emerald-500" size={20} />
+                                            <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center border-2 border-emerald-100 dark:border-emerald-500/30">
+                                                <User className="text-emerald-600 dark:text-emerald-500" size={20} />
                                             </div>
                                         )}
                                         <div>
-                                            <h3 className="text-xl font-bold text-white mb-1">
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                                                 {teacher.name}
                                             </h3>
-                                            <p className="text-purple-400 text-sm font-medium">
+                                            <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">
                                                 {teacher.role}
                                             </p>
                                         </div>
@@ -283,19 +283,19 @@ export default function TeacherManager({ onBack }) {
                                 </div>
 
                                 <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                        <Briefcase size={14} />
+                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                        <Briefcase size={14} className="text-gray-400 dark:text-slate-400" />
                                         <span>{teacher.department}</span>
                                     </div>
                                     {teacher.email && (
-                                        <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                            <Mail size={14} />
+                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                            <Mail size={14} className="text-gray-400 dark:text-slate-400" />
                                             <span className="truncate">{teacher.email}</span>
                                         </div>
                                     )}
                                     {teacher.phone && (
-                                        <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                            <Phone size={14} />
+                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                            <Phone size={14} className="text-gray-400 dark:text-slate-400" />
                                             <span>{teacher.phone}</span>
                                         </div>
                                     )}
@@ -303,21 +303,21 @@ export default function TeacherManager({ onBack }) {
                                 <div className=" gap-2 absolute top-2 right-2 lg:hidden group-hover:flex">
                                     <button
                                         onClick={() => handleEditTeacher(teacher)}
-                                        className="p-2 hover:bg-blue-500/10 text-blue-400 hover:text-blue-300 rounded-lg transition-colors"
+                                        className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
                                     >
                                         <Edit size={18} />
                                     </button>
                                     <button
                                         onClick={() => setDeleteConfirm(teacher)}
-                                        className="p-2 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-lg transition-colors"
+                                        className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors border border-red-100 dark:border-transparent"
                                     >
                                         <Trash2 size={18} />
                                     </button>
                                 </div>
                                 {teacher.shift && (
-                                    <div className="pt-3 border-t border-white/10">
-                                        <p className="text-xs text-gray-400">
-                                            Shift: <span className="text-gray-300">{teacher.shift}</span>
+                                    <div className="pt-3 border-t border-gray-100 dark:border-white/10">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Shift: <span className="text-gray-700 dark:text-gray-300">{teacher.shift}</span>
                                         </p>
                                     </div>
 
@@ -330,22 +330,22 @@ export default function TeacherManager({ onBack }) {
                 {/* Add/Edit Modal */}
                 {showModal && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-700">
-                            <div className="sticky top-0 bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-                                <h2 className="text-2xl font-bold text-white">
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700 shadow-2xl">
+                            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between z-10">
+                                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {modalMode === 'add' ? 'Add New Teacher' : 'Edit Teacher'}
                                 </h2>
                                 <button
                                     onClick={() => setShowModal(false)}
-                                    className="p-2 hover:bg-slate-700 rounded-full transition-colors"
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
                                 >
-                                    <X className="text-slate-400" size={24} />
+                                    <X className="text-gray-500 dark:text-slate-400" size={24} />
                                 </button>
                             </div>
                             <form onSubmit={handleSaveTeacher} className="p-6 space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        Name <span className="text-red-400">*</span>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                        Name <span className="text-red-500 dark:text-red-400">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -353,13 +353,13 @@ export default function TeacherManager({ onBack }) {
                                         value={currentTeacher.name || ''}
                                         onChange={handleInputChange}
                                         required
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                                         placeholder="Dr. John Doe"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        Email <span className="text-red-400">*</span>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                        Email <span className="text-red-500 dark:text-red-400">*</span>
                                     </label>
                                     <input
                                         type="email"
@@ -367,12 +367,12 @@ export default function TeacherManager({ onBack }) {
                                         value={currentTeacher.email || ''}
                                         onChange={handleInputChange}
                                         required
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                                         placeholder="john.doe@spi.edu"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                                         Phone
                                     </label>
                                     <input
@@ -380,20 +380,20 @@ export default function TeacherManager({ onBack }) {
                                         name="phone"
                                         value={currentTeacher.phone || ''}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                                         placeholder="0 1734-****"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        Department <span className="text-red-400">*</span>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                        Department <span className="text-red-500 dark:text-red-400">*</span>
                                     </label>
                                     <select
                                         name="department"
                                         value={currentTeacher.department}
                                         onChange={handleInputChange}
                                         required
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                                     >
                                         <option value="">Select Department</option>
                                         {departments.map(dept => (
@@ -402,7 +402,7 @@ export default function TeacherManager({ onBack }) {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                                         Shift
                                     </label>
                                     <input
@@ -410,12 +410,12 @@ export default function TeacherManager({ onBack }) {
                                         name="shift"
                                         value={currentTeacher.shift || ''}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                                         placeholder="Shift"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                                         Role
                                     </label>
                                     <input
@@ -423,12 +423,12 @@ export default function TeacherManager({ onBack }) {
                                         name="role"
                                         value={currentTeacher.role || ''}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                                         placeholder="Professor"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                                         Image URL
                                     </label>
                                     <input
@@ -436,7 +436,7 @@ export default function TeacherManager({ onBack }) {
                                         name="image"
                                         value={currentTeacher.image || ''}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                                         placeholder="https://example.com/photo.jpg"
                                     />
                                 </div>
@@ -444,7 +444,7 @@ export default function TeacherManager({ onBack }) {
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}
-                                        className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium"
+                                        className="flex-1 px-6 py-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-white rounded-lg transition-colors font-medium border border-transparent dark:border-transparent"
                                     >
                                         Cancel
                                     </button>
@@ -464,21 +464,21 @@ export default function TeacherManager({ onBack }) {
                 {/* Delete Confirmation Modal */}
                 {deleteConfirm && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-slate-800 rounded-2xl max-w-md w-full border border-slate-700">
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full border border-gray-200 dark:border-slate-700 shadow-2xl">
                             <div className="p-6">
                                 <div className="flex items-center gap-4 mb-4">
-                                    <div className="bg-red-500/10 p-3 rounded-full">
+                                    <div className="bg-red-50 dark:bg-red-500/10 p-3 rounded-full border border-red-100 dark:border-transparent">
                                         <Trash2 className="text-red-500" size={24} />
                                     </div>
-                                    <h2 className="text-xl font-bold text-white">Delete Teacher</h2>
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Delete Teacher</h2>
                                 </div>
-                                <p className="text-slate-300 mb-6">
-                                    Are you sure you want to delete <span className="font-semibold text-white">{deleteConfirm.name}</span>? This action cannot be undone.
+                                <p className="text-gray-600 dark:text-slate-300 mb-6">
+                                    Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.name}</span>? This action cannot be undone.
                                 </p>
                                 <div className="flex gap-3">
                                     <button
                                         onClick={() => setDeleteConfirm(null)}
-                                        className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium"
+                                        className="flex-1 px-6 py-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-white rounded-lg transition-colors font-medium"
                                     >
                                         Cancel
                                     </button>

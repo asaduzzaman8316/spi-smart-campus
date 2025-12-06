@@ -8,6 +8,7 @@ export const metadata = {
     description: "Access your daily class schedule instantly. Filter by department and semester.",
     images: ['/sy.png'],
   },
+  keywords: ["SPI Routine", "Class Table", "Sylhet Polytechnic Schedule", "Diploma Routine", "BTEB Routine"],
 };
 
 export default function RoutinePage() {

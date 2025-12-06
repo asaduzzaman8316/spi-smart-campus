@@ -17,7 +17,7 @@ function Facilities() {
                     <h2 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
                         World-Class Facilities
                     </h2>
-                    <p className="text-gray-400 text-lg">
+                    <p className="text-gray-500 dark:text-gray-400 text-lg">
                         State-of-the-art infrastructure for comprehensive learning
                     </p>
                 </div>
@@ -26,14 +26,14 @@ function Facilities() {
                         <div
                             data-aos='fade-up'
                             key={index}
-                            className="bg-linear-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 hover:border-pink-500 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-pink-500/20"
+                            className="bg-linear-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-pink-500 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-pink-500/20"
                         >
                             <div className="flex flex-col items-center text-center space-y-4">
                                 <div className="p-4 bg-linear-to-br from-purple-500 to-pink-500 rounded-2xl">
                                     <facility.icon className="w-8 h-8" />
                                 </div>
-                                <h3 className="text-xl font-bold text-white">{facility.title}</h3>
-                                <p className="text-gray-400">{facility.description}</p>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{facility.title}</h3>
+                                <p className="text-gray-500 dark:text-gray-400">{facility.description}</p>
                             </div>
                         </div>
                     ))}

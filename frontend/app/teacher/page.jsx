@@ -8,6 +8,7 @@ export const metadata = {
         description: "Browse the complete list of SPI faculty members and their contact details.",
         images: ['/sy.png'],
     },
+    keywords: ["SPI Teachers", "Sylhet Polytechnic Faculty", "Teacher Directory", "Department Heads", "Contact Info"],
 };
 
 export default function TeacherPage() {

@@ -38,7 +38,7 @@ export default function TeacherList() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-950">
+            <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-950">
                 <div className='size-36'>
                     <DotLottieReact
                         src="/Loading.lottie"
@@ -52,40 +52,40 @@ export default function TeacherList() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-950 p-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
             <div className="max-w-7xl pt-18 mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent mb-4">
                         Our Teachers
                     </h1>
-                    <p className="text-gray-300 mb-6">Meet our dedicated faculty members</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-6">Meet our dedicated faculty members</p>
 
                     {/* Filter */}
                     <div className="flex justify-center">
                         <select
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            className="px-6 py-3 bg-linear-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
+                            className="px-6 py-3 bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all shadow-md"
                         >
-                            <option value="all" className="bg-gray-800">All Departments</option>
+                            <option value="all" className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200">All Departments</option>
                             {departments.map(dept => (
-                                <option key={dept._id} value={dept.name} className="bg-gray-800">{dept.name}</option>
+                                <option key={dept._id} value={dept.name} className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-200">{dept.name}</option>
                             ))}
                         </select>
                     </div>
                 </div>
 
                 {filteredTeachers.length === 0 ? (
-                    <div className="text-center py-12 bg-linear-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl">
-                        <p className="text-gray-400 text-xl">No teachers found</p>
+                    <div className="text-center py-12 bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg">
+                        <p className="text-gray-500 dark:text-gray-400 text-xl">No teachers found</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredTeachers.map((teacher) => (
                             <div
                                 key={teacher._id}
-                                className="bg-linear-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-2xl p-6 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 hover:scale-105"
+                                className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:border-purple-500 dark:hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 hover:scale-105"
                             >
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-4">
@@ -101,15 +101,15 @@ export default function TeacherList() {
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center border-2 border-purple-500/30">
+                                            <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center border-2 border-purple-500/30">
                                                 <User className="text-purple-500" size={32} />
                                             </div>
                                         )}
                                         <div>
-                                            <h3 className="text-xl font-bold text-white mb-1">
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                                                 {teacher.name}
                                             </h3>
-                                            <p className="text-purple-400 text-sm font-medium">
+                                            <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">
                                                 {teacher.role}
                                             </p>
                                         </div>
@@ -117,19 +117,19 @@ export default function TeacherList() {
                                 </div>
 
                                 <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                        <Briefcase size={14} className="text-pink-400" />
+                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                        <Briefcase size={14} className="text-pink-500 dark:text-pink-400" />
                                         <span>{teacher.department}</span>
                                     </div>
                                     {teacher.email && (
-                                        <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                            <Mail size={14} className="text-purple-400" />
+                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                            <Mail size={14} className="text-purple-500 dark:text-purple-400" />
                                             <span className="truncate">{teacher.email}</span>
                                         </div>
                                     )}
                                     {teacher.phone && (
-                                        <div className="flex items-center gap-2 text-gray-300 text-sm">
-                                            <Phone size={14} className="text-red-400" />
+                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                            <Phone size={14} className="text-red-500 dark:text-red-400" />
                                             <span>{teacher.phone}</span>
                                         </div>
                                     )}
@@ -137,9 +137,9 @@ export default function TeacherList() {
 
                                 {
                                     teacher.shift && (
-                                        <div className="pt-3 border-t border-gray-700">
-                                            <p className="text-xs text-gray-400">
-                                                Shift: <span className="text-gray-300">{teacher.shift}</span>
+                                        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Shift: <span className="text-gray-700 dark:text-gray-300">{teacher.shift}</span>
                                             </p>
                                         </div>
                                     )

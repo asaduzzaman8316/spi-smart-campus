@@ -76,7 +76,7 @@ export default function AdminLogin() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4 py-12 relative overflow-hidden pt-18">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4 py-12 relative overflow-hidden pt-18 transition-colors duration-300">
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden ">
                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -90,14 +90,14 @@ export default function AdminLogin() {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-purple-500 to-pink-500 rounded-2xl mb-4 shadow-lg shadow-purple-500/50">
                         <Shield className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent mb-2">
+                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-600 via-pink-600 to-red-600 dark:from-purple-400 dark:via-pink-400 dark:to-red-400 bg-clip-text text-transparent mb-2">
                         Admin Login
                     </h1>
-                    <p className="text-gray-400">Access the SPI Dashboard</p>
+                    <p className="text-gray-600 dark:text-gray-400">Access the SPI Dashboard</p>
                 </div>
 
                 {/* Login Card */}
-                <div className="bg-linear-to-br from-gray-800 to-gray-900 rounded-3xl p-8 border border-gray-700 shadow-2xl backdrop-blur-sm">
+                <div className="bg-white dark:bg-gray-900/80 rounded-3xl p-8 border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl backdrop-blur-sm transition-colors duration-300">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Success Message */}
                         {success && (
@@ -121,7 +121,7 @@ export default function AdminLogin() {
 
                         {/* Email Input */}
                         <div className="space-y-2">
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Email Address
                             </label>
                             <div className="relative">
@@ -138,14 +138,14 @@ export default function AdminLogin() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={loading}
                                     placeholder="admin@example.com"
-                                    className="block w-full pl-12 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring focus:ring-purple-500  transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="block w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </div>
 
                         {/* Password Input */}
                         <div className="space-y-2">
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Password
                             </label>
                             <div className="relative">
@@ -162,7 +162,7 @@ export default function AdminLogin() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={loading}
                                     placeholder="••••••••"
-                                    className="block w-full pl-12 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:ring focus:ring-purple-500  transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="block w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </div>
@@ -191,8 +191,8 @@ export default function AdminLogin() {
                     </form>
 
                     {/* Footer */}
-                    <div className="mt-6 pt-6 border-t border-gray-700">
-                        <p className="text-center text-sm text-gray-400">
+                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
                             Secure admin access for Sylhet Polytechnic Institute
                         </p>
                     </div>

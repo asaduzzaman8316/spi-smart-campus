@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/Lib/features/firebase/config';
 import Image from 'next/image';
+import ThemeSwitcher from '../ThemeSwitcher';
 
 export default function Header() {
     const isLoggedIn = useSelector((state) => state.auth.login)
@@ -37,7 +38,7 @@ export default function Header() {
     }
 
     return (
-        <header className="bg-gray-950/20 backdrop-blur-lg fixed w-full mx-auto top-0 z-50">
+        <header className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-lg fixed w-full mx-auto top-0 z-50 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
@@ -58,7 +59,7 @@ export default function Header() {
                                 key={link.name}
                                 href={link.href}
                                 onClick={() => setActiveNav(index)}
-                                className={` hover:text-red-500 transition-colors duration-200 font-medium ${activeNav === index ? 'text-red-500' : 'text-white'}`}
+                                className={`transition-colors duration-200 font-medium ${activeNav === index ? 'text-red-600 dark:text-red-500' : 'text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400'}`}
                             >
                                 {link.name}
                             </Link>
@@ -69,7 +70,7 @@ export default function Header() {
                                 <Link
                                     href="/dashboard"
                                     onClick={() => setActiveNav(99)}
-                                    className={`flex items-center space-x-2 ${activeNav === 99 ? 'text-red-500' : 'text-white'} hover:text-red-500 transition-colors duration-200 font-medium`}
+                                    className={`flex items-center space-x-2 ${activeNav === 99 ? 'text-red-600 dark:text-red-500' : 'text-gray-700 dark:text-gray-200'} hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200 font-medium`}
                                 >
                                     <LayoutDashboard size={18} />
                                     <span>Dashboard</span>
@@ -85,18 +86,19 @@ export default function Header() {
                         ) : (
                             <Link
                                 href={'/login'}
-                                className=" border-2 border-gray-500 text-white hover:text-white  px-6 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                                className=" border-2 border-gray-500 text-gray-700 dark:text-white hover:text-black dark:hover:text-gray-200 hover:border-gray-800 dark:hover:border-white px-6 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                             >
                                 Admin Login
                             </Link>
                         )}
+                        <ThemeSwitcher />
                     </div>
 
                     {/* Mobile menu button */}
                     <div className="md:hidden">
                         <button
                             onClick={toggleMenu}
-                            className="text-white hover:text-red-500 focus:outline-none"
+                            className="text-gray-900 dark:text-white hover:text-red-500 focus:outline-none"
                         >
                             {isOpen ? <X size={28} /> : <Menu size={28} />}
                         </button>
@@ -112,7 +114,7 @@ export default function Header() {
                                     key={link.name}
                                     href={link.href}
                                     onClick={() => setIsOpen(false)}
-                                    className="text-white hover:text-red-500  px-3 py-2 rounded-lg transition-all duration-200"
+                                    className="text-gray-700 dark:text-white hover:text-red-600 dark:hover:text-red-400 px-3 py-2 rounded-lg transition-all duration-200"
                                 >
                                     {link.name}
                                 </Link>
@@ -123,7 +125,7 @@ export default function Header() {
                                     <Link
                                         href="/dashboard"
                                         onClick={() => setIsOpen(false)}
-                                        className="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-purple-800/30 px-3 py-2 rounded-lg transition-all duration-200"
+                                        className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-purple-800/30 px-3 py-2 rounded-lg transition-all duration-200"
                                     >
                                         <LayoutDashboard size={18} />
                                         <span>Dashboard</span>
@@ -145,6 +147,12 @@ export default function Header() {
                                     Admin Login
                                 </Link>
                             )}
+                            <div className="pt-2 px-3">
+                                <span className="text-gray-500 dark:text-gray-400 text-sm mb-2 block">Theme</span>
+                                <div className="flex justify-start">
+                                    <ThemeSwitcher />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

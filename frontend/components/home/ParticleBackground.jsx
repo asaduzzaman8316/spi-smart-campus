@@ -26,7 +26,7 @@ export default function ParticleBackground() {
             {particles.map((particle) => (
                 <div
                     key={particle.id}
-                    className="absolute w-1 h-1 bg-purple-500/30 rounded-full animate-float"
+                    className="absolute w-1 h-1 bg-cyan-500/30 dark:bg-purple-500/30 rounded-full animate-float"
                     style={{
                         left: `${particle.left}%`,
                         top: `${particle.top}%`,
