@@ -1,13 +1,5 @@
 let BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/";
 
-// // Ensure protocol is present if it's a domain and not a relative path
-// if (BASE_URL !== '/api' && !BASE_URL.startsWith('http') && !BASE_URL.startsWith('/')) {
-//     BASE_URL = `https://${BASE_URL}`;
-// }
-
-// if (!process.env.NEXT_PUBLIC_API_URL) {
-//     console.warn('NEXT_PUBLIC_API_URL is not defined, falling back to /api');
-// }
 
 // Helper to handle response
 const handleResponse = async (response) => {

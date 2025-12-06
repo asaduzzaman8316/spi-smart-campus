@@ -17,6 +17,7 @@ const getTeachers = async (req, res) => {
 // @access  Private
 const createTeacher = async (req, res) => {
     try {
+        console.log('Creating teacher with data:', req.body);
         const teacher = await Teacher.create(req.body);
         res.status(201).json(teacher);
     } catch (error) {

@@ -44,7 +44,16 @@ export default function TeacherManager({ onBack }) {
             setLoading(true);
             const data = await fetchTeachers();
             // Map _id to docId and ensure id is present if needed for UI, or use _id as key
-            const teachersData = data.map(t => ({ docId: t._id, ...t }));
+            const teachersData = data.map(t => ({
+                docId: t._id,
+                ...t,
+                shift: t.shift || '',
+                role: t.role || '',
+                phone: t.phone || '',
+                email: t.email || '',
+                image: t.image || '',
+                department: t.department || ''
+            }));
             setTeachers(teachersData);
         } catch (error) {
             console.error("Error fetching teachers:", error);
@@ -128,7 +137,7 @@ export default function TeacherManager({ onBack }) {
             const teacherData = {
                 name: currentTeacher.name,
                 email: currentTeacher.email,
-                phone: currentTeacher.mobile,
+                phone: currentTeacher.phone,
                 department: currentTeacher.department,
                 shift: currentTeacher.shift,
                 role: currentTeacher.role,
@@ -308,7 +317,7 @@ export default function TeacherManager({ onBack }) {
                                 {teacher.shift && (
                                     <div className="pt-3 border-t border-white/10">
                                         <p className="text-xs text-gray-400">
-                                            shift: <span className="text-gray-300">{teacher.shift}</span>
+                                            Shift: <span className="text-gray-300">{teacher.shift}</span>
                                         </p>
                                     </div>
 
@@ -341,7 +350,7 @@ export default function TeacherManager({ onBack }) {
                                     <input
                                         type="text"
                                         name="name"
-                                        value={currentTeacher.name}
+                                        value={currentTeacher.name || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
@@ -355,7 +364,7 @@ export default function TeacherManager({ onBack }) {
                                     <input
                                         type="email"
                                         name="email"
-                                        value={currentTeacher.email}
+                                        value={currentTeacher.email || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
@@ -369,10 +378,10 @@ export default function TeacherManager({ onBack }) {
                                     <input
                                         type="text"
                                         name="phone"
-                                        value={currentTeacher.phone}
+                                        value={currentTeacher.phone || ''}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                                        placeholder="0 1234-567890"
+                                        placeholder="0 1734-****"
                                     />
                                 </div>
                                 <div>
@@ -394,15 +403,15 @@ export default function TeacherManager({ onBack }) {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-slate-300 mb-2">
-                                        shift
+                                        Shift
                                     </label>
                                     <input
                                         type="text"
                                         name="shift"
-                                        value={currentTeacher.shift}
+                                        value={currentTeacher.shift || ''}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                                        placeholder="Head of Department"
+                                        placeholder="Shift"
                                     />
                                 </div>
                                 <div>
@@ -412,7 +421,7 @@ export default function TeacherManager({ onBack }) {
                                     <input
                                         type="text"
                                         name="role"
-                                        value={currentTeacher.role}
+                                        value={currentTeacher.role || ''}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                                         placeholder="Professor"
@@ -425,7 +434,7 @@ export default function TeacherManager({ onBack }) {
                                     <input
                                         type="url"
                                         name="image"
-                                        value={currentTeacher.image}
+                                        value={currentTeacher.image || ''}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                                         placeholder="https://example.com/photo.jpg"

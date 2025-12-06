@@ -7,16 +7,15 @@ const teacherSchema = mongoose.Schema({
     },
     email: {
         type: String,
-        // unique: true
     },
     phone: String,
     department: {
         type: String,
         required: true
     },
-    designation: String,
+    role: String,
+    shift: String,
     image: String,
-    // Add other fields from frontend analysis if needed
 }, {
     timestamps: true
 });
