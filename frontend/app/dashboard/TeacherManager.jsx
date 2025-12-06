@@ -174,7 +174,7 @@ export default function TeacherManager({ onBack }) {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
-            <div className="max-w-7xl mx-auto px-4">
+            <div className="max-w-7xl mx-auto px-2">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
                     <div className="flex items-center gap-4">

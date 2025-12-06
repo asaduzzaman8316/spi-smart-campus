@@ -4,6 +4,7 @@ import StoreProvider from "./Provider";
 import CustomThemeProvider from "./CustomThemeProvider";
 import Header from "@/components/Ui/Header/Header";
 import { ToastContainer } from "react-toastify";
+import { SidebarProvider } from "@/context/SidebarContext";
 import Script from "next/script";
 
 const font = Inter({
@@ -95,9 +96,11 @@ export default function RootLayout({ children }) {
         />
         <StoreProvider>
           <CustomThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-            <Header />
-            {children}
-            <ToastContainer />
+            <SidebarProvider>
+              <Header />
+              {children}
+              <ToastContainer />
+            </SidebarProvider>
           </CustomThemeProvider>
         </StoreProvider>
       </body>

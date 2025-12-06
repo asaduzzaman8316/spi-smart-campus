@@ -203,11 +203,9 @@ export default function RoutineBuilder({ onBack, initialData }) {
         setSaving(true);
         try {
             const payload = { ...routine, lastUpdated: Date.now() };
-            // Backend handles upsert logic based on department, semester, shift, group
             await createRoutine(payload);
 
             toast("Routine saved successfully!", { type: "success", position: 'top-right' });
-            //  router.push('/admin/dashboard'); // Uncomment if you have this route
         } catch (error) {
             console.error("Error saving routine:", error);
             toast("Failed to save routine", { type: "error", position: 'top-right' });
@@ -218,7 +216,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
     return (
         <div className='bg-gray-50 dark:bg-gray-950 min-h-screen'>
-            <div className="container  mx-auto max-w-12xl py-8 px-4 pb-24">
+            <div className="container  mx-auto max-w-12xl py-8 px-2 pb-24">
                 <div className="flex items-center justify-between mb-8 rounded-md sticky top-16 bg-white dark:bg-gray-800 z-30 p-4 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white shadow-sm">
                     <div className="flex items-center gap-4">
                         <button

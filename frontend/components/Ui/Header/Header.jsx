@@ -9,6 +9,7 @@ import { signOut } from 'firebase/auth'
 import { auth } from '@/Lib/features/firebase/config';
 import Image from 'next/image';
 import ThemeSwitcher from '../ThemeSwitcher';
+import { toast } from 'react-toastify';
 
 
 export default function Header() {
@@ -36,6 +37,7 @@ export default function Header() {
             setIsOpen(false)
             await signOut(auth) // Sign out from Firebase
             dispatch(setLogout()) // Clear Redux + localStorage
+            toast.success('Logout Successful')
             router.push('/') // Go to home page
         } catch (error) {
             console.error('Logout error:', error)
