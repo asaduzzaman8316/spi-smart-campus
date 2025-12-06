@@ -17,7 +17,7 @@ export const metadata = {
     template: "%s | SPI Smart Campus - Sylhet Polytechnic Institute"
   },
   description: "Official smart campus portal for Sylhet Polytechnic Institute (SPI). Access class routines, BTEB results, teacher directory, and campus notices instantly. Your one-stop digital solution for polytechnic diploma life in Sylhet.",
-  keywords: ["sylhet", "sylhet polytechnic", "sylhet polytechnic institute", "polytechnic notics", "bteb", "dimploma", "diploma routine", "sylhet class routine", "sylhet routine", "spi", "spi result", "spi class routine", "spi campus"],
+  keywords: ["sylhet", "sylhet polytechnic", "sylhet polytechnic institute", "polytechnic notics", "bteb", "dimploma", "diploma routine", "sylhet class routine", "sylhet routine", "spi", "spi result", "spi class routine", "spi campus", "SPI Class Routine 2025", "Sylhet Polytechnic Result 2024", "SPI Online Service", "Sylhet Polytechnic Institute Routine"],
   authors: [{ name: "Sylhet Polytechnic Institute" }],
   creator: "SPI Smart Campus",
   publisher: "Sylhet Polytechnic Institute",
