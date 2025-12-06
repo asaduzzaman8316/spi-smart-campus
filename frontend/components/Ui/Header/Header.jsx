@@ -4,20 +4,22 @@ import { Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLogout } from '@/Lib/features/auth/authReducer';
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/Lib/features/firebase/config';
 import Image from 'next/image';
 import ThemeSwitcher from '../ThemeSwitcher';
 
+
 export default function Header() {
     const isLoggedIn = useSelector((state) => state.auth.login)
     const dispatch = useDispatch()
     const router = useRouter()
+    const pathname = usePathname()
     const [isOpen, setIsOpen] = useState(false)
 
+
     const toggleMenu = () => setIsOpen(!isOpen);
-    const [activeNav, setActiveNav] = useState(0)
 
     const navLinks = [
         { name: 'Home', href: '/' },
@@ -27,8 +29,11 @@ export default function Header() {
         { name: 'Teacher', href: '/teacher' },
     ];
 
+    const isActive = (path) => pathname === path;
+
     const handleLogout = async () => {
         try {
+            setIsOpen(false)
             await signOut(auth) // Sign out from Firebase
             dispatch(setLogout()) // Clear Redux + localStorage
             router.push('/') // Go to home page
@@ -37,29 +42,43 @@ export default function Header() {
         }
     }
 
+
+
     return (
         <header className="bg-white/80 dark:bg-gray-950/80 backdrop-blur-lg fixed w-full mx-auto top-0 z-50 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
                     <div className="shrink-0">
-                        <Image
-                            src={'/sy.png'}
-                            width={40}
-                            height={10}
-                            alt='main logo'
-                            className='w-full h-full rounded-full '
-                        />
+                        <Link href="/">
+                            <div className="relative w-10 h-10">
+                                <Image
+                                    src="/logo-dark.png"
+                                    width={40}
+                                    height={40}
+                                    alt='SPI Smart Campus Logo'
+                                    className='absolute inset-0 w-full h-full rounded-full object-cover hidden dark:block'
+                                    priority
+                                />
+                                <Image
+                                    src="/logo-light.png"
+                                    width={40}
+                                    height={40}
+                                    alt='SPI Smart Campus Logo'
+                                    className='absolute inset-0 w-full h-full rounded-full object-cover block dark:hidden'
+                                    priority
+                                />
+                            </div>
+                        </Link>
                     </div>
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex items-center space-x-8">
-                        {navLinks.map((link, index) => (
+                        {navLinks.map((link) => (
                             <Link
                                 key={link.name}
                                 href={link.href}
-                                onClick={() => setActiveNav(index)}
-                                className={`transition-colors duration-200 font-medium ${activeNav === index ? 'text-red-600 dark:text-red-500' : 'text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400'}`}
+                                className={`transition-colors duration-200 font-medium ${isActive(link.href) ? 'text-red-600 dark:text-red-500' : 'text-gray-700 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400'}`}
                             >
                                 {link.name}
                             </Link>
@@ -69,8 +88,7 @@ export default function Header() {
                             <>
                                 <Link
                                     href="/dashboard"
-                                    onClick={() => setActiveNav(99)}
-                                    className={`flex items-center space-x-2 ${activeNav === 99 ? 'text-red-600 dark:text-red-500' : 'text-gray-700 dark:text-gray-200'} hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200 font-medium`}
+                                    className={`flex items-center space-x-2 ${isActive('/dashboard') ? 'text-red-600 dark:text-red-500' : 'text-gray-700 dark:text-gray-200'} hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200 font-medium`}
                                 >
                                     <LayoutDashboard size={18} />
                                     <span>Dashboard</span>
@@ -119,7 +137,7 @@ export default function Header() {
                                     key={link.name}
                                     href={link.href}
                                     onClick={() => setIsOpen(false)}
-                                    className="text-gray-700 dark:text-white hover:text-red-600 dark:hover:text-red-400 px-3 py-2 rounded-lg transition-all duration-200"
+                                    className={`px-3 py-2 rounded-lg transition-all duration-200 ${isActive(link.href) ? 'text-red-600 dark:text-red-500 font-semibold' : 'text-gray-700 dark:text-white hover:text-red-600 dark:hover:text-red-400'}`}
                                 >
                                     {link.name}
                                 </Link>
@@ -130,7 +148,7 @@ export default function Header() {
                                     <Link
                                         href="/dashboard"
                                         onClick={() => setIsOpen(false)}
-                                        className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-purple-800/30 px-3 py-2 rounded-lg transition-all duration-200"
+                                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${isActive('/dashboard') ? 'text-red-600 dark:text-red-500 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-purple-800/30'}`}
                                     >
                                         <LayoutDashboard size={18} />
                                         <span>Dashboard</span>
@@ -146,7 +164,7 @@ export default function Header() {
                             ) : (
                                 <Link
                                     href={'/login'}
-
+                                    onClick={() => setIsOpen(false)}
                                     className="bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg transition-all duration-200 shadow-md"
                                 >
                                     Admin Login
