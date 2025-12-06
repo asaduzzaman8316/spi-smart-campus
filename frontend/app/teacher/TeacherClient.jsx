@@ -136,10 +136,10 @@ export default function TeacherList() {
                                 </div>
 
                                 {
-                                    teacher.designation && (
+                                    teacher.shift && (
                                         <div className="pt-3 border-t border-gray-700">
                                             <p className="text-xs text-gray-400">
-                                                Designation: <span className="text-gray-300">{teacher.designation}</span>
+                                                Shift: <span className="text-gray-300">{teacher.shift}</span>
                                             </p>
                                         </div>
                                     )
