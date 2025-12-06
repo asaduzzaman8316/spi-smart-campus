@@ -95,13 +95,18 @@ export default function Header() {
                     </div>
 
                     {/* Mobile menu button */}
-                    <div className="md:hidden">
-                        <button
-                            onClick={toggleMenu}
-                            className="text-gray-900 dark:text-white hover:text-red-500 focus:outline-none"
-                        >
-                            {isOpen ? <X size={28} /> : <Menu size={28} />}
-                        </button>
+                    <div className="md:hidden ">
+                        <div className='flex items-center justify-center gap-3'>
+                            <div className="flex justify-start">
+                                <ThemeSwitcher />
+                            </div>
+                            <button
+                                onClick={toggleMenu}
+                                className="text-gray-900 dark:text-white hover:text-red-500 focus:outline-none"
+                            >
+                                {isOpen ? <X size={28} /> : <Menu size={28} />}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -147,12 +152,7 @@ export default function Header() {
                                     Admin Login
                                 </Link>
                             )}
-                            <div className="pt-2 px-3">
-                                <span className="text-gray-500 dark:text-gray-400 text-sm mb-2 block">Theme</span>
-                                <div className="flex justify-start">
-                                    <ThemeSwitcher />
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 )}
