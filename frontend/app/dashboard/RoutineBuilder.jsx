@@ -135,6 +135,44 @@ export default function RoutineBuilder({ onBack, initialData }) {
         return busyTeachers;
     };
 
+    // Get unavailable rooms for a specific time slot
+    const getUnavailableRooms = (dayName, startTime, endTime, currentClassId) => {
+        if (!startTime || !endTime) return new Set();
+
+        const busyRooms = new Set();
+
+        // Check against all other routines
+        allRoutines.forEach(r => {
+            if (r.id === routine.id && isEditMode) return;
+
+            const dayData = r.days.find(d => d.name === dayName);
+            if (dayData) {
+                dayData.classes.forEach(c => {
+                    if (c.room && isTimeOverlap(startTime, endTime, c.startTime, c.endTime)) {
+                        busyRooms.add(c.room);
+                    }
+                });
+            }
+        });
+
+        // Also check against other classes in the CURRENT routine (local state)
+        // to prevent assigning the same room to two overlapping classes in the same routine
+        const currentDay = routine.days.find(d => d.name === activeDay); // Use activeDay or dayName? helper uses activeDay implicitly via routine state, but we should use dayName argument to be safe, though here dayName is activeDay.
+        // Wait, the original getUnavailableTeachers uses routine.days.find(d => d.name === dayName). 
+        // Let's stick to consistent logic.
+        
+        const currentDayLocal = routine.days.find(d => d.name === dayName);
+        if (currentDayLocal) {
+            currentDayLocal.classes.forEach(c => {
+                if (c.id !== currentClassId && c.room && isTimeOverlap(startTime, endTime, c.startTime, c.endTime)) {
+                    busyRooms.add(c.room);
+                }
+            });
+        }
+
+        return busyRooms;
+    };
+
     const addClass = () => {
         const newClass = {
             id: Math.random().toString(36).substr(2, 9),
@@ -388,6 +426,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                     <div className="space-y-3">
                                         {routine.days.find(d => d.name === activeDay)?.classes.map((cls, index) => {
                                             const unavailableTeachers = getUnavailableTeachers(activeDay, cls.startTime, cls.endTime, cls.id);
+                                            const unavailableRooms = getUnavailableRooms(activeDay, cls.startTime, cls.endTime, cls.id);
                                             return (
                                                 <div key={cls.id} className="group flex flex-col md:flex-row gap-3 items-start md:items-center bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-200 hover:border-blue-400 transition-colors shadow-sm dark:shadow-none">
                                                     {/* Adjusted Grid for Code input */}
@@ -464,9 +503,19 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                                 className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
                                                             >
                                                                 <option className='text-gray-500 dark:text-slate-400' value="">Room</option>
-                                                                {rooms.map((r, index) => (
-                                                                    <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={r.number || r.name}>{r.number || r.name}</option>
-                                                                ))}
+                                                                {rooms.map((r, index) => {
+                                                                    const isBusy = unavailableRooms.has(r.number || r.name);
+                                                                    return (
+                                                                        <option
+                                                                            className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500 dark:text-red-400' : ''}`}
+                                                                            key={index}
+                                                                            value={r.number || r.name}
+                                                                            disabled={isBusy && (r.number || r.name) !== cls.room}
+                                                                        >
+                                                                            {r.number || r.name} {isBusy ? '(Busy)' : ''}
+                                                                        </option>
+                                                                    );
+                                                                })}
                                                             </select>
                                                         </div>
                                                     </div>
