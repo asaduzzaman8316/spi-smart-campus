@@ -65,7 +65,31 @@ export const deleteDepartment = async (id) => {
 
 // --- Subjects ---
 export const fetchSubjects = async () => {
-    const res = await fetch(`${BASE_URL}/subjects`);
+    return handleResponse(res);
+};
+
+export const createSubject = async (data) => {
+    const res = await fetch(`${BASE_URL}/subjects`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const updateSubject = async (id, data) => {
+    const res = await fetch(`${BASE_URL}/subjects/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const deleteSubject = async (id) => {
+    const res = await fetch(`${BASE_URL}/subjects/${id}`, {
+        method: 'DELETE',
+    });
     return handleResponse(res);
 };
 

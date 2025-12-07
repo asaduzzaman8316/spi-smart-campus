@@ -4,7 +4,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import RoutineBuilder from "./RoutineBuilder";
 import RoutineViewer from "./RoutineViewer";
 import TeacherManager from "./TeacherManager";
-import { PlusCircle, List, LayoutDashboard, Users, Building2 } from 'lucide-react';
+import SubjectManager from "./SubjectManager";
+import { PlusCircle, List, LayoutDashboard, Users, Building2, BookOpen } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useSidebar } from '@/context/SidebarContext';
 
@@ -35,6 +36,8 @@ export default function DashboardPage() {
                 return <RoutineViewer onBack={() => setView('home')} onEdit={handleEditRoutine} />;
             case 'teachers':
                 return <TeacherManager onBack={() => setView('home')} />;
+            case 'subjects':
+                return <SubjectManager onBack={() => setView('home')} />;
             case 'home':
             default:
                 return (
@@ -59,6 +62,13 @@ export default function DashboardPage() {
                             color="emerald"
                             desc="Add, edit, and manage teacher information."
                             onClick={() => setView('teachers')}
+                        />
+                        <DashboardCard
+                            title="Manage Subjects"
+                            icon={BookOpen}
+                            color="cyan"
+                            desc="Add, edit, and manage subjects."
+                            onClick={() => setView('subjects')}
                         />
                     </div>
                 );
@@ -91,7 +101,10 @@ function DashboardCard({ title, icon: Icon, color, desc, onClick }) {
     const colorClasses = {
         blue: 'hover:border-blue-500 text-blue-500 bg-blue-500/10',
         purple: 'hover:border-purple-500 text-purple-500 bg-purple-500/10',
-        emerald: 'hover:border-emerald-500 text-emerald-500 bg-emerald-500/10'
+        blue: 'hover:border-blue-500 text-blue-500 bg-blue-500/10',
+        purple: 'hover:border-purple-500 text-purple-500 bg-purple-500/10',
+        emerald: 'hover:border-emerald-500 text-emerald-500 bg-emerald-500/10',
+        cyan: 'hover:border-cyan-500 text-cyan-500 bg-cyan-500/10'
     };
 
     return (

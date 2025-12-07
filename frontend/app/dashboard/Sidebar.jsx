@@ -1,5 +1,5 @@
 'use client';
-import { Home, PlusCircle, List, Users, Briefcase } from 'lucide-react';
+import { Home, PlusCircle, List, Users, Briefcase, BookOpen } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 
 export default function Sidebar({ currentView, setView }) {
@@ -10,6 +10,7 @@ export default function Sidebar({ currentView, setView }) {
         { id: 'create', label: 'Create Routine', icon: PlusCircle },
         { id: 'show', label: 'Show Routines', icon: List },
         { id: 'teachers', label: 'Manage Teachers', icon: Users },
+        { id: 'subjects', label: 'Manage Subjects', icon: BookOpen },
     ];
 
     const handleItemClick = (viewId) => {
