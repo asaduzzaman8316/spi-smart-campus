@@ -361,8 +361,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                         disabled={isEditMode}
                                     >
                                         <option className='text-gray-500 dark:text-slate-400' value="">Select Department</option>
-                                        {departments.map((dept) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={dept._id} value={dept.name}>{dept.name}</option>
+                                        {departments.map((dept, index) => (
+                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={dept.name}>{dept.name}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -377,8 +377,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                         disabled={isEditMode}
                                     >
                                         <option className='text-gray-500 dark:text-slate-400' value="">Select Semester</option>
-                                        {SEMESTERS.map((sem) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={sem} value={sem}>{sem}</option>
+                                        {SEMESTERS.map((sem, index) => (
+                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={sem}>{sem}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -393,8 +393,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                         disabled={isEditMode}
                                     >
                                         <option className='text-gray-500 dark:text-slate-400' value="">Select Shift</option>
-                                        {SHIFTS.map((shift) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={shift} value={shift}>{shift}</option>
+                                        {SHIFTS.map((shift, index) => (
+                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={shift}>{shift}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -413,8 +413,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                             if (routine.shift === "1st") return ["A1", "B1"].includes(grp);
                                             if (routine.shift === "2nd") return ["A2", "B2"].includes(grp);
                                             return true;
-                                        }).map((grp) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={grp} value={grp}>{grp}</option>
+                                        }).map((grp, index) => (
+                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={grp}>{grp}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -432,8 +432,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                         className="w-full bg-gray-50 dark:bg-slate-800 border-gray-300 dark:border-slate-600 rounded-md text-sm p-2 border text-gray-900 dark:text-white focus:border-blue-500 outline-none"
                                     >
                                         <option className='text-gray-500 dark:text-slate-400' value="">All Departments</option>
-                                        {departments.map((dept) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={dept.id || dept._id} value={dept.name}>{dept.name}</option>
+                                        {departments.map((dept, index) => (
+                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={dept.name}>{dept.name}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -486,7 +486,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                         const unavailableTeachers = getUnavailableTeachers(activeDay, cls.startTime, cls.endTime, cls.id);
                                         const unavailableRooms = getUnavailableRooms(activeDay, cls.startTime, cls.endTime, cls.id);
                                         return (
-                                            <div key={cls.id} className="group flex flex-col md:flex-row gap-3 items-start md:items-center bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-200 hover:border-blue-400 transition-colors shadow-sm dark:shadow-none">
+                                            <div key={index} className="group flex flex-col md:flex-row gap-3 items-start md:items-center bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-200 hover:border-blue-400 transition-colors shadow-sm dark:shadow-none">
                                                 {/* Adjusted Grid for Code input */}
                                                 <div className="grid grid-cols-2 md:grid-cols-12 gap-3 w-full">
                                                     <div className="col-span-1 md:col-span-2">
@@ -526,8 +526,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
                                                         >
                                                             <option className='text-gray-500 dark:text-slate-400' value="">Select Subject</option>
-                                                            {filteredSubjects.map((sub) => (
-                                                                <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={sub.id || sub._id} value={sub.name}>{sub.name}</option>
+                                                            {filteredSubjects.map((sub, index) => (
+                                                                <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={sub.name}>{sub.name}</option>
                                                             ))}
                                                         </select>
                                                     </div>
@@ -550,12 +550,12 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                                     teachersToShow.sort((a, b) => a.name.localeCompare(b.name));
                                                                 }
 
-                                                                return teachersToShow.map((t) => {
+                                                                return teachersToShow.map((t, index) => {
                                                                     const isBusy = unavailableTeachers.has(t.name);
                                                                     return (
                                                                         <option
                                                                             className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500 dark:text-red-400' : ''}`}
-                                                                            key={t.id || t._id}
+                                                                            key={index}
                                                                             value={t.name}
                                                                             disabled={isBusy && t.name !== cls.teacher} // Allow keeping current teacher if already selected, or just disable
                                                                         >
@@ -574,12 +574,12 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
                                                         >
                                                             <option className='text-gray-500 dark:text-slate-400' value="">Room</option>
-                                                            {rooms.map((r) => {
+                                                            {rooms.map((r, index) => {
                                                                 const isBusy = unavailableRooms.has(r.number || r.name);
                                                                 return (
                                                                     <option
                                                                         className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500 dark:text-red-400' : ''}`}
-                                                                        key={r.id || r._id}
+                                                                        key={index}
                                                                         value={r.number || r.name}
                                                                         disabled={isBusy && (r.number || r.name) !== cls.room}
                                                                     >

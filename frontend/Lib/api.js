@@ -65,6 +65,7 @@ export const deleteDepartment = async (id) => {
 
 // --- Subjects ---
 export const fetchSubjects = async () => {
+    const res = await fetch(`${BASE_URL}/subjects`);
     return handleResponse(res);
 };
 

@@ -216,8 +216,8 @@ export default function SubjectManager({ onBack }) {
                         className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                     >
                         <option value="">All Semesters</option>
-                        {SEMESTERS.map(sem => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
+                        {SEMESTERS.map((sem, index) => (
+                            <option key={index} value={sem}>Semester {sem}</option>
                         ))}
                     </select>
                 </div>
@@ -248,9 +248,9 @@ export default function SubjectManager({ onBack }) {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 relative md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredSubjects.map(subject => (
+                        {filteredSubjects.map((subject, index) => (
                             <div
-                                key={subject.docId || subject.id}
+                                key={index}
                                 className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-blue-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
                             >
                                 <div className="flex justify-between items-start mb-4">
@@ -355,8 +355,8 @@ export default function SubjectManager({ onBack }) {
                                         className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                                     >
                                         <option value="">Select Department</option>
-                                        {departments.map(dept => (
-                                            <option key={dept.id} value={dept.name}>{dept.name}</option>
+                                        {departments.map((dept, index) => (
+                                            <option key={index} value={dept.name}>{dept.name}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -371,8 +371,8 @@ export default function SubjectManager({ onBack }) {
                                         required
                                         className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                                     >
-                                        {SEMESTERS.map(sem => (
-                                            <option key={sem} value={sem}>{sem}</option>
+                                        {SEMESTERS.map((sem, index) => (
+                                            <option key={index} value={sem}>{sem}</option>
                                         ))}
                                     </select>
                                 </div>
