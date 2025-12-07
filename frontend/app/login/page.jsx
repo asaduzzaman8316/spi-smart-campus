@@ -1,7 +1,7 @@
 'use client'
-import { useDispatch } from "react-redux"
-import { setLogin } from "@/Lib/features/auth/authReducer"
-import { useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { setLogin, selectIsLogin } from "@/Lib/features/auth/authReducer"
+import { useState, useEffect } from "react"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/Lib/features/firebase/config"
 import { useRouter } from "next/navigation"
@@ -10,11 +10,18 @@ import { Lock, Mail, Shield, AlertCircle, CheckCircle } from 'lucide-react'
 export default function AdminLogin() {
     const dispatch = useDispatch()
     const router = useRouter()
+    const isLogin = useSelector(selectIsLogin)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        if (isLogin) {
+            router.push('/dashboard')
+        }
+    }, [isLogin, router])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
