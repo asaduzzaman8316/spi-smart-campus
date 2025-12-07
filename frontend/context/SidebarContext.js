@@ -4,7 +4,7 @@ import { createContext, useContext, useState } from 'react';
 const SidebarContext = createContext();
 
 export function SidebarProvider({ children }) {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     const toggleSidebar = () => setIsCollapsed(!isCollapsed);
