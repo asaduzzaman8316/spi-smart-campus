@@ -72,12 +72,13 @@ export default function RoutineDisplay() {
       ];
     } else if (selectedShift === "2nd") {
       return [
-        { label: "02:00 - 02:45", start: "14:00", end: "14:45" },
-        { label: "02:45 - 03:30", start: "14:45", end: "15:30" },
-        { label: "03:30 - 04:15", start: "15:30", end: "16:15" },
-        { label: "04:15 - 05:00", start: "16:15", end: "17:00" },
-        { label: "05:00 - 05:45", start: "17:00", end: "17:45" },
-        { label: "05:45 - 06:30", start: "17:45", end: "18:30" },
+        { label: "01:30 - 02:15", start: "13:30", end: "14:15" },
+        { label: "02:15 - 03:00", start: "14:15", end: "15:00" },
+        { label: "03:00 - 03:45", start: "15:00", end: "15:45" },
+        { label: "03:45 - 04:30", start: "15:45", end: "16:30" },
+        { label: "04:30 - 05:15", start: "16:30", end: "17:15" },
+        { label: "05:15 - 06:00", start: "17:15", end: "18:00" },
+        { label: "06:00 - 06:45", start: "18:00", end: "18:45" }
       ];
     }
     return [];
