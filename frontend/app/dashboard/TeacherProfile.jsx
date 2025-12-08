@@ -2,20 +2,22 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { selectUser, setLogin } from '@/Lib/features/auth/authReducer';
-import { User, Mail, Phone, Briefcase, Hash, Clock, Shield, Edit2, Key, Save, X, Camera } from 'lucide-react';
+import { User, Mail, Phone, Briefcase, Hash, Clock, Shield, Edit2, Key, Save, X, Camera, Menu } from 'lucide-react';
+import { useSidebar } from '@/context/SidebarContext';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { auth } from '@/Lib/features/firebase/config';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
 import { InfoCard } from './InfoCard';
-// You might need an API to update the teacher profile in MongoDB
-// import { updateTeacherProfile } from '../../Lib/api'; 
+import { updateTeacher } from '../../Lib/api';
 
 export default function TeacherProfile() {
     const user = useSelector(selectUser);
     const dispatch = useDispatch();
+    const { toggleMobileSidebar } = useSidebar();
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
+    const [showHint, setShowHint] = useState(true);
 
     // Edit Form State
     const [formData, setFormData] = useState({
@@ -39,8 +41,8 @@ export default function TeacherProfile() {
         e.preventDefault();
         setLoading(true);
         try {
-            // Simulate API call - Replace with actual API call
-            // await updateTeacherProfile(user._id, formData);
+            // Update in MongoDB
+            await updateTeacher(user._id, formData);
 
             // Update Redux state
             dispatch(setLogin({
@@ -96,11 +98,11 @@ export default function TeacherProfile() {
                     <div className="relative group">
                         <div className="w-32 h-32 rounded-full bg-white dark:bg-gray-900 p-0.5 shadow-2xl ">
                             {formData.image ? (
-                                <Image src={formData.image} 
-                                unoptimized
-                                width={128} height={128} alt={user.name} className="w-full h-full object-cover rounded-full" />
+                                <Image src={formData.image}
+                                    unoptimized
+                                    width={128} height={128} alt={user.name} className="w-full h-full object-cover rounded-full" />
                             ) : (
-                                <div className="w-full h-full bg-gray-100 dark:bg-gray-800    rounded-full flex items-center justify-center text-4xl font-bold text-gray-400">   
+                                <div className="w-full h-full bg-gray-100 dark:bg-gray-800    rounded-full flex items-center justify-center text-4xl font-bold text-gray-400">
                                     {user.name?.charAt(0)}
                                 </div>
                             )}
@@ -252,6 +254,33 @@ export default function TeacherProfile() {
                         </div>
                     )}
                 </div>
+            </div>
+            {/* Mobile Sidebar Toggle & Hint */}
+            <div className="fixed bottom-6 right-6 z-50 md:hidden flex flex-col items-end gap-2">
+                {/* Hint Bubble */}
+                {showHint && (
+                    <div className="bg-blue-600 text-white p-3 rounded-lg shadow-lg relative max-w-[200px] animate-bounce">
+                        <p className="text-xs font-medium">Click here to access usage options & menu</p>
+                        <div className="absolute -bottom-1 right-4 w-3 h-3 bg-blue-600 transform rotate-45"></div>
+                        <button
+                            onClick={() => setShowHint(false)}
+                            className="absolute -top-2 -left-2 bg-white text-blue-600 rounded-full p-0.5 shadow-sm"
+                        >
+                            <X size={12} />
+                        </button>
+                    </div>
+                )}
+
+                {/* Toggle Button */}
+                <button
+                    onClick={() => {
+                        setShowHint(false);
+                        toggleMobileSidebar();
+                    }}
+                    className="p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-transform active:scale-95"
+                >
+                    <Menu size={24} />
+                </button>
             </div>
         </div>
     );

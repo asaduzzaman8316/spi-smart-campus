@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { fetchRoutines } from '../../Lib/api';
 import { useSelector } from 'react-redux';
 import { selectUser } from '@/Lib/features/auth/authReducer';
-import { Calendar, Clock, MapPin, BookOpen, AlertCircle, Download } from 'lucide-react';
+import { Calendar, Clock, MapPin, BookOpen, AlertCircle, Download, Menu } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useSidebar } from '@/context/SidebarContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -12,6 +13,7 @@ const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", 
 
 export default function TeacherRoutine({ onBack }) {
     const user = useSelector(selectUser);
+    const { toggleMobileSidebar } = useSidebar();
     const [weeklySchedule, setWeeklySchedule] = useState({});
     const [loading, setLoading] = useState(true);
 
@@ -202,6 +204,15 @@ export default function TeacherRoutine({ onBack }) {
                     })}
                 </div>
             )}
+            {/* Mobile Sidebar Toggle */}
+            <div className="fixed bottom-6 right-6 z-50 md:hidden">
+                <button
+                    onClick={()=> toggleMobileSidebar()}
+                    className="p-4 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-transform active:scale-95"
+                >
+                    <Menu size={24} />
+                </button>
+            </div>
         </div>
     );
 }

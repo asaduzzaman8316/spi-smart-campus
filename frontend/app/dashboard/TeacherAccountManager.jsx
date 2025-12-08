@@ -5,6 +5,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { UserPlus, Check, X, Loader2, Search, User, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 // Secondary Firebase App for creating users without logging out admin
 const secondaryApp = initializeApp({
@@ -143,7 +144,16 @@ export default function TeacherAccountManager() {
         setCreatedAccount(null);
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
+        <div className='size-36'>
+            <DotLottieReact
+                src="/loader1.lottie"
+                loop
+                autoplay
+
+            />
+        </div>
+    </div>;
 
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
@@ -197,7 +207,7 @@ export default function TeacherAccountManager() {
                                     onClick={() => handleCreateAccountClick(teacher)}
                                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
                                 >
-                                    <UserPlus size={16} /> Create Account
+                                    <UserPlus size={16} /> <p className='hidden md:block'>Create Account</p>
                                 </button>
                             </div>
                         )}

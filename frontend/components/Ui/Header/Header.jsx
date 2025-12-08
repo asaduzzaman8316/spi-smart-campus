@@ -148,6 +148,13 @@ export default function Header() {
                                         <LayoutDashboard size={18} />
                                         <span>Dashboard</span>
                                     </Link>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-red-600 dark:text-red-500 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left"
+                                    >
+                                        <LogOut size={18} />
+                                        <span>Logout</span>
+                                    </button>
                                 </>
                             ) : (
                                 <Link

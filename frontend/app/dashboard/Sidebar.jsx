@@ -46,6 +46,43 @@ export default function Sidebar({ currentView, setView }) {
 
     return (
         <>
+            {/* Mobile Sidebar Overlay & Drawer */}
+            {isMobileOpen && (
+                <div className="fixed inset-0 z-50 md:hidden">
+                    <div 
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={closeMobileSidebar}
+                    />
+                    <aside className="fixed top-0 left-0 w-64 h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 shadow-2xl flex flex-col">
+                        <div className="flex flex-col py-4 gap-2 flex-1 overflow-y-auto mt-16">
+                            {menuItems.map((item) => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => handleItemClick(item.id)}
+                                    className={`flex items-center px-6 py-4 mx-2 rounded-xl transition-colors
+                                        ${currentView === item.id
+                                            ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-500'
+                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}
+                                    `}
+                                >
+                                    <item.icon size={24} className="mr-4" />
+                                    <span className="font-medium">{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="p-2 border-t border-gray-200 dark:border-gray-800">
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center px-6 py-4 rounded-xl transition-colors text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                                <LogOut size={24} className="mr-4" />
+                                <span className="font-medium">Logout</span>
+                            </button>
+                        </div>
+                    </aside>
+                </div>
+            )}
             {/* Desktop Sidebar */}
             <aside className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 hidden md:flex flex-col z-40 ${sidebarClass}`}>
                 <div className="flex flex-col py-4 gap-2 flex-1 overflow-y-auto">

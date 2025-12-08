@@ -5,7 +5,7 @@ export const InfoCard = ({ icon: Icon, label, value, color }) => {
                 <Icon className={color.replace('bg-', 'text-')} size={20} />
             </div>
             <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">{label}</p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">{value || 'N/A'}</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-white break-all">{value || 'N/A'}</p>
         </div>
     )
 };
