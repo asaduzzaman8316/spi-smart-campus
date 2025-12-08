@@ -4,6 +4,7 @@ import { setLogin, selectIsLogin } from "@/Lib/features/auth/authReducer"
 import { useState, useEffect } from "react"
 import { signInWithEmailAndPassword } from "firebase/auth"
 import { auth } from "@/Lib/features/firebase/config"
+import { fetchTeacherByUid } from "@/Lib/api" // Import API
 import { useRouter } from "next/navigation"
 import { Lock, Mail, Shield, AlertCircle, CheckCircle } from 'lucide-react'
 
@@ -31,11 +32,30 @@ export default function AdminLogin() {
 
         try {
             // Sign in with Firebase
-            await signInWithEmailAndPassword(auth, email, password)
+            const userCredential = await signInWithEmailAndPassword(auth, email, password)
+            const user = userCredential.user;
+
+            // Check if user is a teacher
+            let role = 'admin'; // Default to admin
+            let teacherProfile = null;
+
+            try {
+                const teacherData = await fetchTeacherByUid(user.uid);
+                if (teacherData && teacherData._id) {
+                    role = 'teacher';
+                    teacherProfile = teacherData;
+                }
+            } catch (err) {
+                console.log("Not a teacher or error fetching profile:", err);
+                // If 404, remains admin
+            }
 
             // Login successful
             dispatch(setLogin({
                 email: email,
+                uid: user.uid,
+                role: role,
+                ...teacherProfile // Spread teacher details if exists
             }))
 
             setSuccess('Login successful! Redirecting...')

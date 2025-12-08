@@ -25,6 +25,20 @@ export const createTeacher = async (data) => {
     return handleResponse(res);
 };
 
+export const registerTeacher = async (data) => {
+    const res = await fetch(`${BASE_URL}/teachers/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const fetchTeacherByUid = async (uid) => {
+    const res = await fetch(`${BASE_URL}/teachers/profile/${uid}`);
+    return handleResponse(res);
+};
+
 export const updateTeacher = async (id, data) => {
     const res = await fetch(`${BASE_URL}/teachers/${id}`, {
         method: 'PUT',
@@ -37,6 +51,13 @@ export const updateTeacher = async (id, data) => {
 export const deleteTeacher = async (id) => {
     const res = await fetch(`${BASE_URL}/teachers/${id}`, {
         method: 'DELETE',
+    });
+    return handleResponse(res);
+};
+
+export const unregisterTeacher = async (id) => {
+    const res = await fetch(`${BASE_URL}/teachers/unregister/${id}`, {
+        method: 'PUT',
     });
     return handleResponse(res);
 };

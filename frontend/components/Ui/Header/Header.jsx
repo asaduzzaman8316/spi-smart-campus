@@ -95,13 +95,6 @@ export default function Header() {
                                     <LayoutDashboard size={18} />
                                     <span>Dashboard</span>
                                 </Link>
-                                <button
-                                    onClick={handleLogout}
-                                    className="flex items-center space-x-2 bg-linear-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
-                                >
-                                    <LogOut size={18} />
-                                    <span>Logout</span>
-                                </button>
                             </>
                         ) : (
                             <Link
@@ -155,13 +148,6 @@ export default function Header() {
                                         <LayoutDashboard size={18} />
                                         <span>Dashboard</span>
                                     </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center justify-center space-x-2 bg-linear-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg transition-all duration-200 shadow-md"
-                                    >
-                                        <LogOut size={18} />
-                                        <span>Logout</span>
-                                    </button>
                                 </>
                             ) : (
                                 <Link

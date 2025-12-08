@@ -20,12 +20,14 @@ try {
     }
 
     // 2. Try Local File (Best for Local Development)
+    // Only try to require if we didn't find the env var to avoid build-time warnings/errors
     if (!serviceAccount) {
         try {
+            // Check if file exists roughly before requiring (optional, but require in try/catch is enough)
             serviceAccount = require(serviceAccountPath);
             console.log("Found local serviceAccountKey.json");
         } catch (e) {
-            // File not found, expected in production if using Env Var
+            // File not found is expected in production
         }
     }
 
@@ -38,14 +40,19 @@ try {
         }
     } else {
         // 3. Fallback to Default (Google Cloud auto-discovery)
+        // This might fail on Vercel if no other creds are present, but we suppress the crash.
         if (!admin.apps.length) {
-            admin.initializeApp();
-            console.log("Firebase Admin initialized with default credentials.");
+            try {
+                admin.initializeApp();
+                console.log("Firebase Admin initialized with default credentials.");
+            } catch (initError) {
+                console.warn("Failed to initialize Firebase Admin (Default):", initError.message);
+            }
         }
     }
 
 } catch (error) {
-    console.error("Firebase Admin Initialization Error:", error);
+    console.error("Firebase Admin Initialization Check Error:", error);
 }
 
 module.exports = admin;
