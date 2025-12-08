@@ -91,6 +91,19 @@ const unregisterTeacher = async (req, res) => {
             return res.status(404).json({ message: 'Teacher not found' });
         }
 
+        // Send deletion email notification before unregistering
+        if (teacher.email && teacher.name) {
+            const { sendAccountDeletionEmail } = require('../config/emailService');
+            const emailResult = await sendAccountDeletionEmail(teacher.email, teacher.name);
+
+            if (emailResult.success) {
+                console.log(`Account deletion email sent to ${teacher.email}`);
+            } else {
+                console.error(`Failed to send deletion email to ${teacher.email}:`, emailResult.error);
+                // Continue with unregistration even if email fails
+            }
+        }
+
         if (teacher.firebaseUid) {
             try {
                 if (admin.apps.length) {
@@ -140,7 +153,7 @@ const registerTeacher = async (req, res) => {
         if (password) {
             const { sendAccountCreationEmail } = require('../config/emailService');
             const emailResult = await sendAccountCreationEmail(email, teacher.name, password);
-            
+
             if (emailResult.success) {
                 console.log(`Account creation email sent to ${email}`);
             } else {
