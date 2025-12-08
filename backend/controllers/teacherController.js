@@ -1,12 +1,25 @@
 const Teacher = require('../models/Teacher');
+const { createPaginatedResponse } = require('../middleware/pagination');
 
 // @desc    Get all teachers
 // @route   GET /api/teachers
-// @access  Public
+// @access  Private (Admin only)
 const getTeachers = async (req, res) => {
     try {
-        const teachers = await Teacher.find();
-        res.status(200).json(teachers);
+        const { skip, limit } = req.pagination;
+
+        // Get total count for pagination
+        const total = await Teacher.countDocuments();
+
+        // Get paginated teachers
+        const teachers = await Teacher.find()
+            .select('-__v') // Exclude version key
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 }) // Newest first
+            .lean(); // Convert to plain JS objects for better performance
+
+        res.json(createPaginatedResponse(teachers, total, req.pagination));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

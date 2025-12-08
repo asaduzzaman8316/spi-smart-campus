@@ -12,12 +12,13 @@ const {
 const { verifyToken, requireAdmin } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { teacherValidation, idValidation } = require('../validators/validators');
+const { paginate } = require('../middleware/pagination');
 
 // Public routes
 router.route('/profile/:uid').get(getTeacherByUid);
 
 // Protected routes (require admin)
-router.route('/').get(verifyToken, requireAdmin, getTeachers).post(verifyToken, requireAdmin, teacherValidation.create, createTeacher);
+router.route('/').get(verifyToken, requireAdmin, paginate, getTeachers).post(verifyToken, requireAdmin, teacherValidation.create, createTeacher);
 router.route('/register').post(authLimiter, teacherValidation.register, registerTeacher);
 
 router.route('/:id').put(verifyToken, requireAdmin, teacherValidation.update, updateTeacher).delete(verifyToken, requireAdmin, idValidation, deleteTeacher);
