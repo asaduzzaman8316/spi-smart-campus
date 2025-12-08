@@ -5,17 +5,31 @@ const teacherSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    email: {
-        type: String,
-    },
     phone: String,
     department: {
         type: String,
         required: true
     },
-    role: String,
+    image: {
+        type: String, // URL to the image
+        default: ''
+    },
+    firebaseUid: {
+        type: String,
+        unique: true,
+        sparse: true // Allows null/undefined values to be non-unique (i.e., multiple teachers without accounts)
+    },
+    role: {
+        type: String,
+        default: 'teacher',
+        enum: ['teacher', 'admin']
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
     shift: String,
-    image: String,
 }, {
     timestamps: true
 });
