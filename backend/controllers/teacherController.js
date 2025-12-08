@@ -117,6 +117,48 @@ const unregisterTeacher = async (req, res) => {
     }
 };
 
+// @desc    Register a teacher (Link Firebase UID)
+// @route   POST /api/teachers/register
+// @access  Private (Admin or Teacher themselves)
+const registerTeacher = async (req, res) => {
+    try {
+        const { email, firebaseUid, role } = req.body;
+
+        const teacher = await Teacher.findOne({ email });
+
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found with this email' });
+        }
+
+        teacher.firebaseUid = firebaseUid;
+        // Role update optional, but good for consistency
+        if (role) teacher.role = role;
+
+        await teacher.save();
+
+        res.status(200).json(teacher);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get teacher by Firebase UID
+// @route   GET /api/teachers/profile/:uid
+// @access  Private
+const getTeacherByUid = async (req, res) => {
+    try {
+        const teacher = await Teacher.findOne({ firebaseUid: req.params.uid });
+
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        res.status(200).json(teacher);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getTeachers,
     createTeacher,

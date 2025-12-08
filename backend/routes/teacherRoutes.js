@@ -6,7 +6,8 @@ const {
     updateTeacher,
     deleteTeacher,
     registerTeacher,
-    getTeacherByUid
+    getTeacherByUid,
+    unregisterTeacher
 } = require('../controllers/teacherController');
 
 router.route('/').get(getTeachers).post(createTeacher);
