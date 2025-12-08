@@ -136,7 +136,7 @@ const sendAccountCreationEmail = async (teacherEmail, teacherName, password) => 
                         </div>
                         
                         <div style="text-align: center;">
-                            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="button">
+                            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="button text-white">
                                 Login to Dashboard
                             </a>
                         </div>
@@ -165,6 +165,106 @@ const sendAccountCreationEmail = async (teacherEmail, teacherName, password) => 
     }
 };
 
+/**
+ * Send account deletion notification email to teacher
+ * @param {string} teacherEmail - Teacher's email address
+ * @param {string} teacherName - Teacher's name
+ */
+const sendAccountDeletionEmail = async (teacherEmail, teacherName) => {
+    try {
+        const mailOptions = {
+            from: `"${process.env.EMAIL_FROM || 'SPI Smart Campus'}" <${process.env.EMAIL_USER}>`,
+            to: teacherEmail,
+            subject: 'SPI Smart Campus - Account Deletion Notice',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .header {
+                            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                            color: white;
+                            padding: 30px;
+                            text-align: center;
+                            border-radius: 10px 10px 0 0;
+                        }
+                        .content {
+                            background: #f9f9f9;
+                            padding: 30px;
+                            border-radius: 0 0 10px 10px;
+                        }
+                        .info-box {
+                            background: white;
+                            border-left: 4px solid #ef4444;
+                            padding: 20px;
+                            margin: 20px 0;
+                            border-radius: 5px;
+                        }
+                        .footer {
+                            text-align: center;
+                            margin-top: 30px;
+                            padding-top: 20px;
+                            border-top: 1px solid #ddd;
+                            color: #666;
+                            font-size: 12px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Account Deletion Notice</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear ${teacherName},</p>
+                        
+                        <p>We are writing to inform you that your teacher account on SPI Smart Campus has been deleted by the administrator.</p>
+                        
+                        <div class="info-box">
+                            <h3 style="margin-top: 0; color: #ef4444;">Account Details</h3>
+                            <p><strong>Email:</strong> ${teacherEmail}</p>
+                            <p><strong>Deletion Date:</strong> ${new Date().toLocaleDateString()}</p>
+                        </div>
+                        
+                        <p>As a result of this deletion:</p>
+                        <ul>
+                            <li>You will no longer be able to access the SPI Smart Campus dashboard</li>
+                            <li>Your login credentials have been removed from the system</li>
+                            <li>All associated data has been archived</li>
+                        </ul>
+                        
+                        <p>If you believe this was done in error or if you have any questions, please contact the administrator immediately.</p>
+                        
+                        <p>Best regards,<br>
+                        <strong>SPI Smart Campus Team</strong></p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>This is an automated message. Please do not reply to this email.</p>
+                        <p>&copy; ${new Date().getFullYear()} SPI Smart Campus. All rights reserved.</p>
+                    </div>
+                </body>
+                </html>
+            `
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Account deletion email sent successfully:', info.messageId);
+        return { success: true, messageId: info.messageId };
+    } catch (error) {
+        console.error('Error sending deletion email:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
-    sendAccountCreationEmail
+    sendAccountCreationEmail,
+    sendAccountDeletionEmail
 };

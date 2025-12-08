@@ -6,6 +6,7 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { UserPlus, Check, X, Loader2, Search, User, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Image from 'next/image';
 
 // Secondary Firebase App for creating users without logging out admin
 const secondaryApp = initializeApp({
@@ -179,13 +180,44 @@ export default function TeacherAccountManager() {
             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                 {filteredTeachers.map(teacher => (
                     <div key={teacher.email} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:border-blue-500 border border-transparent transition-all">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
-                                {teacher.name.charAt(0)}
-                            </div>
-                            <div>
-                                <h3 className="font-medium text-gray-900 dark:text-white">{teacher.name}</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{teacher.email}</p>
+                        <div className="flex items-center gap-4">
+                            {teacher.image ? (
+                                <Image
+                                    unoptimized
+                                    height={64}
+                                    width={64}
+                                    src={teacher.image}
+                                    alt={teacher.name}
+                                    className="w-14 h-14 rounded-full object-cover border-2 border-blue-500"
+                                />
+                            ) : (
+                                <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg border-2 border-blue-500">
+                                    {teacher.name.charAt(0)}
+                                </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white">{teacher.name}</h3>
+                                    {teacher.firebaseUid && (
+                                        <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full font-medium">
+                                            Active
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 break-all mb-2">{teacher.email}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-medium">
+                                        {teacher.department}
+                                    </span>
+                                    <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded font-medium">
+                                        {teacher.shift} Shift
+                                    </span>
+                                    {teacher.phone && (
+                                        <span className="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded font-medium">
+                                            📞 {teacher.phone}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -250,13 +282,32 @@ export default function TeacherAccountManager() {
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold">
-                                            {selectedTeacher.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <p className="font-medium text-gray-900 dark:text-white">{selectedTeacher.name}</p>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">{selectedTeacher.email}</p>
+                                    <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                        {selectedTeacher.image ? (
+                                            <Image
+                                                unoptimized
+                                                height={64}
+                                                width={64}
+                                                src={selectedTeacher.image}
+                                                alt={selectedTeacher.name}
+                                                className="w-16 h-16 rounded-full object-cover border-2 border-purple-500"
+                                            />
+                                        ) : (
+                                            <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center border-2 border-purple-500">
+                                                <User className="text-purple-600 dark:text-purple-400" size={32} />
+                                            </div>
+                                        )}
+                                        <div className="flex-1">
+                                            <p className="font-bold text-lg text-gray-900 dark:text-white">{selectedTeacher.name}</p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 break-all">{selectedTeacher.email}</p>
+                                            <div className="flex gap-2 mt-2">
+                                                <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-medium">
+                                                    {selectedTeacher.department}
+                                                </span>
+                                                <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded font-medium">
+                                                    {selectedTeacher.shift} Shift
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
