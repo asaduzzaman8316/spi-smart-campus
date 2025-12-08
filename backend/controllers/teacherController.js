@@ -122,7 +122,7 @@ const unregisterTeacher = async (req, res) => {
 // @access  Private (Admin or Teacher themselves)
 const registerTeacher = async (req, res) => {
     try {
-        const { email, firebaseUid, role } = req.body;
+        const { email, firebaseUid, role, password } = req.body;
 
         const teacher = await Teacher.findOne({ email });
 
@@ -135,6 +135,19 @@ const registerTeacher = async (req, res) => {
         if (role) teacher.role = role;
 
         await teacher.save();
+
+        // Send email with credentials if password is provided
+        if (password) {
+            const { sendAccountCreationEmail } = require('../config/emailService');
+            const emailResult = await sendAccountCreationEmail(email, teacher.name, password);
+            
+            if (emailResult.success) {
+                console.log(`Account creation email sent to ${email}`);
+            } else {
+                console.error(`Failed to send email to ${email}:`, emailResult.error);
+                // Don't fail the registration if email fails
+            }
+        }
 
         res.status(200).json(teacher);
     } catch (error) {

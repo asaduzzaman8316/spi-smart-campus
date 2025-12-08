@@ -114,7 +114,8 @@ export default function TeacherAccountManager() {
             await registerTeacher({
                 email: selectedTeacher.email,
                 firebaseUid: user.uid,
-                role: 'teacher'
+                role: 'teacher',
+                password: generatedPassword // Send password for email notification
             });
 
             // 3. Success
@@ -122,7 +123,7 @@ export default function TeacherAccountManager() {
                 email: selectedTeacher.email,
                 password: generatedPassword
             });
-            toast.success("Teacher account created successfully!");
+            toast.success("Teacher account created successfully! Login credentials sent to email.");
 
             // Refresh list
             loadTeachers();
