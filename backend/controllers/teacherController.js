@@ -107,7 +107,7 @@ const unregisterTeacher = async (req, res) => {
             }
         }
 
-        teacher.firebaseUid = null;
+        teacher.firebaseUid = undefined;
         teacher.role = 'teacher';
         await teacher.save();
 
