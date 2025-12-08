@@ -128,7 +128,7 @@ export default function TeacherToday({ onBack }) {
                                     <div className="text-right">
                                         <div className="text-sm font-medium text-gray-900 dark:text-white">{cls.department}</div>
                                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            {cls.shift} Shift • Group {cls.group}
+                                            Semester {cls.semester} • {cls.shift} Shift • Group {cls.group}
                                         </div>
                                     </div>
                                 </div>
@@ -140,7 +140,7 @@ export default function TeacherToday({ onBack }) {
             {/* Mobile Sidebar Toggle */}
             <div className="fixed bottom-6 right-6 z-50 md:hidden">
                 <button
-                    onClick={()=> toggleMobileSidebar()}
+                    onClick={() => toggleMobileSidebar()}
                     className="p-4 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-transform active:scale-95"
                 >
                     <Menu size={24} />
