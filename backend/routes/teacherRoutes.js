@@ -12,6 +12,8 @@ const {
 router.route('/').get(getTeachers).post(createTeacher);
 router.route('/register').post(registerTeacher);
 router.route('/profile/:uid').get(getTeacherByUid);
+
 router.route('/:id').put(updateTeacher).delete(deleteTeacher);
+router.route('/unregister/:id').put(unregisterTeacher);
 
 module.exports = router;

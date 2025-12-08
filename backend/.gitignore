@@ -27,3 +27,7 @@ logs/
 
 # Coverage
 coverage/
+
+# Security
+serviceAccountKey.json
+config/serviceAccountKey.json

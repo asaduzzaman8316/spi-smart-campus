@@ -40,59 +40,78 @@ const updateTeacher = async (req, res) => {
     }
 };
 
+const admin = require('../config/firebaseAdmin');
+
+// ... existing code ...
+
 // @desc    Delete a teacher
 // @route   DELETE /api/teachers/:id
 // @access  Private
 const deleteTeacher = async (req, res) => {
     try {
-        const teacher = await Teacher.findByIdAndDelete(req.params.id);
+        const teacher = await Teacher.findById(req.params.id); // Find first to get UID
+
         if (!teacher) {
             return res.status(404).json({ message: 'Teacher not found' });
         }
+
+        // Delete from Firebase if UID exists
+        if (teacher.firebaseUid) {
+            try {
+                if (admin.apps.length) {
+                    await admin.auth().deleteUser(teacher.firebaseUid);
+                    console.log(`Deleted Firebase user: ${teacher.firebaseUid}`);
+                } else {
+                    console.warn("Firebase Admin not initialized. Skipping Firebase user deletion.");
+                }
+            } catch (firebaseError) {
+                console.error("Error deleting Firebase user:", firebaseError);
+                // Continue to delete from DB even if Firebase fails? 
+                // Mostly yes, to avoid zombie records, or maybe warning.
+            }
+        }
+
+        await Teacher.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'Teacher deleted' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// @desc    Register a teacher account (Link Firebase UID)
-// @route   POST /api/teachers/register
-// @access  Private
-const registerTeacher = async (req, res) => {
-    try {
-        const { email, firebaseUid, role } = req.body;
+// ... existing code ...
 
-        // Find teacher by email
-        const teacher = await Teacher.findOne({ email });
+// @desc    Unregister a teacher account (Remove Firebase Access)
+// @route   PUT /api/teachers/unregister/:id
+// @access  Private
+const unregisterTeacher = async (req, res) => {
+    try {
+        const teacher = await Teacher.findById(req.params.id);
 
         if (!teacher) {
-            return res.status(404).json({ message: 'Teacher profile not found with this email' });
+            return res.status(404).json({ message: 'Teacher not found' });
         }
 
-        // Update teacher with UID and Role
-        teacher.firebaseUid = firebaseUid;
-        teacher.role = role || 'teacher';
+        if (teacher.firebaseUid) {
+            try {
+                if (admin.apps.length) {
+                    await admin.auth().deleteUser(teacher.firebaseUid);
+                } else {
+                    console.warn("Firebase Admin not initialized. Skipping Firebase user deletion.");
+                }
+            } catch (firebaseError) {
+                console.error("Error deleting Firebase user:", firebaseError);
+                // If user not found, process anyway
+                if (firebaseError.code !== 'auth/user-not-found') {
+                    // For now proceed, but maybe we should alert?
+                }
+            }
+        }
 
+        teacher.firebaseUid = null;
+        teacher.role = 'teacher';
         await teacher.save();
 
-        res.status(200).json(teacher);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
-// @desc    Get teacher profile by Firebase UID
-// @route   GET /api/teachers/profile/:uid
-// @access  Private
-const getTeacherByUid = async (req, res) => {
-    try {
-        const teacher = await Teacher.findOne({ firebaseUid: req.params.uid });
-
-        if (!teacher) {
-            return res.status(404).json({ message: 'Teacher profile not found' });
-        }
-
-        res.status(200).json(teacher);
+        res.status(200).json({ message: 'Teacher unregistered', teacher });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -104,5 +123,6 @@ module.exports = {
     updateTeacher,
     deleteTeacher,
     registerTeacher,
+    unregisterTeacher,
     getTeacherByUid
 };
