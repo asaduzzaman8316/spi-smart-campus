@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-import { fetchDepartments, fetchRoutines } from '../../Lib/api';
+import { fetchDepartments, fetchRoutines, fetchRooms } from '../../Lib/api';
 import { Filter, Calendar, Clock, MapPin, User, BookOpen, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -14,6 +14,7 @@ const GROUPS = ["A1", "A2", "B1", "B2"];
 export default function RoutineDisplay() {
   const [departments, setDepartments] = useState([]);
   const [routines, setRoutines] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Filter states
@@ -27,13 +28,15 @@ export default function RoutineDisplay() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [departmentsData, routinesData] = await Promise.all([
+        const [departmentsData, routinesData, roomsData] = await Promise.all([
           fetchDepartments(),
-          fetchRoutines()
+          fetchRoutines(),
+          fetchRooms()
         ]);
 
         setDepartments(departmentsData.map(d => ({ ...d, id: d._id })));
         setRoutines(routinesData.map(r => ({ ...r, id: r._id })));
+        setRooms(roomsData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -172,8 +175,16 @@ export default function RoutineDisplay() {
         const colspan = spanInfo ? spanInfo.colspan : 1;
 
         if (classInfo) {
+          let roomStr = classInfo.room || '';
+          if (roomStr) {
+             const room = rooms.find(r => r.number === roomStr || r.name === roomStr);
+             if (room && room.type) {
+                 roomStr += ` (${room.type})`;
+             }
+          }
+
           row.push({
-            content: `${classInfo.subjectCode}\n${classInfo.subject}\n${classInfo.teacher || ''}\n${classInfo.room || ''}`,
+            content: `${classInfo.subjectCode}\n${classInfo.subject}\n${classInfo.teacher || ''}\n${roomStr}`,
             colSpan: colspan,
             styles: { halign: 'center', valign: 'middle' }
           });
@@ -261,7 +272,7 @@ export default function RoutineDisplay() {
                 className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
               >
                 <option value="" className="text-gray-900 dark:text-gray-200">Select Department</option>
-                {departments.map(dept => (
+                {departments.slice(0, 7).map(dept => (
                   <option key={dept.id} value={dept.name} className="text-gray-900 dark:text-gray-200">
                     {dept.name}
                   </option>
@@ -407,7 +418,13 @@ export default function RoutineDisplay() {
                                 {classInfo.room && (
                                   <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-300 text-xs">
                                     <MapPin size={10} />
-                                    <span>{classInfo.room}</span>
+                                    <span>
+                                      {classInfo.room}
+                                      {(() => {
+                                        const room = rooms.find(r => r.number === classInfo.room || r.name === classInfo.room);
+                                        return room && room.type ? ` (${room.type})` : '';
+                                      })()}
+                                    </span>
                                   </div>
                                 )}
                               </div>

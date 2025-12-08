@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { fetchDepartments, fetchRoutines, fetchTeachers } from '../../Lib/api'
+import { fetchDepartments, fetchRoutines, fetchTeachers, fetchRooms } from '../../Lib/api'
 import { Filter, Calendar, Clock, MapPin, User, BookOpen, Sun, AlertCircle, Download } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -16,6 +16,7 @@ export default function TodayRoutine() {
     const [departments, setDepartments] = useState([])
     const [routines, setRoutines] = useState([])
     const [teachers, setTeachers] = useState([])
+    const [rooms, setRooms] = useState([])
     const [loading, setLoading] = useState(true)
     const [currentDay, setCurrentDay] = useState('')
 
@@ -35,15 +36,17 @@ export default function TodayRoutine() {
 
         const fetchData = async () => {
             try {
-                const [departmentsData, routinesData, teachersData] = await Promise.all([
+                const [departmentsData, routinesData, teachersData, roomsData] = await Promise.all([
                     fetchDepartments(),
                     fetchRoutines(),
-                    fetchTeachers()
+                    fetchTeachers(),
+                    fetchRooms()
                 ]);
 
                 setDepartments(departmentsData.map(d => ({ ...d, id: d._id })))
                 setRoutines(routinesData.map(d => ({ ...d, id: d._id })))
                 setTeachers(teachersData.map(d => ({ ...d, id: d._id })))
+                setRooms(roomsData)
             } catch (error) {
                 console.error("Error fetching data:", error)
             } finally {
@@ -114,12 +117,22 @@ export default function TodayRoutine() {
         ]
 
         // Table Rows
-        const rows = todayClasses.map(cls => ({
-            time: `${cls.startTime} - ${cls.endTime}`,
-            subject: `${cls.subjectCode}\n${cls.subject}`,
-            teacher: cls.teacher || '-',
-            room: cls.room || '-'
-        }))
+        const rows = todayClasses.map(cls => {
+            let roomStr = cls.room || '-';
+            if (cls.room) {
+                const room = rooms.find(r => r.number === cls.room || r.name === cls.room);
+                if (room && room.type) {
+                    roomStr += `\n(${room.type})`;
+                }
+            }
+
+            return {
+                time: `${cls.startTime} - ${cls.endTime}`,
+                subject: `${cls.subjectCode}\n${cls.subject}`,
+                teacher: cls.teacher || '-',
+                room: roomStr
+            }
+        })
 
         // Generate Table
         autoTable(doc, {
@@ -202,7 +215,7 @@ export default function TodayRoutine() {
                                 className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500 transition-all"
                             >
                                 <option value="" className="text-gray-900 dark:text-gray-200">Select Department</option>
-                                {departments.map(dept => (
+                                {departments.slice(0, 7).map(dept => (
                                     <option key={dept.id} value={dept.name} className="text-gray-900 dark:text-gray-200">
                                         {dept.name}
                                     </option>
@@ -362,7 +375,13 @@ export default function TodayRoutine() {
                                                 {classInfo.room && (
                                                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                                                         <MapPin size={16} className="text-red-500 dark:text-red-400" />
-                                                        <span>Room {classInfo.room}</span>
+                                                        <span>
+                                                            Room {classInfo.room}
+                                                            {(() => {
+                                                                const room = rooms.find(r => r.number === classInfo.room || r.name === classInfo.room);
+                                                                return room && room.type ? ` (${room.type})` : '';
+                                                            })()}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>

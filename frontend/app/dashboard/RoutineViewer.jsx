@@ -120,7 +120,7 @@ export default function RoutineViewer({ onBack, onEdit }) {
                             className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-md text-sm p-2 text-gray-900 dark:text-white focus:border-blue-500 outline-none"
                         >
                             <option value="">All Departments</option>
-                            {departments.map((dept, index) => (
+                            {departments.slice(0, 7).map((dept, index) => (
                                 <option key={index} value={dept.name}>{dept.name}</option>
                             ))}
                         </select>

@@ -100,6 +100,31 @@ export const fetchRooms = async () => {
     return handleResponse(res);
 };
 
+export const createRoom = async (data) => {
+    const res = await fetch(`${BASE_URL}/rooms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const updateRoom = async (id, data) => {
+    const res = await fetch(`${BASE_URL}/rooms/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+    return handleResponse(res);
+};
+
+export const deleteRoom = async (id) => {
+    const res = await fetch(`${BASE_URL}/rooms/${id}`, {
+        method: 'DELETE',
+    });
+    return handleResponse(res);
+};
+
 // --- Routines ---
 export const fetchRoutines = async () => {
     const res = await fetch(`${BASE_URL}/routines`);

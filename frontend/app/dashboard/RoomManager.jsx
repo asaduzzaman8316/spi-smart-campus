@@ -1,152 +1,129 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { fetchSubjects, fetchDepartments, createSubject, updateSubject, deleteSubject } from '../../Lib/api';
-import { ArrowLeft, Plus, Edit, Trash2, Search, X, BookOpen, Briefcase, Hash, Calendar } from 'lucide-react';
+import { fetchRooms, createRoom, updateRoom, deleteRoom } from '../../Lib/api';
+import { ArrowLeft, Plus, Edit, Trash2, Search, X, Building, Grid, Users } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
-const INITIAL_SUBJECT = {
-    name: '',
-    code: '',
-    department: '',
-    semester: 1,
-    id: 0
+const INITIAL_ROOM = {
+    number: '',
+    type: 'Theory',
+    capacity: ''
 };
 
-const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
+const ROOM_TYPES = ['Theory', 'Lab'];
 
-export default function SubjectManager({ onBack }) {
-    const [subjects, setSubjects] = useState([]);
-    const [filteredSubjects, setFilteredSubjects] = useState([]);
-    const [departments, setDepartments] = useState([]);
+export default function RoomManager({ onBack }) {
+    const [rooms, setRooms] = useState([]);
+    const [filteredRooms, setFilteredRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
-    const [currentSubject, setCurrentSubject] = useState(INITIAL_SUBJECT);
+    const [currentRoom, setCurrentRoom] = useState(INITIAL_ROOM);
     const [searchQuery, setSearchQuery] = useState('');
-    const [departmentFilter, setDepartmentFilter] = useState('');
-    const [semesterFilter, setSemesterFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        loadSubjects();
-        loadDepartments();
+        loadRooms();
     }, []);
 
     useEffect(() => {
-        filterSubjects();
-    }, [subjects, searchQuery, departmentFilter, semesterFilter]);
+        filterRooms();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rooms, searchQuery, typeFilter]);
 
-    const loadSubjects = async () => {
+    const loadRooms = async () => {
         try {
             setLoading(true);
-            const data = await fetchSubjects();
-            const subjectsData = data.map(s => ({
-                docId: s._id,
-                ...s,
-                code: s.code || '',
-                semester: s.semester || 1,
-                department: s.department || ''
+            const data = await fetchRooms();
+            const roomsData = data.map(r => ({
+                docId: r._id,
+                ...r,
+                capacity: r.capacity || 0
             }));
-            setSubjects(subjectsData);
+            setRooms(roomsData);
         } catch (error) {
-            console.error("Error fetching subjects:", error);
-            toast.error("Failed to load subjects");
+            console.error("Error fetching rooms:", error);
+            toast.error("Failed to load rooms");
         } finally {
             setLoading(false);
         }
     };
 
-    const loadDepartments = async () => {
-        try {
-            const data = await fetchDepartments();
-            setDepartments(data.map(d => ({ ...d, id: d._id || d.id })));
-        } catch (error) {
-            console.error("Error fetching departments:", error);
-        }
-    };
-
-    const filterSubjects = () => {
-        let filtered = [...subjects];
+    const filterRooms = () => {
+        let filtered = [...rooms];
 
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(s =>
-                s.name?.toLowerCase().includes(query) ||
-                s.code?.toLowerCase().includes(query)
+            filtered = filtered.filter(r =>
+                r.number?.toLowerCase().includes(query)
             );
         }
 
-        if (departmentFilter) {
-            filtered = filtered.filter(s => s.department === departmentFilter);
+        if (typeFilter) {
+            filtered = filtered.filter(r => r.type === typeFilter);
         }
 
-        if (semesterFilter) {
-            filtered = filtered.filter(s => Number(s.semester) === Number(semesterFilter));
-        }
-
-        setFilteredSubjects(filtered);
+        setFilteredRooms(filtered);
     };
 
-    const handleAddSubject = () => {
-        const maxId = subjects.length > 0 ? Math.max(...subjects.map(s => s.id || 0)) : 0;
-        setCurrentSubject({ ...INITIAL_SUBJECT, id: maxId + 1 });
+    const handleAddRoom = () => {
+        setCurrentRoom({ ...INITIAL_ROOM });
         setModalMode('add');
         setShowModal(true);
     };
 
-    const handleEditSubject = (subject) => {
-        setCurrentSubject(subject);
+    const handleEditRoom = (room) => {
+        setCurrentRoom(room);
         setModalMode('edit');
         setShowModal(true);
     };
 
-    const handleDeleteSubject = async (subject) => {
+    const handleDeleteRoom = async (room) => {
         try {
-            await deleteSubject(subject.docId);
-            toast.success("Subject deleted successfully");
-            loadSubjects();
+            await deleteRoom(room.docId);
+            toast.success("Room deleted successfully");
+            loadRooms();
             setDeleteConfirm(null);
         } catch (error) {
-            console.error("Error deleting subject:", error);
-            toast.error("Failed to delete subject");
+            console.error("Error deleting room:", error);
+            toast.error("Failed to delete room");
         }
     };
 
-    const handleSaveSubject = async (e) => {
+    const handleSaveRoom = async (e) => {
         e.preventDefault();
 
         // Validation
-        if (!currentSubject.name || !currentSubject.code || !currentSubject.department || !currentSubject.semester) {
-            toast.error("Please fill in all required fields");
+        if (!currentRoom.number) {
+            toast.error("Please fill in room number");
             return;
         }
 
         setSaving(true);
         try {
-            const subjectData = {
-                name: currentSubject.name,
-                code: currentSubject.code,
-                department: currentSubject.department,
-                semester: Number(currentSubject.semester),
-                id: currentSubject.id
+            const roomData = {
+                number: currentRoom.number,
+                type: currentRoom.type,
+                capacity: Number(currentRoom.capacity)
             };
 
             if (modalMode === 'add') {
-                await createSubject(subjectData);
-                toast.success("Subject added successfully");
+                await createRoom(roomData);
+                toast.success("Room added successfully");
             } else {
-                await updateSubject(currentSubject.docId, subjectData);
-                toast.success("Subject updated successfully");
+                await updateRoom(currentRoom.docId, roomData);
+                toast.success("Room updated successfully");
             }
 
             setShowModal(false);
-            setCurrentSubject(INITIAL_SUBJECT);
-            loadSubjects();
+            setCurrentRoom(INITIAL_ROOM);
+            loadRooms();
         } catch (error) {
-            console.error("Error saving subject:", error);
-            toast.error("Failed to save subject");
+            console.error("Error saving room:", error);
+            toast.error("Failed to save room");
         } finally {
             setSaving(false);
         }
@@ -154,9 +131,9 @@ export default function SubjectManager({ onBack }) {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setCurrentSubject(prev => ({
+        setCurrentRoom(prev => ({
             ...prev,
-            [name]: name === 'semester' ? Number(value) : value
+            [name]: name === 'capacity' ? Number(value) : value
         }));
     };
 
@@ -174,55 +151,45 @@ export default function SubjectManager({ onBack }) {
                         </button>
                         <div className="flex items-center gap-3">
                             <div className="bg-blue-50 dark:bg-blue-500/10 p-3 rounded-xl border border-blue-100 dark:border-transparent">
-                                <BookOpen className="text-blue-600 dark:text-blue-500" size={28} />
+                                <Building className="text-blue-600 dark:text-blue-500" size={28} />
                             </div>
-                            <h1 className="text-3xl font-bold hidden lg:block text-gray-900 dark:text-white">Subject Management</h1>
+                            <h1 className="text-3xl font-bold hidden lg:block text-gray-900 dark:text-white">Room Management</h1>
                         </div>
                     </div>
                     <button
-                        onClick={handleAddSubject}
+                        onClick={handleAddRoom}
                         className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors font-medium"
                     >
                         <Plus size={20} />
-                        Add Subject
+                        Add Room
                     </button>
                 </div>
 
                 {/* Search and Filter */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" size={20} />
                         <input
                             type="text"
-                            placeholder="Search by name or code..."
+                            placeholder="Search by room number..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                         />
                     </div>
                     <select
-                        value={departmentFilter}
-                        onChange={(e) => setDepartmentFilter(e.target.value)}
+                        value={typeFilter}
+                        onChange={(e) => setTypeFilter(e.target.value)}
                         className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                     >
-                        <option value="">All Departments</option>
-                        {departments.slice(0, 7).map(dept => (
-                            <option key={dept.id} value={dept.name}>{dept.name}</option>
-                        ))}
-                    </select>
-                    <select
-                        value={semesterFilter}
-                        onChange={(e) => setSemesterFilter(e.target.value)}
-                        className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
-                    >
-                        <option value="">All Semesters</option>
-                        {SEMESTERS.map((sem, index) => (
-                            <option key={index} value={sem}>Semester {sem}</option>
+                        <option value="">All Types</option>
+                        {ROOM_TYPES.map((type, index) => (
+                            <option key={index} value={type}>{type}</option>
                         ))}
                     </select>
                 </div>
 
-                {/* Subjects Grid */}
+                {/* Rooms Grid */}
                 {loading ? (
                     <div className="text-center py-16">
                         <div className="flex items-center justify-center ">
@@ -235,20 +202,20 @@ export default function SubjectManager({ onBack }) {
                             </div>
                         </div>
                     </div>
-                ) : filteredSubjects.length === 0 ? (
+                ) : filteredRooms.length === 0 ? (
                     <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
-                        <BookOpen className="mx-auto text-gray-400 dark:text-slate-600 mb-4" size={64} />
-                        <p className="text-gray-500 dark:text-slate-400 text-lg">No subjects found</p>
+                        <Building className="mx-auto text-gray-400 dark:text-slate-600 mb-4" size={64} />
+                        <p className="text-gray-500 dark:text-slate-400 text-lg">No rooms found</p>
                         <button
-                            onClick={handleAddSubject}
+                            onClick={handleAddRoom}
                             className="mt-4 text-blue-500 hover:underline"
                         >
-                            Add your first subject
+                            Add your first room
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 relative md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredSubjects.map((subject, index) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {filteredRooms.map((room, index) => (
                             <div
                                 key={index}
                                 className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-blue-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
@@ -256,15 +223,15 @@ export default function SubjectManager({ onBack }) {
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border-2 border-blue-100 dark:border-blue-500/30">
-                                            <BookOpen className="text-blue-600 dark:text-blue-500" size={20} />
+                                            <Building className="text-blue-600 dark:text-blue-500" size={20} />
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                                                {subject.name}
+                                                {room.number}
                                             </h3>
                                             <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 text-sm font-medium">
-                                                <Hash size={14} className="text-purple-400 dark:text-purple-500" />
-                                                Code: {subject.code}
+                                                <Grid size={14} className="text-purple-400 dark:text-purple-500" />
+                                                {room.type}
                                             </div>
                                         </div>
                                     </div>
@@ -272,23 +239,19 @@ export default function SubjectManager({ onBack }) {
 
                                 <div className="space-y-2 mb-4">
                                     <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                        <Briefcase size={14} className="text-gray-400 dark:text-slate-400" />
-                                        <span>{subject.department} Department</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                        <Calendar size={14} className="text-gray-400 dark:text-slate-400" />
-                                        <span>Semester {subject.semester}</span>
+                                        <Users size={14} className="text-gray-400 dark:text-slate-400" />
+                                        <span>Capacity: {room.capacity}</span>
                                     </div>
                                 </div>
-                                <div className="gap-2 absolute top-2 right-2 lg:hidden group-hover:flex">
+                                <div className="flex gap-2 justify-end opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                                     <button
-                                        onClick={() => handleEditSubject(subject)}
+                                        onClick={() => handleEditRoom(room)}
                                         className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
                                     >
                                         <Edit size={18} />
                                     </button>
                                     <button
-                                        onClick={() => setDeleteConfirm(subject)}
+                                        onClick={() => setDeleteConfirm(room)}
                                         className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors border border-red-100 dark:border-transparent"
                                     >
                                         <Trash2 size={18} />
@@ -302,10 +265,10 @@ export default function SubjectManager({ onBack }) {
                 {/* Add/Edit Modal */}
                 {showModal && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                        <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700 shadow-2xl">
+                        <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-slate-700 shadow-2xl">
                             <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between z-10">
                                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {modalMode === 'add' ? 'Add New Subject' : 'Edit Subject'}
+                                    {modalMode === 'add' ? 'Add New Room' : 'Edit Room'}
                                 </h2>
                                 <button
                                     onClick={() => setShowModal(false)}
@@ -314,67 +277,48 @@ export default function SubjectManager({ onBack }) {
                                     <X className="text-gray-500 dark:text-slate-400" size={24} />
                                 </button>
                             </div>
-                            <form onSubmit={handleSaveSubject} className="p-6 space-y-4">
+                            <form onSubmit={handleSaveRoom} className="p-6 space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                                        Subject Name <span className="text-red-500 dark:text-red-400">*</span>
+                                        Room Number <span className="text-red-500 dark:text-red-400">*</span>
                                     </label>
                                     <input
                                         type="text"
-                                        name="name"
-                                        value={currentSubject.name || ''}
+                                        name="number"
+                                        value={currentRoom.number || ''}
                                         onChange={handleInputChange}
                                         required
                                         className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
-                                        placeholder="Engineering Drawing"
+                                        placeholder="101"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                                        Subject Code <span className="text-red-500 dark:text-red-400">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="code"
-                                        value={currentSubject.code || ''}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
-                                        placeholder="21011"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                                        Department <span className="text-red-500 dark:text-red-400">*</span>
+                                        Type
                                     </label>
                                     <select
-                                        name="department"
-                                        value={currentSubject.department}
+                                        name="type"
+                                        value={currentRoom.type}
                                         onChange={handleInputChange}
-                                        required
                                         className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
                                     >
-                                        <option value="">Select Department</option>
-                                        {departments.map((dept, index) => (
-                                            <option key={index} value={dept.name}>{dept.name}</option>
+                                        {ROOM_TYPES.map((type, index) => (
+                                            <option key={index} value={type}>{type}</option>
                                         ))}
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                                        Semester <span className="text-red-500 dark:text-red-400">*</span>
+                                        Capacity
                                     </label>
-                                    <select
-                                        name="semester"
-                                        value={currentSubject.semester}
+                                    <input
+                                        type="number"
+                                        name="capacity"
+                                        value={currentRoom.capacity || ''}
                                         onChange={handleInputChange}
-                                        required
                                         className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
-                                    >
-                                        {SEMESTERS.map((sem, index) => (
-                                            <option key={index} value={sem}>{sem}</option>
-                                        ))}
-                                    </select>
+                                        placeholder="40"
+                                    />
                                 </div>
                                 <div className="flex gap-3 pt-4">
                                     <button
@@ -389,7 +333,7 @@ export default function SubjectManager({ onBack }) {
                                         disabled={saving}
                                         className="flex-1 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
                                     >
-                                        {saving ? 'Saving...' : 'Save Subject'}
+                                        {saving ? 'Saving...' : 'Save Room'}
                                     </button>
                                 </div>
                             </form>
@@ -406,10 +350,10 @@ export default function SubjectManager({ onBack }) {
                                     <div className="bg-red-50 dark:bg-red-500/10 p-3 rounded-full border border-red-100 dark:border-transparent">
                                         <Trash2 className="text-red-500" size={24} />
                                     </div>
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Delete Subject</h2>
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Delete Room</h2>
                                 </div>
                                 <p className="text-gray-600 dark:text-slate-300 mb-6">
-                                    Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.name}</span>? This action cannot be undone.
+                                    Are you sure you want to delete room <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.number}</span>? This action cannot be undone.
                                 </p>
                                 <div className="flex gap-3">
                                     <button
@@ -419,7 +363,7 @@ export default function SubjectManager({ onBack }) {
                                         Cancel
                                     </button>
                                     <button
-                                        onClick={() => handleDeleteSubject(deleteConfirm)}
+                                        onClick={() => handleDeleteRoom(deleteConfirm)}
                                         className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
                                     >
                                         Delete

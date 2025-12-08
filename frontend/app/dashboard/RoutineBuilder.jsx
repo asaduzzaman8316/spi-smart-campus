@@ -36,10 +36,16 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
     // Resource Filters State
     const [teacherFilterDept, setTeacherFilterDept] = useState('');
+    const [roomFilterType, setRoomFilterType] = useState(''); // '' (All), 'Theory', 'Lab'
+
     // Filtered lists
     const filteredTeachers = teacherFilterDept
         ? teachers.filter(t => t.department === teacherFilterDept)
         : teachers;
+
+    const filteredRooms = roomFilterType
+        ? rooms.filter(r => r.type === roomFilterType)
+        : rooms;
 
     // Use all subjects as filter is removed
     const filteredSubjects = subjects;
@@ -165,9 +171,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
         // Also check against other classes in the CURRENT routine (local state)
         // to prevent assigning the same room to two overlapping classes in the same routine
-        const currentDay = routine.days.find(d => d.name === activeDay); // Use activeDay or dayName? helper uses activeDay implicitly via routine state, but we should use dayName argument to be safe, though here dayName is activeDay.
-        // Wait, the original getUnavailableTeachers uses routine.days.find(d => d.name === dayName). 
-        // Let's stick to consistent logic.
+        const currentDay = routine.days.find(d => d.name === activeDay);
 
         const currentDayLocal = routine.days.find(d => d.name === dayName);
         if (currentDayLocal) {
@@ -361,7 +365,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                         disabled={isEditMode}
                                     >
                                         <option className='text-gray-500 dark:text-slate-400' value="">Select Department</option>
-                                        {departments.map((dept, index) => (
+                                        {departments.slice(0, 7).map((dept, index) => (
                                             <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={dept.name}>{dept.name}</option>
                                         ))}
                                     </select>
@@ -435,6 +439,19 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                         {departments.map((dept, index) => (
                                             <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={dept.name}>{dept.name}</option>
                                         ))}
+                                    </select>
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="block text-xs font-medium text-gray-600 dark:text-slate-300 mb-1">Filter Rooms by Type</label>
+                                    <select
+                                        value={roomFilterType}
+                                        onChange={(e) => setRoomFilterType(e.target.value)}
+                                        className="w-full bg-gray-50 dark:bg-slate-800 border-gray-300 dark:border-slate-600 rounded-md text-sm p-2 border text-gray-900 dark:text-white focus:border-blue-500 outline-none"
+                                    >
+                                        <option className='text-gray-500 dark:text-slate-400' value="">All Types</option>
+                                        <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' value="Theory">Theory</option>
+                                        <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' value="Lab">Lab</option>
                                     </select>
                                 </div>
 
@@ -542,7 +559,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             {(() => {
                                                                 const selectedTeacherObj = teachers.find(t => t.name === cls.teacher);
                                                                 let teachersToShow = filteredTeachers;
-                                                                
+
                                                                 // If selected teacher exists but is filtered out, add them back for this specific dropdown
                                                                 if (selectedTeacherObj && !teachersToShow.find(t => t.id === selectedTeacherObj.id)) {
                                                                     teachersToShow = [...teachersToShow, selectedTeacherObj];
@@ -574,19 +591,31 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
                                                         >
                                                             <option className='text-gray-500 dark:text-slate-400' value="">Room</option>
-                                                            {rooms.map((r, index) => {
-                                                                const isBusy = unavailableRooms.has(r.number || r.name);
-                                                                return (
-                                                                    <option
-                                                                        className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500 dark:text-red-400' : ''}`}
-                                                                        key={index}
-                                                                        value={r.number || r.name}
-                                                                        disabled={isBusy && (r.number || r.name) !== cls.room}
-                                                                    >
-                                                                        {r.number || r.name} {isBusy ? '(Busy)' : ''}
-                                                                    </option>
-                                                                );
-                                                            })}
+                                                            {(() => {
+                                                                const selectedRoomObj = rooms.find(r => (r.number || r.name) === cls.room);
+                                                                let roomsToShow = filteredRooms;
+
+                                                                // If selected room exists but is filtered out, add it back for this specific dropdown
+                                                                if (selectedRoomObj && !roomsToShow.find(r => r.id === selectedRoomObj.id)) {
+                                                                    roomsToShow = [...roomsToShow, selectedRoomObj];
+                                                                    // Optional: keep sorted
+                                                                    roomsToShow.sort((a, b) => (a.number || a.name).localeCompare(b.number || b.name));
+                                                                }
+
+                                                                return roomsToShow.map((r, index) => {
+                                                                    const isBusy = unavailableRooms.has(r.number || r.name);
+                                                                    return (
+                                                                        <option
+                                                                            className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500 dark:text-red-400' : ''}`}
+                                                                            key={index}
+                                                                            value={r.number || r.name}
+                                                                            disabled={isBusy && (r.number || r.name) !== cls.room}
+                                                                        >
+                                                                            {r.number || r.name} {r.type ? `(${r.type})` : ''} {isBusy ? '(Busy)' : ''}
+                                                                        </option>
+                                                                    );
+                                                                });
+                                                            })()}
                                                         </select>
                                                     </div>
                                                 </div>
