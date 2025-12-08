@@ -34,4 +34,8 @@ const teacherSchema = mongoose.Schema({
     timestamps: true
 });
 
+// Indexes for better query performance
+teacherSchema.index({ department: 1 });
+teacherSchema.index({ shift: 1 });
+
 module.exports = mongoose.model('Teacher', teacherSchema);

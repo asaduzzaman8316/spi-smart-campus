@@ -6,8 +6,14 @@ const {
     updateRoom,
     deleteRoom
 } = require('../controllers/roomController');
+const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { roomValidation, idValidation } = require('../validators/validators');
 
-router.route('/').get(getRooms).post(createRoom);
-router.route('/:id').put(updateRoom).delete(deleteRoom);
+// Public routes
+router.route('/').get(getRooms);
+
+// Protected routes (require admin)
+router.route('/').post(verifyToken, requireAdmin, roomValidation.create, createRoom);
+router.route('/:id').put(verifyToken, requireAdmin, roomValidation.update, updateRoom).delete(verifyToken, requireAdmin, idValidation, deleteRoom);
 
 module.exports = router;

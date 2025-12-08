@@ -6,8 +6,14 @@ const {
     updateDepartment,
     deleteDepartment
 } = require('../controllers/departmentController');
+const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { resourceValidation, idValidation } = require('../validators/validators');
 
-router.route('/').get(getDepartments).post(createDepartment);
-router.route('/:id').put(updateDepartment).delete(deleteDepartment);
+// Public routes
+router.route('/').get(getDepartments);
+
+// Protected routes (require admin)
+router.route('/').post(verifyToken, requireAdmin, resourceValidation.create, createDepartment);
+router.route('/:id').put(verifyToken, requireAdmin, resourceValidation.update, updateDepartment).delete(verifyToken, requireAdmin, idValidation, deleteDepartment);
 
 module.exports = router;

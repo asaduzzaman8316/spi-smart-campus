@@ -140,10 +140,10 @@ export default function TeacherManager({ onBack }) {
                 phone: currentTeacher.phone,
                 department: currentTeacher.department,
                 shift: currentTeacher.shift,
-                role: currentTeacher.role,
                 image: currentTeacher.image,
                 id: currentTeacher.id
             };
+            // Don't send role field - let backend use default 'teacher'
 
             if (modalMode === 'add') {
                 await createTeacher(teacherData);
