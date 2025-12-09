@@ -58,8 +58,12 @@ export default function TeacherAccountManager() {
 
     const handleDeleteTeacher = async (teacher) => {
         try {
-            await deleteTeacher(teacher.docId || teacher._id);
-            toast.success("Teacher and Account deleted successfully");
+            const response = await deleteTeacher(teacher.docId || teacher._id);
+            if (response?.emailSent) {
+                toast.success("Teacher deleted and notification email sent");
+            } else {
+                toast.success("Teacher and Account deleted successfully");
+            }
             setDeleteConfirm(null);
             loadTeachers();
         } catch (error) {
@@ -79,7 +83,7 @@ export default function TeacherAccountManager() {
 
         setProcessing(true);
         try {
-            await updateTeacher(selectedTeacher.docId || selectedTeacher._id, {
+            const response = await updateTeacher(selectedTeacher.docId || selectedTeacher._id, {
                 password: generatedPassword
             });
 
@@ -87,7 +91,12 @@ export default function TeacherAccountManager() {
                 email: selectedTeacher.email,
                 password: generatedPassword
             });
-            toast.success("Teacher account created successfully! Credentials displayed.");
+
+            if (response?.emailSent) {
+                toast.success("Account credentials sent to teacher's email!");
+            } else {
+                toast.success("Account created! Credentials displayed (email failed).");
+            }
 
             loadTeachers();
         } catch (error) {

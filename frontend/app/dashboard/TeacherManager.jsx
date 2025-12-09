@@ -99,8 +99,12 @@ export default function TeacherManager({ onBack }) {
 
     const handleDeleteTeacher = async (teacher) => {
         try {
-            await deleteTeacher(teacher.docId);
-            toast.success("Teacher deleted successfully");
+            const response = await deleteTeacher(teacher.docId);
+            if (response?.emailSent) {
+                toast.success("Teacher deleted and notification email sent");
+            } else {
+                toast.success("Teacher deleted successfully");
+            }
             loadTeachers();
             setDeleteConfirm(null);
         } catch (error) {
@@ -135,11 +139,20 @@ export default function TeacherManager({ onBack }) {
                 shift: currentTeacher.shift,
                 image: currentTeacher.image
             };
+
+            // Include password if provided (only for new teachers)
+            if (modalMode === 'add' && currentTeacher.password) {
+                teacherData.password = currentTeacher.password;
+            }
             // Don't send role or id field - let backend use default 'teacher'
 
             if (modalMode === 'add') {
-                await createTeacher(teacherData);
-                toast.success("Teacher added successfully");
+                const response = await createTeacher(teacherData);
+                if (response.emailSent) {
+                    toast.success("Teacher added successfully! Welcome email sent.");
+                } else {
+                    toast.success("Teacher added successfully! (Email failed to send)");
+                }
             } else {
                 await updateTeacher(currentTeacher.docId, teacherData);
                 toast.success("Teacher updated successfully");

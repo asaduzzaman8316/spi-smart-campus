@@ -69,12 +69,12 @@ const createTeacher = async (req, res) => {
             return res.status(400).json({ message: 'Teacher already exists' });
         }
 
+        // Generate password if not provided
+        const plainPassword = password || `${name.replace(/\s/g, '').toLowerCase().slice(0, 5)}${Math.floor(1000 + Math.random() * 9000)}!`;
+
         // Hash password
-        // Default password if not provided? Or make it required?
-        // Let's assume admin provides a temporary password or we generate one.
-        const passwordToHash = password || '123456';
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(passwordToHash, salt);
+        const hashedPassword = await bcrypt.hash(plainPassword, salt);
 
         const teacher = await Teacher.create({
             name,
@@ -86,17 +86,21 @@ const createTeacher = async (req, res) => {
             password: hashedPassword
         });
 
-        // Send email with credentials? (Optional, existing usage suggested it)
-        if (req.body.password) {
-            const { sendAccountCreationEmail } = require('../config/emailService');
-            // logic to send email
+        // Send account creation email with credentials
+        const { sendAccountCreationEmail } = require('../config/emailService');
+        const emailResult = await sendAccountCreationEmail(email, name, plainPassword);
+
+        if (!emailResult.success) {
+            console.error('Failed to send account creation email:', emailResult.error);
+            // Continue even if email fails - account is created
         }
 
         res.status(201).json({
             _id: teacher._id,
             name: teacher.name,
             email: teacher.email,
-            role: teacher.role
+            role: teacher.role,
+            emailSent: emailResult.success
         });
     } catch (error) {
         console.error(error);
@@ -110,11 +114,13 @@ const createTeacher = async (req, res) => {
 const updateTeacher = async (req, res) => {
     try {
         const { password, ...otherUpdates } = req.body;
+        let plainPassword = null;
 
         // If updating password
         if (password) {
             const salt = await bcrypt.genSalt(10);
             otherUpdates.password = await bcrypt.hash(password, salt);
+            plainPassword = password; // Store plain password for email
         }
 
         const teacher = await Teacher.findByIdAndUpdate(req.params.id, otherUpdates, { new: true });
@@ -122,6 +128,22 @@ const updateTeacher = async (req, res) => {
         if (!teacher) {
             return res.status(404).json({ message: 'Teacher not found' });
         }
+
+        // Send email if password was updated
+        if (plainPassword) {
+            const { sendAccountCreationEmail } = require('../config/emailService');
+            const emailResult = await sendAccountCreationEmail(teacher.email, teacher.name, plainPassword);
+
+            if (!emailResult.success) {
+                console.error('Failed to send password update email:', emailResult.error);
+            }
+
+            return res.status(200).json({
+                ...teacher.toObject(),
+                emailSent: emailResult.success
+            });
+        }
+
         res.status(200).json(teacher);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -139,10 +161,22 @@ const deleteTeacher = async (req, res) => {
             return res.status(404).json({ message: 'Teacher not found' });
         }
 
+        // Send account deletion email notification
+        const { sendAccountDeletionEmail } = require('../config/emailService');
+        const emailResult = await sendAccountDeletionEmail(teacher.email, teacher.name);
+
+        if (!emailResult.success) {
+            console.error('Failed to send account deletion email:', emailResult.error);
+            // Continue with deletion even if email fails
+        }
+
         // Look for any related cleanup if needed (e.g. routines)
 
         await Teacher.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: 'Teacher deleted' });
+        res.status(200).json({
+            message: 'Teacher deleted',
+            emailSent: emailResult.success
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
