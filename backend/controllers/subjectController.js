@@ -1,3 +1,4 @@
+const Subject = require('../models/Subject');
 const { createPaginatedResponse } = require('../middleware/pagination');
 
 // @desc    Get all subjects
