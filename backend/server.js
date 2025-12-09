@@ -23,7 +23,20 @@ app.use(morgan('combined')); // HTTP request logging
 
 // CORS
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: (origin, callback) => {
+        const allowedOrigin = process.env.FRONTEND_URL;
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Normalize origins by removing trailing slash for comparison
+        const normalize = (url) => url ? url.replace(/\/$/, '') : '';
+
+        if (normalize(origin) === normalize(allowedOrigin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
 
