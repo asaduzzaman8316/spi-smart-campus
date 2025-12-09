@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { fetchRoutines } from '../../Lib/api';
-import { useSelector } from 'react-redux';
-import { selectUser } from '@/Lib/features/auth/authReducer';
+import { useAuth } from '@/context/AuthContext';
 import { Clock, MapPin, BookOpen, AlertCircle, Calendar, Menu } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useSidebar } from '@/context/SidebarContext';
@@ -10,7 +9,7 @@ import { useSidebar } from '@/context/SidebarContext';
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default function TeacherToday({ onBack }) {
-    const user = useSelector(selectUser);
+    const { user } = useAuth();
     const [todayClasses, setTodayClasses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentDayStr, setCurrentDayStr] = useState('');

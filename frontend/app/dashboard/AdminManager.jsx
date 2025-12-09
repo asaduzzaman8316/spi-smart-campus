@@ -1,8 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { fetchAdmins, createAdmin, deleteAdmin, unregisterAdmin } from '@/Lib/adminApi';
+import { fetchAdmins, createAdmin, deleteAdmin } from '@/Lib/adminApi';
 import { fetchDepartments } from '@/Lib/api';
-import { UserPlus, Trash2, UserX, Search, Shield } from 'lucide-react';
+import { UserPlus, Trash2, Search, Shield } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Ui/Pagination';
 
@@ -74,7 +74,7 @@ export default function AdminManager() {
     };
 
     const handleDelete = async (id, name) => {
-        if (!confirm(`Are you sure you want to delete ${name}? This will also remove their Firebase account.`)) {
+        if (!confirm(`Are you sure you want to delete ${name}?`)) {
             return;
         }
 
@@ -84,20 +84,6 @@ export default function AdminManager() {
             loadAdmins();
         } catch (error) {
             toast.error(error.message || 'Failed to delete admin');
-        }
-    };
-
-    const handleUnregister = async (id, name) => {
-        if (!confirm(`Are you sure you want to unregister ${name}? This will remove their login access.`)) {
-            return;
-        }
-
-        try {
-            await unregisterAdmin(id);
-            toast.success('Admin unregistered successfully');
-            loadAdmins();
-        } catch (error) {
-            toast.error(error.message || 'Failed to unregister admin');
         }
     };
 
@@ -165,9 +151,6 @@ export default function AdminManager() {
                                                 Role
                                             </th>
                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                 Actions
                                             </th>
                                         </tr>
@@ -203,36 +186,16 @@ export default function AdminManager() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${admin.role === 'super_admin'
-                                                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                                                         }`}>
                                                         <Shield size={12} />
                                                         {admin.role === 'super_admin' ? 'Super Admin' : 'Dept Admin'}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    {admin.firebaseUid ? (
-                                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                                            Active
-                                                        </span>
-                                                    ) : (
-                                                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                                            Pending
-                                                        </span>
-                                                    )}
-                                                </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     {admin.role !== 'super_admin' && (
                                                         <div className="flex items-center gap-2">
-                                                            {admin.firebaseUid && (
-                                                                <button
-                                                                    onClick={() => handleUnregister(admin._id, admin.name)}
-                                                                    className="text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300"
-                                                                    title="Unregister"
-                                                                >
-                                                                    <UserX size={18} />
-                                                                </button>
-                                                            )}
                                                             <button
                                                                 onClick={() => handleDelete(admin._id, admin.name)}
                                                                 className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"

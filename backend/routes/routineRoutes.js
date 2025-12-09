@@ -6,7 +6,7 @@ const {
     createOrUpdateRoutine,
     deleteRoutine
 } = require('../controllers/routineController');
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/authMiddleware');
 const { idValidation } = require('../validators/validators');
 const { paginate } = require('../middleware/pagination');
 
@@ -15,7 +15,7 @@ router.route('/').get(paginate, getRoutines);
 router.route('/find').get(findRoutine);
 
 // Protected routes (require admin)
-router.route('/').post(verifyToken, requireAdmin, createOrUpdateRoutine);
-router.route('/:id').delete(verifyToken, requireAdmin, idValidation, deleteRoutine);
+router.route('/').post(protect, authorize('admin'), createOrUpdateRoutine);
+router.route('/:id').delete(protect, authorize('admin'), idValidation, deleteRoutine);
 
 module.exports = router;

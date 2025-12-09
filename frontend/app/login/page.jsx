@@ -1,106 +1,53 @@
-'use client'
-import { useDispatch, useSelector } from "react-redux"
-import { setLogin, selectIsLogin } from "@/Lib/features/auth/authReducer"
 import { useState, useEffect } from "react"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "@/Lib/features/firebase/config"
-import { fetchTeacherByUid } from "@/Lib/api" // Import API
+import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
 import { Lock, Mail, Shield, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function AdminLogin() {
-    const dispatch = useDispatch()
+    const { login, user, loading: authLoading } = useAuth()
     const router = useRouter()
-    const isLogin = useSelector(selectIsLogin)
+
+    // Local loading state for the form submission
+    const [submitting, setSubmitting] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [success, setSuccess] = useState('')
-    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
-        if (isLogin) {
+        if (user && !authLoading) {
             router.push('/dashboard')
         }
-    }, [isLogin, router])
+    }, [user, authLoading, router])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
         setSuccess('')
-        setLoading(true)
+        setSubmitting(true)
 
         try {
-            // Sign in with Firebase
-            const userCredential = await signInWithEmailAndPassword(auth, email, password)
-            const user = userCredential.user;
+            const result = await login(email, password)
 
-            // Check if user is a teacher
-            let role = 'admin'; // Default to admin
-            let teacherProfile = null;
-
-            try {
-                const teacherData = await fetchTeacherByUid(user.uid);
-                if (teacherData && teacherData._id) {
-                    role = 'teacher';
-                    teacherProfile = teacherData;
-                }
-            } catch (err) {
-                console.log("Not a teacher or error fetching profile:", err);
-                // If 404, remains admin
+            if (result.success) {
+                setSuccess('Login successful! Redirecting...')
+                // Redirect is handled in AuthContext, but let's clear form
+                setEmail('')
+                setPassword('')
+            } else {
+                setError(result.error || 'Login failed')
             }
-
-            // Login successful
-            dispatch(setLogin({
-                email: email,
-                uid: user.uid,
-                role: role,
-                ...teacherProfile // Spread teacher details if exists
-            }))
-
-            setSuccess('Login successful! Redirecting...')
-
-            // Clear form
-            setEmail('')
-            setPassword('')
-
-            // Redirect after 1 second
-            setTimeout(() => {
-                router.push('/dashboard')
-            }, 1000)
-        } catch (error) {
-            // Handle Firebase errors
-            let errorMessage = 'Invalid email or password'
-
-            switch (error.code) {
-                case 'auth/user-not-found':
-                    errorMessage = 'No user found with this email'
-                    break
-                case 'auth/wrong-password':
-                    errorMessage = 'Incorrect password'
-                    break
-                case 'auth/invalid-email':
-                    errorMessage = 'Invalid email address'
-                    break
-                case 'auth/user-disabled':
-                    errorMessage = 'This account has been disabled'
-                    break
-                case 'auth/too-many-requests':
-                    errorMessage = 'Too many failed attempts. Please try again later'
-                    break
-                case 'auth/network-request-failed':
-                    errorMessage = 'Network error. Please check your connection'
-                    break
-                default:
-                    errorMessage = 'Login failed. Please try again'
-            }
-
-            setError(errorMessage)
-            console.error('Login error:', error)
+        } catch (err) {
+            setError('An unexpected error occurred')
+            console.error(err)
         } finally {
-            setLoading(false)
+            setSubmitting(false)
         }
     }
+
+    // Rename submitting to loading for UI compatibility
+    const loading = submitting || authLoading;
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4 py-12 relative overflow-hidden pt-18 transition-colors duration-300">

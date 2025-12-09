@@ -1,5 +1,6 @@
 const Admin = require('../models/Admin');
 const { createPaginatedResponse } = require('../middleware/pagination');
+const bcrypt = require('bcryptjs');
 
 // @desc    Get all admins
 // @route   GET /api/admins
@@ -10,7 +11,7 @@ const getAdmins = async (req, res) => {
 
         const total = await Admin.countDocuments();
         const admins = await Admin.find()
-            .select('-__v')
+            .select('-__v -password')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 })
@@ -27,8 +28,8 @@ const getAdmins = async (req, res) => {
 // @access  Private (Any Admin)
 const getAdminProfile = async (req, res) => {
     try {
-        const admin = await Admin.findOne({ firebaseUid: req.user.uid })
-            .select('-__v');
+        // req.user is set by authMiddleware
+        const admin = await Admin.findById(req.user._id).select('-__v -password');
 
         if (!admin) {
             return res.status(404).json({ message: 'Admin profile not found' });
@@ -45,13 +46,17 @@ const getAdminProfile = async (req, res) => {
 // @access  Private (Super Admin only)
 const createAdmin = async (req, res) => {
     try {
-        const { name, email, department, phone, image } = req.body;
+        const { name, email, department, phone, image, password } = req.body;
 
         // Check if admin already exists
         const existingAdmin = await Admin.findOne({ email });
         if (existingAdmin) {
             return res.status(400).json({ message: 'Admin with this email already exists' });
         }
+
+        const passwordToHash = password || 'admin123';
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(passwordToHash, salt);
 
         // Create new department admin
         const admin = await Admin.create({
@@ -60,50 +65,26 @@ const createAdmin = async (req, res) => {
             department,
             phone,
             image,
-            role: 'department_admin'
+            role: 'department_admin',
+            password: hashedPassword
         });
 
-        res.status(201).json(admin);
+        res.status(201).json({
+            _id: admin._id,
+            name: admin.name,
+            email: admin.email,
+            role: admin.role
+        });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
-// @desc    Register admin (link Firebase UID)
+// @desc    Register admin (link Firebase UID) -> Deprecated
 // @route   POST /api/admins/register
 // @access  Public (with rate limiting)
 const registerAdmin = async (req, res) => {
-    try {
-        const { email, firebaseUid, password } = req.body;
-
-        const admin = await Admin.findOne({ email });
-        if (!admin) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-
-        if (admin.firebaseUid) {
-            return res.status(400).json({ message: 'Admin already registered' });
-        }
-
-        admin.firebaseUid = firebaseUid;
-        await admin.save();
-
-        // Send email with credentials if password provided
-        if (password) {
-            const { sendAccountCreationEmail } = require('../config/emailService');
-            const emailResult = await sendAccountCreationEmail(email, admin.name, password);
-
-            if (emailResult.success) {
-                console.log(`Account creation email sent to ${email}`);
-            } else {
-                console.error(`Failed to send email to ${email}:`, emailResult.error);
-            }
-        }
-
-        res.status(200).json(admin);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    res.status(501).json({ message: 'Register functionality deprecated in JWT version.' });
 };
 
 // @desc    Update admin profile
@@ -111,9 +92,9 @@ const registerAdmin = async (req, res) => {
 // @access  Private (Any Admin)
 const updateAdminProfile = async (req, res) => {
     try {
-        const { name, phone, image } = req.body;
+        const { name, phone, image, password } = req.body;
 
-        const admin = await Admin.findOne({ firebaseUid: req.user.uid });
+        const admin = await Admin.findById(req.user._id);
         if (!admin) {
             return res.status(404).json({ message: 'Admin not found' });
         }
@@ -123,8 +104,18 @@ const updateAdminProfile = async (req, res) => {
         if (phone !== undefined) admin.phone = phone;
         if (image !== undefined) admin.image = image;
 
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            admin.password = await bcrypt.hash(password, salt);
+        }
+
         await admin.save();
-        res.json(admin);
+
+        // Return without password
+        const adminResponse = admin.toObject();
+        delete adminResponse.password;
+
+        res.json(adminResponse);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -146,19 +137,6 @@ const deleteAdmin = async (req, res) => {
             return res.status(403).json({ message: 'Cannot delete super admin' });
         }
 
-        // Delete from Firebase if exists
-        if (admin.firebaseUid) {
-            const admin_firebase = require('../config/firebaseAdmin');
-            try {
-                if (admin_firebase.apps.length) {
-                    await admin_firebase.auth().deleteUser(admin.firebaseUid);
-                    console.log(`Deleted Firebase user: ${admin.firebaseUid}`);
-                }
-            } catch (firebaseError) {
-                console.error('Error deleting Firebase user:', firebaseError);
-            }
-        }
-
         await Admin.findByIdAndDelete(req.params.id);
         res.json({ message: 'Admin deleted successfully' });
     } catch (error) {
@@ -166,52 +144,11 @@ const deleteAdmin = async (req, res) => {
     }
 };
 
-// @desc    Unregister admin (remove Firebase access)
+// @desc    Unregister admin (remove Firebase access) -> Deprecated
 // @route   PUT /api/admins/unregister/:id
 // @access  Private (Super Admin only)
 const unregisterAdmin = async (req, res) => {
-    try {
-        const admin = await Admin.findById(req.params.id);
-
-        if (!admin) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-
-        if (admin.role === 'super_admin') {
-            return res.status(403).json({ message: 'Cannot unregister super admin' });
-        }
-
-        // Send deletion email notification
-        if (admin.email && admin.name) {
-            const { sendAccountDeletionEmail } = require('../config/emailService');
-            const emailResult = await sendAccountDeletionEmail(admin.email, admin.name);
-
-            if (emailResult.success) {
-                console.log(`Account deletion email sent to ${admin.email}`);
-            } else {
-                console.error(`Failed to send deletion email to ${admin.email}:`, emailResult.error);
-            }
-        }
-
-        // Delete from Firebase
-        if (admin.firebaseUid) {
-            const admin_firebase = require('../config/firebaseAdmin');
-            try {
-                if (admin_firebase.apps.length) {
-                    await admin_firebase.auth().deleteUser(admin.firebaseUid);
-                }
-            } catch (firebaseError) {
-                console.error('Error deleting Firebase user:', firebaseError);
-            }
-        }
-
-        admin.firebaseUid = undefined;
-        await admin.save();
-
-        res.json({ message: 'Admin unregistered successfully', admin });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    res.status(501).json({ message: 'Unregister functionality deprecated in JWT version.' });
 };
 
 module.exports = {
@@ -223,3 +160,4 @@ module.exports = {
     deleteAdmin,
     unregisterAdmin
 };
+

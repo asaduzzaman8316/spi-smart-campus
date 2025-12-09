@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { selectUser } from '@/Lib/features/auth/authReducer';
+import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoutineBuilder from "./RoutineBuilder";
 import RoutineViewer from "./RoutineViewer";
@@ -20,7 +19,7 @@ export default function DashboardPage() {
     const [view, setView] = useState('home'); // 'home', 'create', 'show', 'teachers', 'subjects', 'rooms', 'accounts', 'my-routine', 'today-routine', 'profile'
     const [editingRoutine, setEditingRoutine] = useState(null);
     const { isCollapsed } = useSidebar();
-    const user = useSelector(selectUser);
+    const { user } = useAuth();
 
     // Redirect teacher to profile if they are on home view
     // We do this during render to avoid cascading updates/flicker

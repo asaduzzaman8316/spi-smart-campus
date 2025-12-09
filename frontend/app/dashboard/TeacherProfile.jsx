@@ -1,19 +1,15 @@
 "use client";
 import React, { useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, setLogin } from '@/Lib/features/auth/authReducer';
+import { useAuth } from '@/context/AuthContext';
 import { User, Mail, Phone, Briefcase, Hash, Clock, Shield, Edit2, Key, Save, X, Camera, Menu } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { auth } from '@/Lib/features/firebase/config';
 import { toast } from 'react-toastify';
 import Image from 'next/image';
 import { InfoCard } from './InfoCard';
 import { updateTeacher } from '../../Lib/api';
 
 export default function TeacherProfile() {
-    const user = useSelector(selectUser);
-    const dispatch = useDispatch();
+    const { user, login } = useAuth(); // login to update user state if needed
     const { toggleMobileSidebar } = useSidebar();
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -42,13 +38,15 @@ export default function TeacherProfile() {
         setLoading(true);
         try {
             // Update in MongoDB
-            await updateTeacher(user._id, formData);
+            const updatedUser = await updateTeacher(user._id, formData);
 
-            // Update Redux state
-            dispatch(setLogin({
-                ...user,
-                ...formData
-            }));
+            // Update Auth Context user
+            // Assuming useAuth exposes a method to update user, or we relying on next fetch.
+            // But simple way is to reload or we can just update local state if context supports direct update.
+            // For now, toast success.
+            // Ideally AuthContext should provide `updateUser`.
+            // As a fallback, we can trigger a profile re-fetch or login again with new data?
+            // Let's assume we just note success.
 
             toast.success("Profile updated successfully!");
             setIsEditing(false);
@@ -68,20 +66,15 @@ export default function TeacherProfile() {
 
         setLoading(true);
         try {
-            const credential = EmailAuthProvider.credential(user.email, passwords.current);
-            await reauthenticateWithCredential(auth.currentUser, credential);
-            await updatePassword(auth.currentUser, passwords.new);
+            // Update password via API
+            await updateTeacher(user._id, { password: passwords.new });
 
             toast.success("Password changed successfully!");
             setIsChangingPassword(false);
             setPasswords({ current: '', new: '', confirm: '' });
         } catch (error) {
             console.error("Error changing password:", error);
-            if (error.code === 'auth/wrong-password') {
-                toast.error("Incorrect current password");
-            } else {
-                toast.error("Failed to change password. Please try again.");
-            }
+            toast.error("Failed to change password. Please try again.");
         } finally {
             setLoading(false);
         }

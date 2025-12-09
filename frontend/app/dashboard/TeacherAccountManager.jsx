@@ -1,24 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { fetchTeachers, registerTeacher, deleteTeacher, updateTeacher, unregisterTeacher } from '../../Lib/api';
-import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { fetchTeachers, deleteTeacher, updateTeacher } from '../../Lib/api';
 import { UserPlus, Check, X, Loader2, Search, User, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Image from 'next/image';
-
-// Secondary Firebase App for creating users without logging out admin
-const secondaryApp = initializeApp({
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-}, "SecondaryApp");
-
-const secondaryAuth = getAuth(secondaryApp);
 
 export default function TeacherAccountManager() {
     const [teachers, setTeachers] = useState([]);
@@ -52,7 +38,6 @@ export default function TeacherAccountManager() {
     const loadTeachers = async () => {
         try {
             const data = await fetchTeachers();
-            // Map _id as docId if needed, though data usually comes with _id
             setTeachers(data.map(d => ({ ...d, docId: d._id })));
             setFilteredTeachers(data.map(d => ({ ...d, docId: d._id })));
         } catch (error) {
@@ -83,20 +68,7 @@ export default function TeacherAccountManager() {
         }
     };
 
-    const handleUnregisterTeacher = async (teacher) => {
-        try {
-            await unregisterTeacher(teacher.docId || teacher._id);
-            toast.success("Teacher account unregistered (Firebase User Deleted)");
-            setDeleteConfirm(null);
-            loadTeachers();
-        } catch (error) {
-            console.error("Error unregistering teacher:", error);
-            toast.error("Failed to unregister teacher");
-        }
-    };
-
     const generatePassword = (name) => {
-        // Simple password generation: First name + random number + special char
         const cleanName = name.replace(/\s/g, '').toLowerCase().slice(0, 5);
         const randomNum = Math.floor(1000 + Math.random() * 9000);
         return `${cleanName}${randomNum}!`;
@@ -107,34 +79,20 @@ export default function TeacherAccountManager() {
 
         setProcessing(true);
         try {
-            // 1. Create user in Firebase (Secondary App)
-            const userCredential = await createUserWithEmailAndPassword(secondaryAuth, selectedTeacher.email, generatedPassword);
-            const user = userCredential.user;
-
-            // 2. Register teacher in Backend (Link UID)
-            await registerTeacher({
-                email: selectedTeacher.email,
-                firebaseUid: user.uid,
-                role: 'teacher',
-                password: generatedPassword // Send password for email notification
+            await updateTeacher(selectedTeacher.docId || selectedTeacher._id, {
+                password: generatedPassword
             });
 
-            // 3. Success
             setCreatedAccount({
                 email: selectedTeacher.email,
                 password: generatedPassword
             });
-            toast.success("Teacher account created successfully! Login credentials sent to email.");
+            toast.success("Teacher account created successfully! Credentials displayed.");
 
-            // Refresh list
             loadTeachers();
         } catch (error) {
             console.error("Error creating account:", error);
-            let msg = "Failed to create account.";
-            if (error.code === 'auth/email-already-in-use') {
-                msg = "Email is already registered in Firebase.";
-            }
-            toast.error(msg);
+            toast.error("Failed to create account.");
         } finally {
             setProcessing(false);
         }
@@ -198,7 +156,7 @@ export default function TeacherAccountManager() {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <h3 className="font-semibold text-gray-900 dark:text-white">{teacher.name}</h3>
-                                    {teacher.firebaseUid && (
+                                    {teacher.hasAccount && (
                                         <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs rounded-full font-medium">
                                             Active
                                         </span>
@@ -221,11 +179,18 @@ export default function TeacherAccountManager() {
                             </div>
                         </div>
 
-                        {teacher.firebaseUid ? (
+                        {teacher.hasAccount ? (
                             <div className="flex items-center gap-3">
                                 <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-medium rounded-full flex items-center gap-1">
-                                    <Check size={12} /> Registered
+                                    <Check size={12} /> Account Ready
                                 </span>
+                                <button
+                                    onClick={() => handleCreateAccountClick(teacher)}
+                                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                    title="Reset Password"
+                                >
+                                    <UserPlus size={18} />
+                                </button>
                                 <button
                                     onClick={() => setDeleteConfirm(teacher)}
                                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -254,7 +219,7 @@ export default function TeacherAccountManager() {
                     <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                         <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                {createdAccount ? 'Account Created' : 'Create Teacher Account'}
+                                {createdAccount ? 'Account Created' : (selectedTeacher?.hasAccount ? 'Reset Password' : 'Create Teacher Account')}
                             </h3>
                             <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
                                 <X size={20} />
@@ -265,7 +230,7 @@ export default function TeacherAccountManager() {
                             {createdAccount ? (
                                 <div className="space-y-4">
                                     <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-100 dark:border-green-900/30">
-                                        <p className="text-green-800 dark:text-green-200 text-sm mb-2">Account successfully created! Please share these credentials with the teacher.</p>
+                                        <p className="text-green-800 dark:text-green-200 text-sm mb-2">Account updated! Please share these credentials.</p>
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
                                                 <span className="text-gray-500 dark:text-gray-400 text-xs">Email:</span>
@@ -300,14 +265,6 @@ export default function TeacherAccountManager() {
                                         <div className="flex-1">
                                             <p className="font-bold text-lg text-gray-900 dark:text-white">{selectedTeacher.name}</p>
                                             <p className="text-sm text-gray-600 dark:text-gray-400 break-all">{selectedTeacher.email}</p>
-                                            <div className="flex gap-2 mt-2">
-                                                <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-medium">
-                                                    {selectedTeacher.department}
-                                                </span>
-                                                <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded font-medium">
-                                                    {selectedTeacher.shift} Shift
-                                                </span>
-                                            </div>
                                         </div>
                                     </div>
 
@@ -319,7 +276,6 @@ export default function TeacherAccountManager() {
                                             onChange={(e) => setGeneratedPassword(e.target.value)}
                                             className="w-full p-3 bg-gray-100 dark:bg-gray-900 rounded-lg font-mono text-center text-lg tracking-wider border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         />
-                                        <p className="text-xs text-gray-400 text-center">This password will be assigned to this account.</p>
                                     </div>
 
                                     <button
@@ -328,7 +284,7 @@ export default function TeacherAccountManager() {
                                         className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
                                         {processing ? <Loader2 className="animate-spin" size={20} /> : <UserPlus size={20} />}
-                                        {processing ? 'Creating...' : 'Create Account'}
+                                        {processing ? 'Processing...' : (selectedTeacher?.hasAccount ? 'Reset Password' : 'Create Account')}
                                     </button>
                                 </div>
                             )}
@@ -337,7 +293,7 @@ export default function TeacherAccountManager() {
                 </div>
             )}
 
-            {/* Delete/Unregister Confirmation Modal */}
+            {/* Delete Confirmation Modal */}
             {deleteConfirm && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full border border-gray-200 dark:border-slate-700 shadow-2xl">
@@ -347,41 +303,26 @@ export default function TeacherAccountManager() {
                                     <Trash2 className="text-red-500" size={24} />
                                 </div>
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                                    {deleteConfirm.firebaseUid ? 'Manage Account Deletion' : 'Delete Teacher'}
+                                    Delete Teacher
                                 </h2>
                             </div>
                             <p className="text-gray-600 dark:text-slate-300 mb-6">
-                                {deleteConfirm.firebaseUid
-                                    ? <span>What would you like to do with <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.name}</span>&apos;s account?</span>
-                                    : <span>Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.name}</span>? This action cannot be undone.</span>
-                                }
+                                Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.name}</span>? This action cannot be undone and will remove their account and profile.
                             </p>
 
-                            <div className="space-y-3">
-                                {deleteConfirm.firebaseUid && (
-                                    <button
-                                        onClick={() => handleUnregisterTeacher(deleteConfirm)}
-                                        className="w-full flex items-center justify-center px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors font-medium"
-                                    >
-                                        Unregister Account Only
-                                        <span className="block text-xs font-normal ml-2 opacity-90">(Keeps Profile)</span>
-                                    </button>
-                                )}
-
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setDeleteConfirm(null)}
-                                        className="flex-1 px-6 py-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-white rounded-lg transition-colors font-medium "
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteTeacher(deleteConfirm)}
-                                        className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
-                                    >
-                                        {deleteConfirm.firebaseUid ? 'Delete Everything' : 'Delete'}
-                                    </button>
-                                </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    className="flex-1 px-6 py-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-white rounded-lg transition-colors font-medium "
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteTeacher(deleteConfirm)}
+                                    className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
+                                >
+                                    Delete
+                                </button>
                             </div>
                         </div>
                     </div>

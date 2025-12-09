@@ -9,7 +9,7 @@ const {
     getTeacherByUid,
     unregisterTeacher
 } = require('../controllers/teacherController');
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { protect, authorize, authorizeOwnerOrAdmin } = require('../middleware/authMiddleware');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { teacherValidation, idValidation } = require('../validators/validators');
 const { paginate } = require('../middleware/pagination');
@@ -18,10 +18,11 @@ const { paginate } = require('../middleware/pagination');
 router.route('/profile/:uid').get(getTeacherByUid);
 
 // Protected routes (require admin)
-router.route('/').get(verifyToken, requireAdmin, paginate, getTeachers).post(verifyToken, requireAdmin, teacherValidation.create, createTeacher);
+router.route('/').get(protect, authorize('admin'), paginate, getTeachers).post(protect, authorize('admin'), teacherValidation.create, createTeacher);
 router.route('/register').post(authLimiter, teacherValidation.register, registerTeacher);
 
-router.route('/:id').put(verifyToken, requireAdmin, teacherValidation.update, updateTeacher).delete(verifyToken, requireAdmin, idValidation, deleteTeacher);
-router.route('/unregister/:id').put(verifyToken, requireAdmin, idValidation, unregisterTeacher);
+// Update: Allow admin OR the teacher themselves to update their profile
+router.route('/:id').put(protect, authorizeOwnerOrAdmin, teacherValidation.update, updateTeacher).delete(protect, authorize('admin'), idValidation, deleteTeacher);
+router.route('/unregister/:id').put(protect, authorize('admin'), idValidation, unregisterTeacher);
 
 module.exports = router;

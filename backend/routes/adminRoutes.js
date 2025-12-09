@@ -9,7 +9,7 @@ const {
     deleteAdmin,
     unregisterAdmin
 } = require('../controllers/adminController');
-const { verifyToken, requireSuperAdmin, requireAnyAdmin } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/authMiddleware');
 const { authLimiter } = require('../middleware/rateLimiter');
 const { paginate } = require('../middleware/pagination');
 const { idValidation } = require('../validators/validators');
@@ -19,18 +19,18 @@ router.route('/register').post(authLimiter, registerAdmin);
 
 // Protected routes (any admin)
 router.route('/profile')
-    .get(verifyToken, requireAnyAdmin, getAdminProfile)
-    .put(verifyToken, requireAnyAdmin, updateAdminProfile);
+    .get(protect, authorize('admin'), getAdminProfile)
+    .put(protect, authorize('admin'), updateAdminProfile);
 
 // Protected routes (super admin only)
 router.route('/')
-    .get(verifyToken, requireSuperAdmin, paginate, getAdmins)
-    .post(verifyToken, requireSuperAdmin, createAdmin);
+    .get(protect, authorize('super_admin'), paginate, getAdmins)
+    .post(protect, authorize('super_admin'), createAdmin);
 
 router.route('/:id')
-    .delete(verifyToken, requireSuperAdmin, idValidation, deleteAdmin);
+    .delete(protect, authorize('super_admin'), idValidation, deleteAdmin);
 
 router.route('/unregister/:id')
-    .put(verifyToken, requireSuperAdmin, idValidation, unregisterAdmin);
+    .put(protect, authorize('super_admin'), idValidation, unregisterAdmin);
 
 module.exports = router;

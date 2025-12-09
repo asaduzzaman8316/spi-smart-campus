@@ -136,7 +136,7 @@ const sendAccountCreationEmail = async (teacherEmail, teacherName, password) => 
                         </div>
                         
                         <div style="text-align: center;">
-                            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="button text-white">
+                            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" class="button">
                                 Login to Dashboard
                             </a>
                         </div>

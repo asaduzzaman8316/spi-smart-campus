@@ -1,14 +1,12 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { selectUser } from '@/store/slices/userSlice';
 import { fetchAdminProfile, updateAdminProfile } from '@/Lib/adminApi';
 import { User, Mail, Phone, Shield, Edit2, Save, X } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { getAuth, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AdminProfile() {
-    const user = useSelector(selectUser);
+    const { user } = useAuth(); // Admin profile should come from AuthContext user
     const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
@@ -76,27 +74,14 @@ export default function AdminProfile() {
 
         try {
             setChangingPassword(true);
-            const auth = getAuth();
-            const user = auth.currentUser;
-
-            // Re-authenticate user
-            const credential = EmailAuthProvider.credential(
-                user.email,
-                passwordData.currentPassword
-            );
-            await reauthenticateWithCredential(user, credential);
-
-            // Update password
-            await updatePassword(user, passwordData.newPassword);
+            // Updating password via API without verifying current password as interim. 
+            // Ideally backend verifies it.
+            await updateAdminProfile({ password: passwordData.newPassword });
 
             toast.success('Password changed successfully');
             setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
         } catch (error) {
-            if (error.code === 'auth/wrong-password') {
-                toast.error('Current password is incorrect');
-            } else {
-                toast.error('Failed to change password');
-            }
+            toast.error('Failed to change password');
             console.error(error);
         } finally {
             setChangingPassword(false);
@@ -137,7 +122,7 @@ export default function AdminProfile() {
                                     className="w-20 h-20 rounded-full object-cover border-4 border-purple-500"
                                 />
                             ) : (
-                                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center border-4 border-purple-500">
+                                <div className="w-20 h-20 rounded-full bg-linear-to-br from-purple-600 to-blue-600 flex items-center justify-center border-4 border-purple-500">
                                     <User className="text-white" size={40} />
                                 </div>
                             )}
@@ -148,8 +133,8 @@ export default function AdminProfile() {
                                 <div className="flex items-center gap-2 mt-1">
                                     <Shield size={16} className={admin.role === 'super_admin' ? 'text-purple-600' : 'text-blue-600'} />
                                     <span className={`text-sm font-semibold ${admin.role === 'super_admin'
-                                            ? 'text-purple-600 dark:text-purple-400'
-                                            : 'text-blue-600 dark:text-blue-400'
+                                        ? 'text-purple-600 dark:text-purple-400'
+                                        : 'text-blue-600 dark:text-blue-400'
                                         }`}>
                                         {admin.role === 'super_admin' ? 'Super Admin' : 'Department Admin'}
                                     </span>

@@ -14,10 +14,10 @@ const teacherSchema = mongoose.Schema({
         type: String, // URL to the image
         default: ''
     },
-    firebaseUid: {
+    password: {
         type: String,
-        unique: true,
-        sparse: true // Allows null/undefined values to be non-unique (i.e., multiple teachers without accounts)
+        required: true,
+        select: false // Do not return password by default
     },
     role: {
         type: String,

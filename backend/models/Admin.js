@@ -10,10 +10,10 @@ const adminSchema = mongoose.Schema({
         required: true,
         unique: true
     },
-    firebaseUid: {
+    password: {
         type: String,
-        unique: true,
-        sparse: true // Allows null/undefined values to be non-unique
+        required: true,
+        select: false
     },
     role: {
         type: String,

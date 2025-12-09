@@ -1,61 +1,41 @@
-import { BASE_URL } from './config';
-
-const handleResponse = async (response) => {
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Something went wrong' }));
-        throw new Error(error.message || 'API Error');
-    }
-    return response.json();
-};
+import api from './api';
 
 // Admin APIs
 export const fetchAdminProfile = async () => {
-    const res = await fetch(`${BASE_URL}/admins/profile`);
-    return handleResponse(res);
+    const { data } = await api.get('/admins/profile');
+    return data;
 };
 
+
 export const updateAdminProfile = async (data) => {
-    const res = await fetch(`${BASE_URL}/admins/profile`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const { data: responseData } = await api.put('/admins/profile', data);
+    return responseData;
 };
 
 export const fetchAdmins = async (page = 1, limit = 20) => {
-    const res = await fetch(`${BASE_URL}/admins?page=${page}&limit=${limit}`);
-    return handleResponse(res);
+    const { data } = await api.get(`/admins?page=${page}&limit=${limit}`);
+    return data;
 };
 
 export const createAdmin = async (data) => {
-    const res = await fetch(`${BASE_URL}/admins`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    const { data: responseData } = await api.post('/admins', data);
+    return responseData;
 };
 
+// Register is deprecated/removed in JWT version, but keeping signature for now or removing?
+// Let's keep it but throw error or point to create
 export const registerAdmin = async (data) => {
-    const res = await fetch(`${BASE_URL}/admins/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-    });
-    return handleResponse(res);
+    // This endpoint is 501 on backend now
+    const { data: responseData } = await api.post('/admins/register', data);
+    return responseData;
 };
 
 export const deleteAdmin = async (id) => {
-    const res = await fetch(`${BASE_URL}/admins/${id}`, {
-        method: 'DELETE',
-    });
-    return handleResponse(res);
+    const { data } = await api.delete(`/admins/${id}`);
+    return data;
 };
 
 export const unregisterAdmin = async (id) => {
-    const res = await fetch(`${BASE_URL}/admins/unregister/${id}`, {
-        method: 'PUT',
-    });
-    return handleResponse(res);
+    const { data } = await api.put(`/admins/unregister/${id}`);
+    return data;
 };

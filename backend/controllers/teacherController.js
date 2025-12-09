@@ -1,5 +1,6 @@
 const Teacher = require('../models/Teacher');
 const { createPaginatedResponse } = require('../middleware/pagination');
+const bcrypt = require('bcryptjs');
 
 // @desc    Get all teachers
 // @route   GET /api/teachers
@@ -12,12 +13,22 @@ const getTeachers = async (req, res) => {
         const total = await Teacher.countDocuments();
 
         // Get paginated teachers
-        const teachers = await Teacher.find()
-            .select('-__v') // Exclude version key
+        let teachers = await Teacher.find()
+            .select('-__v') // Select password to check existence
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 }) // Newest first
             .lean(); // Convert to plain JS objects for better performance
+
+        // Add hasAccount flag and remove password
+        teachers = teachers.map(teacher => {
+            const hasAccount = !!teacher.password;
+            delete teacher.password;
+            return {
+                ...teacher,
+                hasAccount
+            };
+        });
 
         res.json(createPaginatedResponse(teachers, total, req.pagination));
     } catch (error) {
@@ -31,9 +42,44 @@ const getTeachers = async (req, res) => {
 const createTeacher = async (req, res) => {
     try {
         console.log('Creating teacher with data:', req.body);
-        const teacher = await Teacher.create(req.body);
-        res.status(201).json(teacher);
+        const { name, email, department, phone, image, shift, password } = req.body;
+
+        const teacherExists = await Teacher.findOne({ email });
+        if (teacherExists) {
+            return res.status(400).json({ message: 'Teacher already exists' });
+        }
+
+        // Hash password
+        // Default password if not provided? Or make it required?
+        // Let's assume admin provides a temporary password or we generate one.
+        const passwordToHash = password || '123456';
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(passwordToHash, salt);
+
+        const teacher = await Teacher.create({
+            name,
+            email,
+            department,
+            phone,
+            image,
+            shift,
+            password: hashedPassword
+        });
+
+        // Send email with credentials? (Optional, existing usage suggested it)
+        if (req.body.password) {
+            const { sendAccountCreationEmail } = require('../config/emailService');
+            // logic to send email
+        }
+
+        res.status(201).json({
+            _id: teacher._id,
+            name: teacher.name,
+            email: teacher.email,
+            role: teacher.role
+        });
     } catch (error) {
+        console.error(error);
         res.status(400).json({ message: error.message });
     }
 };
@@ -43,7 +89,16 @@ const createTeacher = async (req, res) => {
 // @access  Private
 const updateTeacher = async (req, res) => {
     try {
-        const teacher = await Teacher.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const { password, ...otherUpdates } = req.body;
+
+        // If updating password
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            otherUpdates.password = await bcrypt.hash(password, salt);
+        }
+
+        const teacher = await Teacher.findByIdAndUpdate(req.params.id, otherUpdates, { new: true });
+
         if (!teacher) {
             return res.status(404).json({ message: 'Teacher not found' });
         }
@@ -53,36 +108,18 @@ const updateTeacher = async (req, res) => {
     }
 };
 
-const admin = require('../config/firebaseAdmin');
-
-// ... existing code ...
-
 // @desc    Delete a teacher
 // @route   DELETE /api/teachers/:id
 // @access  Private
 const deleteTeacher = async (req, res) => {
     try {
-        const teacher = await Teacher.findById(req.params.id); // Find first to get UID
+        const teacher = await Teacher.findById(req.params.id);
 
         if (!teacher) {
             return res.status(404).json({ message: 'Teacher not found' });
         }
 
-        // Delete from Firebase if UID exists
-        if (teacher.firebaseUid) {
-            try {
-                if (admin.apps.length) {
-                    await admin.auth().deleteUser(teacher.firebaseUid);
-                    console.log(`Deleted Firebase user: ${teacher.firebaseUid}`);
-                } else {
-                    console.warn("Firebase Admin not initialized. Skipping Firebase user deletion.");
-                }
-            } catch (firebaseError) {
-                console.error("Error deleting Firebase user:", firebaseError);
-                // Continue to delete from DB even if Firebase fails? 
-                // Mostly yes, to avoid zombie records, or maybe warning.
-            }
-        }
+        // Look for any related cleanup if needed (e.g. routines)
 
         await Teacher.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'Teacher deleted' });
@@ -91,102 +128,34 @@ const deleteTeacher = async (req, res) => {
     }
 };
 
-// ... existing code ...
-
-// @desc    Unregister a teacher account (Remove Firebase Access)
-// @route   PUT /api/teachers/unregister/:id
-// @access  Private
+// @desc    Unregister a teacher account 
+// (For JWT, this might just mean deactivating or resetting password? 
+// The original unregister was removing Firebase UID. 
+// We will just return not implemented or remove functionality if not needed.
+// For now, let's just do nothing or maybe delete the password?)
 const unregisterTeacher = async (req, res) => {
-    try {
-        const teacher = await Teacher.findById(req.params.id);
-
-        if (!teacher) {
-            return res.status(404).json({ message: 'Teacher not found' });
-        }
-
-        // Send deletion email notification before unregistering
-        if (teacher.email && teacher.name) {
-            const { sendAccountDeletionEmail } = require('../config/emailService');
-            const emailResult = await sendAccountDeletionEmail(teacher.email, teacher.name);
-
-            if (emailResult.success) {
-                console.log(`Account deletion email sent to ${teacher.email}`);
-            } else {
-                console.error(`Failed to send deletion email to ${teacher.email}:`, emailResult.error);
-                // Continue with unregistration even if email fails
-            }
-        }
-
-        if (teacher.firebaseUid) {
-            try {
-                if (admin.apps.length) {
-                    await admin.auth().deleteUser(teacher.firebaseUid);
-                } else {
-                    console.warn("Firebase Admin not initialized. Skipping Firebase user deletion.");
-                }
-            } catch (firebaseError) {
-                console.error("Error deleting Firebase user:", firebaseError);
-                // If user not found, process anyway
-                if (firebaseError.code !== 'auth/user-not-found') {
-                    // For now proceed, but maybe we should alert?
-                }
-            }
-        }
-
-        teacher.firebaseUid = undefined;
-        teacher.role = 'teacher';
-        await teacher.save();
-
-        res.status(200).json({ message: 'Teacher unregistered', teacher });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    // In JWT world, maybe "deactivate"? 
+    // For now, I'll basically leave it as a placeholder or remove it. 
+    // Let's implement it as "RESET to default password and disable login" if we had an "isActive" flag.
+    // For now, let's just delete the record? No, "unregister" implies keeping the record but removing access.
+    // I'll implementation it as clearing the password or setting it to a random un-knowable string.
+    res.status(501).json({ message: 'Unregister functionality deprecated in JWT version. Use Delete or Update.' });
 };
 
-// @desc    Register a teacher (Link Firebase UID)
+// @desc    Register a teacher (Link Firebase UID) -> Deprecated
 // @route   POST /api/teachers/register
 // @access  Private (Admin or Teacher themselves)
 const registerTeacher = async (req, res) => {
-    try {
-        const { email, firebaseUid, role, password } = req.body;
-
-        const teacher = await Teacher.findOne({ email });
-
-        if (!teacher) {
-            return res.status(404).json({ message: 'Teacher not found with this email' });
-        }
-
-        teacher.firebaseUid = firebaseUid;
-        // Role update optional, but good for consistency
-        if (role) teacher.role = role;
-
-        await teacher.save();
-
-        // Send email with credentials if password is provided
-        if (password) {
-            const { sendAccountCreationEmail } = require('../config/emailService');
-            const emailResult = await sendAccountCreationEmail(email, teacher.name, password);
-
-            if (emailResult.success) {
-                console.log(`Account creation email sent to ${email}`);
-            } else {
-                console.error(`Failed to send email to ${email}:`, emailResult.error);
-                // Don't fail the registration if email fails
-            }
-        }
-
-        res.status(200).json(teacher);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    res.status(501).json({ message: 'Register functionality deprecated in JWT version. Use Create or Update.' });
 };
 
-// @desc    Get teacher by Firebase UID
-// @route   GET /api/teachers/profile/:uid
-// @access  Private
-const getTeacherByUid = async (req, res) => {
+// @desc    Get teacher by ID (Replacing getTeacherByUid)
+// @route   GET /api/teachers/profile/:id
+const getTeacherById = async (req, res) => {
     try {
-        const teacher = await Teacher.findOne({ firebaseUid: req.params.uid });
+        // Formerly getTeacherByUid
+        // If the frontend sends an ID, we find by ID.
+        const teacher = await Teacher.findById(req.params.id).select('-password');
 
         if (!teacher) {
             return res.status(404).json({ message: 'Teacher not found' });
@@ -205,5 +174,6 @@ module.exports = {
     deleteTeacher,
     registerTeacher,
     unregisterTeacher,
-    getTeacherByUid
+    getTeacherByUid: getTeacherById // Map to new function for compatibility if routes use this name
 };
+

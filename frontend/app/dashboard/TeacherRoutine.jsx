@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { fetchRoutines, fetchRooms } from '../../Lib/api';
-import { useSelector } from 'react-redux';
-import { selectUser } from '@/Lib/features/auth/authReducer';
+import { useAuth } from '@/context/AuthContext';
 import { Calendar, Clock, MapPin, BookOpen, AlertCircle, Download, Menu } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useSidebar } from '@/context/SidebarContext';
@@ -12,7 +11,7 @@ import autoTable from 'jspdf-autotable';
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export default function TeacherRoutine({ onBack }) {
-    const user = useSelector(selectUser);
+    const { user } = useAuth();
     const { toggleMobileSidebar } = useSidebar();
     const [myRoutines, setMyRoutines] = useState([]);
     const [rooms, setRooms] = useState([]);

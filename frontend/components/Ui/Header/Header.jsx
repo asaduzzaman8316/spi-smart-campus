@@ -1,23 +1,20 @@
-'use client'
-import React, { useState } from 'react';
-import { Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
-import Link from 'next/link';
-import { useDispatch, useSelector } from 'react-redux';
-import { setLogout } from '@/Lib/features/auth/authReducer';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation'
-import { signOut } from 'firebase/auth'
-import { auth } from '@/Lib/features/firebase/config';
 import Image from 'next/image';
 import ThemeSwitcher from '../ThemeSwitcher';
 import { toast } from 'react-toastify';
+import Link from 'next/link';
+import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 
 
 export default function Header() {
-    const isLoggedIn = useSelector((state) => state.auth.login)
-    const dispatch = useDispatch()
+    const { user, logout } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
     const [isOpen, setIsOpen] = useState(false)
+
+    // Derived state for UI compatibility
+    const isLoggedIn = !!user;
 
 
     const toggleMenu = () => setIsOpen(!isOpen);
@@ -35,10 +32,7 @@ export default function Header() {
     const handleLogout = async () => {
         try {
             setIsOpen(false)
-            await signOut(auth) // Sign out from Firebase
-            dispatch(setLogout()) // Clear Redux + localStorage
-            toast.success('Logout Successful')
-            router.push('/') // Go to home page
+            logout() // Use context logout
         } catch (error) {
             console.error('Logout error:', error)
         }

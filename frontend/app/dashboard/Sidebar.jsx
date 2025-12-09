@@ -1,22 +1,16 @@
 import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectUser, setLogout } from '@/Lib/features/auth/authReducer';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/Lib/features/firebase/config';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
 export default function Sidebar({ currentView, setView }) {
     const { isCollapsed, isMobileOpen, closeMobileSidebar, toggleSidebar } = useSidebar();
-    const user = useSelector(selectUser);
-    const dispatch = useDispatch();
+    const { user, logout } = useAuth();
     const router = useRouter();
 
     const handleLogout = async () => {
         try {
-            await signOut(auth);
-            dispatch(setLogout());
-            router.push('/');
+            logout();
         } catch (error) {
             console.error("Logout failed", error);
         }
@@ -49,7 +43,7 @@ export default function Sidebar({ currentView, setView }) {
             {/* Mobile Sidebar Overlay & Drawer */}
             {isMobileOpen && (
                 <div className="fixed inset-0 z-50 md:hidden">
-                    <div 
+                    <div
                         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={closeMobileSidebar}
                     />
