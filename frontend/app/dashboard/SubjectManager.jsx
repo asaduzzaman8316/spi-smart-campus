@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { fetchSubjects, fetchDepartments, createSubject, updateSubject, deleteSubject } from '../../Lib/api';
+import { fetchPaginatedSubjects, fetchDepartments, createSubject, updateSubject, deleteSubject } from '../../Lib/api';
 import { ArrowLeft, Plus, Edit, Trash2, Search, X, BookOpen, Briefcase, Hash, Calendar } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Pagination from '@/components/Ui/Pagination';
 
 const INITIAL_SUBJECT = {
     name: '',
@@ -17,7 +18,6 @@ const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
 
 export default function SubjectManager({ onBack }) {
     const [subjects, setSubjects] = useState([]);
-    const [filteredSubjects, setFilteredSubjects] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -28,28 +28,32 @@ export default function SubjectManager({ onBack }) {
     const [semesterFilter, setSemesterFilter] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState(null);
 
     useEffect(() => {
         loadSubjects();
         loadDepartments();
-    }, []);
-
-    useEffect(() => {
-        filterSubjects();
-    }, [subjects, searchQuery, departmentFilter, semesterFilter]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, searchQuery, departmentFilter, semesterFilter]);
 
     const loadSubjects = async () => {
         try {
             setLoading(true);
-            const data = await fetchSubjects();
-            const subjectsData = data.map(s => ({
+            const response = await fetchPaginatedSubjects(currentPage, 9, searchQuery, departmentFilter, semesterFilter);
+            const rawData = response.data || [];
+            const paginationData = response.pagination;
+
+            const subjectsData = rawData.map(s => ({
                 docId: s._id,
                 ...s,
                 code: s.code || '',
                 semester: s.semester || 1,
                 department: s.department || ''
             }));
+
             setSubjects(subjectsData);
+            setPagination(paginationData);
         } catch (error) {
             console.error("Error fetching subjects:", error);
             toast.error("Failed to load subjects");
@@ -67,26 +71,19 @@ export default function SubjectManager({ onBack }) {
         }
     };
 
-    const filterSubjects = () => {
-        let filtered = [...subjects];
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1);
+    };
 
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(s =>
-                s.name?.toLowerCase().includes(query) ||
-                s.code?.toLowerCase().includes(query)
-            );
-        }
+    const handleDepartmentChange = (e) => {
+        setDepartmentFilter(e.target.value);
+        setCurrentPage(1);
+    };
 
-        if (departmentFilter) {
-            filtered = filtered.filter(s => s.department === departmentFilter);
-        }
-
-        if (semesterFilter) {
-            filtered = filtered.filter(s => Number(s.semester) === Number(semesterFilter));
-        }
-
-        setFilteredSubjects(filtered);
+    const handleSemesterChange = (e) => {
+        setSemesterFilter(e.target.value);
+        setCurrentPage(1);
     };
 
     const handleAddSubject = () => {
@@ -196,13 +193,13 @@ export default function SubjectManager({ onBack }) {
                             type="text"
                             placeholder="Search by name or code..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={handleSearchChange}
                             className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                         />
                     </div>
                     <select
                         value={departmentFilter}
-                        onChange={(e) => setDepartmentFilter(e.target.value)}
+                        onChange={handleDepartmentChange}
                         className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                     >
                         <option value="">All Departments</option>
@@ -212,7 +209,7 @@ export default function SubjectManager({ onBack }) {
                     </select>
                     <select
                         value={semesterFilter}
-                        onChange={(e) => setSemesterFilter(e.target.value)}
+                        onChange={handleSemesterChange}
                         className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                     >
                         <option value="">All Semesters</option>
@@ -235,7 +232,7 @@ export default function SubjectManager({ onBack }) {
                             </div>
                         </div>
                     </div>
-                ) : filteredSubjects.length === 0 ? (
+                ) : subjects.length === 0 ? (
                     <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
                         <BookOpen className="mx-auto text-gray-400 dark:text-slate-600 mb-4" size={64} />
                         <p className="text-gray-500 dark:text-slate-400 text-lg">No subjects found</p>
@@ -247,56 +244,68 @@ export default function SubjectManager({ onBack }) {
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 relative md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredSubjects.map((subject, index) => (
-                            <div
-                                key={index}
-                                className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-blue-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border-2 border-blue-100 dark:border-blue-500/30">
-                                            <BookOpen className="text-blue-600 dark:text-blue-500" size={20} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                                                {subject.name}
-                                            </h3>
-                                            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 text-sm font-medium">
-                                                <Hash size={14} className="text-purple-400 dark:text-purple-500" />
-                                                Code: {subject.code}
+                    <>
+                        <div className="grid grid-cols-1 relative md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            {subjects.map((subject, index) => (
+                                <div
+                                    key={index}
+                                    className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-blue-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border-2 border-blue-100 dark:border-blue-500/30">
+                                                <BookOpen className="text-blue-600 dark:text-blue-500" size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                                                    {subject.name}
+                                                </h3>
+                                                <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 text-sm font-medium">
+                                                    <Hash size={14} className="text-purple-400 dark:text-purple-500" />
+                                                    Code: {subject.code}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                        <Briefcase size={14} className="text-gray-400 dark:text-slate-400" />
-                                        <span>{subject.department} Department</span>
+                                    <div className="space-y-2 mb-4">
+                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                            <Briefcase size={14} className="text-gray-400 dark:text-slate-400" />
+                                            <span>{subject.department} Department</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                            <Calendar size={14} className="text-gray-400 dark:text-slate-400" />
+                                            <span>Semester {subject.semester}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                        <Calendar size={14} className="text-gray-400 dark:text-slate-400" />
-                                        <span>Semester {subject.semester}</span>
+                                    <div className="gap-2 absolute top-2 right-2 lg:hidden group-hover:flex">
+                                        <button
+                                            onClick={() => handleEditSubject(subject)}
+                                            className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => setDeleteConfirm(subject)}
+                                            className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors border border-red-100 dark:border-transparent"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="gap-2 absolute top-2 right-2 lg:hidden group-hover:flex">
-                                    <button
-                                        onClick={() => handleEditSubject(subject)}
-                                        className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
-                                    >
-                                        <Edit size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => setDeleteConfirm(subject)}
-                                        className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors border border-red-100 dark:border-transparent"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
+                            ))}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {pagination && (
+                            <div className="mt-8 flex justify-center">
+                                <Pagination
+                                    pagination={pagination}
+                                    onPageChange={setCurrentPage}
+                                />
                             </div>
-                        ))}
-                    </div>
+                        )}
+                    </>
                 )}
 
                 {/* Add/Edit Modal */}

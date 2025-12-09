@@ -1,10 +1,11 @@
-"use client";
+'use client';
 import React, { useState, useEffect } from 'react';
-import { fetchTeachers, fetchDepartments, createTeacher, updateTeacher, deleteTeacher } from '../../Lib/api';
+import { fetchPaginatedTeachers, fetchDepartments, createTeacher, updateTeacher, deleteTeacher } from '../../Lib/api';
 import { ArrowLeft, Plus, Edit, Trash2, Search, X, Users, Briefcase, Mail, Phone, User } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Image from 'next/image';
+import Pagination from '@/components/Ui/Pagination';
 
 const INITIAL_TEACHER = {
     name: '',
@@ -19,7 +20,6 @@ const INITIAL_TEACHER = {
 
 export default function TeacherManager({ onBack }) {
     const [teachers, setTeachers] = useState([]);
-    const [filteredTeachers, setFilteredTeachers] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -29,22 +29,24 @@ export default function TeacherManager({ onBack }) {
     const [departmentFilter, setDepartmentFilter] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState(null);
 
     useEffect(() => {
         loadTeachers();
         loadDepartments();
-    }, []);
-
-    useEffect(() => {
-        filterTeachers();
-    }, [teachers, searchQuery, departmentFilter]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, searchQuery, departmentFilter]);
 
     const loadTeachers = async () => {
         try {
             setLoading(true);
-            const data = await fetchTeachers();
+            const response = await fetchPaginatedTeachers(currentPage, 9, searchQuery, departmentFilter);
+            const rawData = response.data || [];
+            const paginationData = response.pagination;
+
             // Map _id to docId and ensure id is present if needed for UI, or use _id as key
-            const teachersData = data.map(t => ({
+            const teachersData = rawData.map(t => ({
                 docId: t._id,
                 ...t,
                 shift: t.shift || '',
@@ -54,7 +56,9 @@ export default function TeacherManager({ onBack }) {
                 image: t.image || '',
                 department: t.department || ''
             }));
+
             setTeachers(teachersData);
+            setPagination(paginationData);
         } catch (error) {
             console.error("Error fetching teachers:", error);
             toast.error("Failed to load teachers");
@@ -72,24 +76,18 @@ export default function TeacherManager({ onBack }) {
         }
     };
 
-    const filterTeachers = () => {
-        let filtered = [...teachers];
+    // Client-side filtering removed. Handlers update state which triggers fetch.
 
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(t =>
-                t.name?.toLowerCase().includes(query) ||
-                t.email?.toLowerCase().includes(query) ||
-                t.shift?.toLowerCase().includes(query)
-            );
-        }
-
-        if (departmentFilter) {
-            filtered = filtered.filter(t => t.department === departmentFilter);
-        }
-
-        setFilteredTeachers(filtered);
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1); // Reset to page 1 on search
     };
+
+    const handleDepartmentChange = (e) => {
+        setDepartmentFilter(e.target.value);
+        setCurrentPage(1); // Reset to page 1 on filter
+    };
+
 
     const handleAddTeacher = () => {
         const maxId = teachers.length > 0 ? Math.max(...teachers.map(t => t.id || 0)) : 0;
@@ -206,15 +204,15 @@ export default function TeacherManager({ onBack }) {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" size={20} />
                         <input
                             type="text"
-                            placeholder="Search by name, email, or shift..."
+                            placeholder="Search by name, email..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={handleSearchChange}
                             className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-sm dark:shadow-none"
                         />
                     </div>
                     <select
                         value={departmentFilter}
-                        onChange={(e) => setDepartmentFilter(e.target.value)}
+                        onChange={handleDepartmentChange}
                         className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 shadow-sm dark:shadow-none"
                     >
                         <option value="">All Departments</option>
@@ -237,7 +235,7 @@ export default function TeacherManager({ onBack }) {
                             </div>
                         </div>
                     </div>
-                ) : filteredTeachers.length === 0 ? (
+                ) : teachers.length === 0 ? (
                     <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
                         <Users className="mx-auto text-gray-400 dark:text-slate-600 mb-4" size={64} />
                         <p className="text-gray-500 dark:text-slate-400 text-lg">No teachers found</p>
@@ -249,82 +247,94 @@ export default function TeacherManager({ onBack }) {
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1  relative md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredTeachers.map(teacher => (
-                            <div
-                                key={teacher.docId || teacher.id}
-                                className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-emerald-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-4">
-                                        {teacher.image ? (
-                                            <Image
-                                                unoptimized
-                                                src={teacher.image}
-                                                alt={teacher.name}
-                                                width={64}
-                                                height={64}
-                                                className="w-16 h-16 object-cover rounded-full border-2 border-slate-100 dark:border-transparent"
-                                            />
-                                        ) : (
-                                            <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center border-2 border-emerald-100 dark:border-emerald-500/30">
-                                                <User className="text-emerald-600 dark:text-emerald-500" size={20} />
+                    <>
+                        <div className="grid grid-cols-1  relative md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                            {teachers.map(teacher => (
+                                <div
+                                    key={teacher.docId || teacher.id}
+                                    className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-emerald-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-4">
+                                            {teacher.image ? (
+                                                <Image
+                                                    unoptimized
+                                                    src={teacher.image}
+                                                    alt={teacher.name}
+                                                    width={64}
+                                                    height={64}
+                                                    className="w-16 h-16 object-cover rounded-full border-2 border-slate-100 dark:border-transparent"
+                                                />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center border-2 border-emerald-100 dark:border-emerald-500/30">
+                                                    <User className="text-emerald-600 dark:text-emerald-500" size={20} />
+                                                </div>
+                                            )}
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                                                    {teacher.name}
+                                                </h3>
+                                                <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">
+                                                    {teacher.role}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 mb-4">
+                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                            <Briefcase size={14} className="text-gray-400 dark:text-slate-400" />
+                                            <span>{teacher.department}</span>
+                                        </div>
+                                        {teacher.email && (
+                                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                                <Mail size={14} className="text-gray-400 dark:text-slate-400" />
+                                                <span className="truncate">{teacher.email}</span>
                                             </div>
                                         )}
-                                        <div>
-                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                                                {teacher.name}
-                                            </h3>
-                                            <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">
-                                                {teacher.role}
+                                        {teacher.phone && (
+                                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                                <Phone size={14} className="text-gray-400 dark:text-slate-400" />
+                                                <span>{teacher.phone}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className=" gap-2 absolute top-2 right-2 lg:hidden group-hover:flex">
+                                        <button
+                                            onClick={() => handleEditTeacher(teacher)}
+                                            className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => setDeleteConfirm(teacher)}
+                                            className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors border border-red-100 dark:border-transparent"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                    {teacher.shift && (
+                                        <div className="pt-3 border-t border-gray-100 dark:border-white/10">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                Shift: <span className="text-gray-700 dark:text-gray-300">{teacher.shift}</span>
                                             </p>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                        <Briefcase size={14} className="text-gray-400 dark:text-slate-400" />
-                                        <span>{teacher.department}</span>
-                                    </div>
-                                    {teacher.email && (
-                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                            <Mail size={14} className="text-gray-400 dark:text-slate-400" />
-                                            <span className="truncate">{teacher.email}</span>
-                                        </div>
-                                    )}
-                                    {teacher.phone && (
-                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                            <Phone size={14} className="text-gray-400 dark:text-slate-400" />
-                                            <span>{teacher.phone}</span>
-                                        </div>
                                     )}
                                 </div>
-                                <div className=" gap-2 absolute top-2 right-2 lg:hidden group-hover:flex">
-                                    <button
-                                        onClick={() => handleEditTeacher(teacher)}
-                                        className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
-                                    >
-                                        <Edit size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => setDeleteConfirm(teacher)}
-                                        className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors border border-red-100 dark:border-transparent"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                                {teacher.shift && (
-                                    <div className="pt-3 border-t border-gray-100 dark:border-white/10">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            Shift: <span className="text-gray-700 dark:text-gray-300">{teacher.shift}</span>
-                                        </p>
-                                    </div>
+                            ))}
+                        </div>
 
-                                )}
+                        {/* Pagination Controls */}
+                        {pagination && (
+                            <div className="mt-8 flex justify-center">
+                                <Pagination
+                                    pagination={pagination}
+                                    onPageChange={setCurrentPage}
+                                />
                             </div>
-                        ))}
-                    </div>
+                        )}
+                    </>
                 )}
 
                 {/* Add/Edit Modal */}

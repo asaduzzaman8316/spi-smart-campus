@@ -15,19 +15,39 @@ const getTeachers = async (req, res) => {
         }
 
         const { skip, limit } = req.pagination;
+        const { search, department, shift } = req.query;
 
-        // Get total count for pagination
-        const total = await Teacher.countDocuments();
+        // Build query object
+        const query = {};
 
-        // Get paginated teachers
-        let teachers = await Teacher.find()
-            .select('-__v +password') // Explicitly include password to check existence if it's hidden by default, otherwise select('-__v') might not bring it if schema hides it. 
-            // Note: If schema has select:false, we need +password. If not, accessing it is fine.
-            // Let's assume we need +password just to be safe for the hasAccount check.
+        // Search functionality (name or email)
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { email: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Department filter
+        if (department) {
+            query.department = department;
+        }
+
+        // Shift filter (optional but good to have)
+        if (shift) {
+            query.shift = shift;
+        }
+
+        // Get total count for pagination based on the query
+        const total = await Teacher.countDocuments(query);
+
+        // Get paginated teachers with the query
+        let teachers = await Teacher.find(query)
+            .select('-__v +password')
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 }) // Newest first
-            .lean(); // Convert to plain JS objects for better performance
+            .sort({ createdAt: -1 })
+            .lean();
 
         // Add hasAccount flag and remove password
         teachers = teachers.map(teacher => {

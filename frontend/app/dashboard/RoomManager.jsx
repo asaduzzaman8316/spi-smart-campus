@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { fetchRooms, createRoom, updateRoom, deleteRoom } from '../../Lib/api';
+import { fetchPaginatedRooms, createRoom, updateRoom, deleteRoom } from '../../Lib/api';
 import { ArrowLeft, Plus, Edit, Trash2, Search, X, Building, Grid, Users } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Pagination from '@/components/Ui/Pagination';
 
 const INITIAL_ROOM = {
     number: '',
@@ -15,7 +16,6 @@ const ROOM_TYPES = ['Theory', 'Lab'];
 
 export default function RoomManager({ onBack }) {
     const [rooms, setRooms] = useState([]);
-    const [filteredRooms, setFilteredRooms] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
@@ -24,26 +24,29 @@ export default function RoomManager({ onBack }) {
     const [typeFilter, setTypeFilter] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState(null);
 
     useEffect(() => {
         loadRooms();
-    }, []);
-
-    useEffect(() => {
-        filterRooms();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [rooms, searchQuery, typeFilter]);
+    }, [currentPage, searchQuery, typeFilter]);
 
     const loadRooms = async () => {
         try {
             setLoading(true);
-            const data = await fetchRooms();
-            const roomsData = data.map(r => ({
+            const response = await fetchPaginatedRooms(currentPage, 9, searchQuery, typeFilter);
+            const rawData = response.data || [];
+            const paginationData = response.pagination;
+
+            const roomsData = rawData.map(r => ({
                 docId: r._id,
                 ...r,
                 capacity: r.capacity || 0
             }));
+
             setRooms(roomsData);
+            setPagination(paginationData);
         } catch (error) {
             console.error("Error fetching rooms:", error);
             toast.error("Failed to load rooms");
@@ -52,21 +55,14 @@ export default function RoomManager({ onBack }) {
         }
     };
 
-    const filterRooms = () => {
-        let filtered = [...rooms];
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1);
+    };
 
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(r =>
-                r.number?.toLowerCase().includes(query)
-            );
-        }
-
-        if (typeFilter) {
-            filtered = filtered.filter(r => r.type === typeFilter);
-        }
-
-        setFilteredRooms(filtered);
+    const handleTypeChange = (e) => {
+        setTypeFilter(e.target.value);
+        setCurrentPage(1);
     };
 
     const handleAddRoom = () => {
@@ -173,13 +169,13 @@ export default function RoomManager({ onBack }) {
                             type="text"
                             placeholder="Search by room number..."
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={handleSearchChange}
                             className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                         />
                     </div>
                     <select
                         value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value)}
+                        onChange={handleTypeChange}
                         className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
                     >
                         <option value="">All Types</option>
@@ -202,7 +198,7 @@ export default function RoomManager({ onBack }) {
                             </div>
                         </div>
                     </div>
-                ) : filteredRooms.length === 0 ? (
+                ) : rooms.length === 0 ? (
                     <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
                         <Building className="mx-auto text-gray-400 dark:text-slate-600 mb-4" size={64} />
                         <p className="text-gray-500 dark:text-slate-400 text-lg">No rooms found</p>
@@ -214,8 +210,9 @@ export default function RoomManager({ onBack }) {
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredRooms.map((room, index) => (
+                    <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                        {rooms.map((room, index) => (
                             <div
                                 key={index}
                                 className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-blue-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
@@ -260,6 +257,17 @@ export default function RoomManager({ onBack }) {
                             </div>
                         ))}
                     </div>
+
+                    {/* Pagination Controls */}
+                    {pagination && (
+                        <div className="mt-8 flex justify-center">
+                            <Pagination
+                                pagination={pagination}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
+                    )}
+                    </>
                 )}
 
                 {/* Add/Edit Modal */}

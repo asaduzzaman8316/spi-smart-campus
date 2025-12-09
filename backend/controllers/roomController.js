@@ -1,12 +1,36 @@
-const Room = require('../models/Room');
+const { createPaginatedResponse } = require('../middleware/pagination');
 
 // @desc    Get all rooms
 // @route   GET /api/rooms
 // @access  Public
 const getRooms = async (req, res) => {
     try {
-        const rooms = await Room.find();
-        res.status(200).json(rooms);
+        if (!req.pagination) {
+            throw new Error('Req.pagination is missing!');
+        }
+
+        const { skip, limit } = req.pagination;
+        const { search, type } = req.query;
+
+        const query = {};
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { roomNumber: { $regex: search, $options: 'i' } } // Assuming roomNumber field based on previous regex
+            ];
+        }
+        if (type) {
+            query.type = type;
+        }
+
+        const total = await Room.countDocuments(query);
+        const rooms = await Room.find(query)
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 }) // or name? Usually creation for management logs
+            .lean();
+
+        res.status(200).json(createPaginatedResponse(rooms, total, req.pagination));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

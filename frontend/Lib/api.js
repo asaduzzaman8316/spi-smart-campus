@@ -28,8 +28,15 @@ export const fetchTeachers = async () => {
     return data && data.data ? data.data : data;
 };
 
-export const fetchPaginatedTeachers = async (page = 1, limit = 9) => {
-    const { data } = await api.get(`/teachers?page=${page}&limit=${limit}`);
+export const fetchPaginatedTeachers = async (page = 1, limit = 9, search = '', department = '') => {
+    const params = new URLSearchParams({
+        page,
+        limit,
+    });
+    if (search) params.append('search', search);
+    if (department) params.append('department', department);
+
+    const { data } = await api.get(`/teachers?${params.toString()}`);
     return data; // Returns { success, data, pagination }
 };
 
@@ -103,6 +110,25 @@ export const deleteRoom = async (id) => {
 export const fetchSubjects = async () => {
     const { data } = await api.get('/subjects?limit=1000');
     return data && data.data ? data.data : data;
+};
+
+export const fetchPaginatedRooms = async (page = 1, limit = 9, search = '', type = '') => {
+    const params = new URLSearchParams({ page, limit });
+    if (search) params.append('search', search);
+    if (type) params.append('type', type);
+    const { data } = await api.get(`/rooms?${params.toString()}`);
+    return data;
+};
+
+// ... existing code ...
+
+export const fetchPaginatedSubjects = async (page = 1, limit = 9, search = '', department = '', semester = '') => {
+    const params = new URLSearchParams({ page, limit });
+    if (search) params.append('search', search);
+    if (department) params.append('department', department);
+    if (semester) params.append('semester', semester);
+    const { data } = await api.get(`/subjects?${params.toString()}`);
+    return data;
 };
 
 export const createSubject = async (subjectData) => {
