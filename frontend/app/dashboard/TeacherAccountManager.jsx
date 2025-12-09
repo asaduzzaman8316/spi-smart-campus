@@ -84,7 +84,8 @@ export default function TeacherAccountManager() {
         setProcessing(true);
         try {
             const response = await updateTeacher(selectedTeacher.docId || selectedTeacher._id, {
-                password: generatedPassword
+                password: generatedPassword,
+                userType: accountType // Send selected account type
             });
 
             setCreatedAccount({
@@ -277,14 +278,29 @@ export default function TeacherAccountManager() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Password</label>
-                                        <input
-                                            type="text"
-                                            value={generatedPassword}
-                                            onChange={(e) => setGeneratedPassword(e.target.value)}
-                                            className="w-full p-3 bg-gray-100 dark:bg-gray-900 rounded-lg font-mono text-center text-lg tracking-wider border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                        />
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Account Type</label>
+                                            <select
+                                                value={accountType}
+                                                onChange={(e) => setAccountType(e.target.value)}
+                                                className="w-full p-3 bg-gray-100 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-gray-900 dark:text-white"
+                                            >
+                                                <option value="teacher">Teacher</option>
+                                                <option value="admin">Department Admin</option>
+                                                <option value="super_admin">Super Admin</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Password</label>
+                                            <input
+                                                type="text"
+                                                value={generatedPassword}
+                                                onChange={(e) => setGeneratedPassword(e.target.value)}
+                                                className="w-full p-3 bg-gray-100 dark:bg-gray-900 rounded-lg font-mono text-center text-lg tracking-wider border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                            />
+                                        </div>
                                     </div>
 
                                     <button

@@ -138,7 +138,6 @@ export default function TeacherManager({ onBack }) {
                 department: currentTeacher.department,
                 shift: currentTeacher.shift,
                 image: currentTeacher.image,
-                userType: currentTeacher.userType || 'teacher',
                 role: currentTeacher.role || ''
             };
             if (modalMode === 'add') {
@@ -427,22 +426,7 @@ export default function TeacherManager({ onBack }) {
                                         placeholder="Shift"
                                     />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                                        Account Type <span className="text-red-500 dark:text-red-400">*</span>
-                                    </label>
-                                    <select
-                                        name="userType"
-                                        value={currentTeacher.userType || 'teacher'}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                                    >
-                                        <option value="teacher">Teacher</option>
-                                        <option value="admin">Department Admin</option>
-                                        <option value="super_admin">Super Admin</option>
-                                    </select>
-                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                                         Job Title/Position
