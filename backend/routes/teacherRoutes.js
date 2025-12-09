@@ -10,7 +10,6 @@ const {
     unregisterTeacher
 } = require('../controllers/teacherController');
 const { protect, authorize, authorizeOwnerOrAdmin } = require('../middleware/authMiddleware');
-const { authLimiter } = require('../middleware/rateLimiter');
 const { teacherValidation, idValidation } = require('../validators/validators');
 const { paginate } = require('../middleware/pagination');
 
@@ -20,7 +19,7 @@ router.route('/').get(paginate, getTeachers);
 
 // Protected routes (require admin)
 router.route('/').post(protect, authorize('admin'), teacherValidation.create, createTeacher);
-router.route('/register').post(authLimiter, teacherValidation.register, registerTeacher);
+router.route('/register').post(teacherValidation.register, registerTeacher);
 
 // Update: Allow admin OR the teacher themselves to update their profile
 router.route('/:id').put(protect, authorizeOwnerOrAdmin, teacherValidation.update, updateTeacher).delete(protect, authorize('admin'), idValidation, deleteTeacher);

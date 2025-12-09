@@ -10,12 +10,11 @@ const {
     unregisterAdmin
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
-const { authLimiter } = require('../middleware/rateLimiter');
 const { paginate } = require('../middleware/pagination');
 const { idValidation } = require('../validators/validators');
 
-// Public routes (with rate limiting)
-router.route('/register').post(authLimiter, registerAdmin);
+// Public routes
+router.route('/register').post(registerAdmin);
 
 // Protected routes (any admin)
 router.route('/profile')
