@@ -1,20 +1,10 @@
 const Subject = require('../models/Subject');
-const { createPaginatedResponse } = require('../middleware/pagination');
 
 // @desc    Get all subjects
 // @route   GET /api/subjects
 // @access  Public
 const getSubjects = async (req, res) => {
     try {
-        let pagination = req.pagination;
-        if (!pagination) {
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 10;
-            const skip = (page - 1) * limit;
-            pagination = { page, limit, skip };
-        }
-
-        const { skip, limit } = pagination;
         const { search, department, semester } = req.query;
 
         const query = {};
@@ -31,14 +21,15 @@ const getSubjects = async (req, res) => {
             query.semester = semester;
         }
 
-        const total = await Subject.countDocuments(query);
         const subjects = await Subject.find(query)
-            .skip(skip)
-            .limit(limit)
             .sort({ createdAt: -1, _id: 1 })
             .lean();
 
-        res.status(200).json(createPaginatedResponse(subjects, total, pagination));
+        res.status(200).json({
+            success: true,
+            count: subjects.length,
+            data: subjects
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

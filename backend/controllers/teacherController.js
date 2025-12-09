@@ -7,14 +7,6 @@ const bcrypt = require('bcryptjs');
 // @access  Private (Admin only)
 const getTeachers = async (req, res) => {
     try {
-        console.log('getTeachers query:', req.query);
-        console.log('getTeachers pagination:', req.pagination);
-
-        if (!req.pagination) {
-            throw new Error('Req.pagination is missing!');
-        }
-
-        const { skip, limit } = req.pagination;
         const { search, department, shift } = req.query;
 
         // Build query object
@@ -33,19 +25,14 @@ const getTeachers = async (req, res) => {
             query.department = department;
         }
 
-        // Shift filter (optional but good to have)
+        // Shift filter
         if (shift) {
             query.shift = shift;
         }
 
-        // Get total count for pagination based on the query
-        const total = await Teacher.countDocuments(query);
-
-        // Get paginated teachers with the query
+        // Get all teachers with the query
         let teachers = await Teacher.find(query)
             .select('-__v +password')
-            .skip(skip)
-            .limit(limit)
             .sort({ createdAt: -1, _id: 1 })
             .lean();
 
@@ -59,7 +46,11 @@ const getTeachers = async (req, res) => {
             };
         });
 
-        res.json(createPaginatedResponse(teachers, total, req.pagination));
+        res.json({
+            success: true,
+            count: teachers.length,
+            data: teachers
+        });
     } catch (error) {
         console.error('getTeachers Error:', error);
         res.status(500).json({ message: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined });

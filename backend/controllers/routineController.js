@@ -1,12 +1,10 @@
 const Routine = require('../models/Routine');
-const { createPaginatedResponse } = require('../middleware/pagination');
 
 // @desc    Get all routines (with optional filters)
 // @route   GET /api/routines
 // @access  Public
 const getRoutines = async (req, res) => {
     try {
-        const { skip, limit } = req.pagination;
         const { department, semester, shift, group } = req.query;
 
         // Build filter object from query params
@@ -16,18 +14,17 @@ const getRoutines = async (req, res) => {
         if (shift) query.shift = shift;
         if (group) query.group = group;
 
-        // Get total count
-        const total = await Routine.countDocuments(query);
-
-        // Get paginated routines
+        // Get all routines
         const routines = await Routine.find(query)
             .select('-__v')
-            .skip(skip)
-            .limit(limit)
             .sort({ department: 1, semester: 1, shift: 1, group: 1 })
             .lean();
 
-        res.json(createPaginatedResponse(routines, total, req.pagination));
+        res.json({
+            success: true,
+            count: routines.length,
+            data: routines
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

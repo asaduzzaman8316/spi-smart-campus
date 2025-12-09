@@ -1,41 +1,32 @@
 const Room = require('../models/Room');
-const { createPaginatedResponse } = require('../middleware/pagination');
 
 // @desc    Get all rooms
 // @route   GET /api/rooms
 // @access  Public
 const getRooms = async (req, res) => {
     try {
-        let pagination = req.pagination;
-        if (!pagination) {
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 10;
-            const skip = (page - 1) * limit;
-            pagination = { page, limit, skip };
-        }
-
-        const { skip, limit } = pagination;
         const { search, type } = req.query;
 
         const query = {};
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },
-                { roomNumber: { $regex: search, $options: 'i' } } // Assuming roomNumber field based on previous regex
+                { roomNumber: { $regex: search, $options: 'i' } }
             ];
         }
         if (type) {
             query.type = type;
         }
 
-        const total = await Room.countDocuments(query);
         const rooms = await Room.find(query)
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1, _id: 1 }) // or name? Usually creation for management logs
+            .sort({ createdAt: -1, _id: 1 })
             .lean();
 
-        res.status(200).json(createPaginatedResponse(rooms, total, pagination));
+        res.status(200).json({
+            success: true,
+            count: rooms.length,
+            data: rooms
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -8,10 +8,8 @@ const {
 } = require('../controllers/routineController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { idValidation } = require('../validators/validators');
-const { paginate } = require('../middleware/pagination');
-
 // Public routes
-router.route('/').get(paginate, getRoutines);
+router.route('/').get(getRoutines);
 router.route('/find').get(findRoutine);
 
 // Protected routes (require admin)

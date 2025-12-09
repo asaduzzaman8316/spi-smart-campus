@@ -11,11 +11,9 @@ const {
 } = require('../controllers/teacherController');
 const { protect, authorize, authorizeOwnerOrAdmin } = require('../middleware/authMiddleware');
 const { teacherValidation, idValidation } = require('../validators/validators');
-const { paginate } = require('../middleware/pagination');
-
 // Public routes
 router.route('/profile/:uid').get(getTeacherByUid);
-router.route('/').get(paginate, getTeachers);
+router.route('/').get(getTeachers);
 
 // Protected routes (require admin)
 router.route('/').post(protect, authorize('admin'), teacherValidation.create, createTeacher);
