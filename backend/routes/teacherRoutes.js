@@ -16,9 +16,10 @@ const { paginate } = require('../middleware/pagination');
 
 // Public routes
 router.route('/profile/:uid').get(getTeacherByUid);
+router.route('/').get(paginate, getTeachers);
 
 // Protected routes (require admin)
-router.route('/').get(protect, authorize('admin'), paginate, getTeachers).post(protect, authorize('admin'), teacherValidation.create, createTeacher);
+router.route('/').post(protect, authorize('admin'), teacherValidation.create, createTeacher);
 router.route('/register').post(authLimiter, teacherValidation.register, registerTeacher);
 
 // Update: Allow admin OR the teacher themselves to update their profile
