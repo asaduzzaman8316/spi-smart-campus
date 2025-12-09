@@ -7,6 +7,13 @@ const bcrypt = require('bcryptjs');
 // @access  Private (Admin only)
 const getTeachers = async (req, res) => {
     try {
+        console.log('getTeachers query:', req.query);
+        console.log('getTeachers pagination:', req.pagination);
+
+        if (!req.pagination) {
+            throw new Error('Req.pagination is missing!');
+        }
+
         const { skip, limit } = req.pagination;
 
         // Get total count for pagination
@@ -14,7 +21,9 @@ const getTeachers = async (req, res) => {
 
         // Get paginated teachers
         let teachers = await Teacher.find()
-            .select('-__v') // Select password to check existence
+            .select('-__v +password') // Explicitly include password to check existence if it's hidden by default, otherwise select('-__v') might not bring it if schema hides it. 
+            // Note: If schema has select:false, we need +password. If not, accessing it is fine.
+            // Let's assume we need +password just to be safe for the hasAccount check.
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 }) // Newest first
@@ -23,7 +32,7 @@ const getTeachers = async (req, res) => {
         // Add hasAccount flag and remove password
         teachers = teachers.map(teacher => {
             const hasAccount = !!teacher.password;
-            delete teacher.password;
+            if (teacher.password) delete teacher.password;
             return {
                 ...teacher,
                 hasAccount
@@ -32,7 +41,8 @@ const getTeachers = async (req, res) => {
 
         res.json(createPaginatedResponse(teachers, total, req.pagination));
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('getTeachers Error:', error);
+        res.status(500).json({ message: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined });
     }
 };
 

@@ -1,4 +1,4 @@
-import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut } from 'lucide-react';
+import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut, Shield } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -17,16 +17,17 @@ export default function Sidebar({ currentView, setView }) {
     };
 
     const allMenuItems = [
-        { id: 'home', label: 'Overview', icon: Home, roles: ['admin', 'teacher'] },
-        { id: 'create', label: 'Create Routine', icon: PlusCircle, roles: ['admin'] },
-        { id: 'show', label: 'Show Routines', icon: List, roles: ['admin'] },
+        { id: 'home', label: 'Overview', icon: Home, roles: ['admin', 'teacher', 'super_admin'] },
+        { id: 'create', label: 'Create Routine', icon: PlusCircle, roles: ['admin', 'super_admin'] },
+        { id: 'show', label: 'Show Routines', icon: List, roles: ['admin', 'super_admin'] },
         { id: 'my-routine', label: 'My Routine', icon: List, roles: ['teacher'] },
         { id: 'today-routine', label: "Today's Routine", icon: Briefcase, roles: ['teacher'] },
         { id: 'profile', label: 'Profile', icon: User, roles: ['teacher'] },
-        { id: 'teachers', label: 'Manage Teachers', icon: Users, roles: ['admin'] },
-        { id: 'subjects', label: 'Manage Subjects', icon: BookOpen, roles: ['admin'] },
-        { id: 'rooms', label: 'Manage Rooms', icon: Building, roles: ['admin'] },
-        { id: 'accounts', label: 'Manage Accounts', icon: Users, roles: ['admin'] },
+        { id: 'teachers', label: 'Manage Teachers', icon: Users, roles: ['admin', 'super_admin'] },
+        { id: 'subjects', label: 'Manage Subjects', icon: BookOpen, roles: ['admin', 'super_admin'] },
+        { id: 'rooms', label: 'Manage Rooms', icon: Building, roles: ['admin', 'super_admin'] },
+        { id: 'accounts', label: 'Teacher Accounts', icon: Users, roles: ['admin', 'super_admin'] },
+        { id: 'admins', label: 'Manage Admins', icon: Shield, roles: ['super_admin'] },
     ];
 
     const menuItems = allMenuItems.filter(item => item.roles.includes(user?.role || 'admin'));
@@ -79,14 +80,14 @@ export default function Sidebar({ currentView, setView }) {
             )}
             {/* Desktop Sidebar */}
             <aside className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 hidden md:flex flex-col z-40 ${sidebarClass}`}>
-                <div className="flex flex-col py-4 gap-2 flex-1 overflow-y-auto">
+                <div className="flex flex-col py-4 gap-2 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                     {/* Toggle Button in Sidebar */}
                     <button
                         onClick={toggleSidebar}
-                        className={`flex items-center px-6 py-4 mx-2 rounded-xl transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800`}
+                        className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'px-6'} py-4 mx-2 rounded-xl transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800`}
                         title={isCollapsed ? "Expand" : "Collapse"}
                     >
-                        <List size={24} className={isCollapsed ? "mx-auto" : "mr-4"} />
+                        <List size={24} className={isCollapsed ? "" : "mr-4"} />
                         {!isCollapsed && <span className="font-medium truncate">Menu</span>}
                     </button>
 
@@ -94,14 +95,14 @@ export default function Sidebar({ currentView, setView }) {
                         <button
                             key={item.id}
                             onClick={() => handleItemClick(item.id)}
-                            className={`flex items-center px-6 py-4 mx-2 rounded-xl transition-colors
+                            className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'px-6'} py-4 mx-2 rounded-xl transition-colors
                                 ${currentView === item.id
                                     ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-500'
                                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}
                             `}
                             title={isCollapsed ? item.label : ''}
                         >
-                            <item.icon size={24} className={isCollapsed ? "mx-auto" : "mr-4"} />
+                            <item.icon size={24} className={isCollapsed ? "" : "mr-4"} />
                             {!isCollapsed && <span className="font-medium truncate">{item.label}</span>}
                         </button>
                     ))}

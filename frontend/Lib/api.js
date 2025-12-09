@@ -28,6 +28,11 @@ export const fetchTeachers = async () => {
     return data && data.data ? data.data : data;
 };
 
+export const fetchPaginatedTeachers = async (page = 1, limit = 9) => {
+    const { data } = await api.get(`/teachers?page=${page}&limit=${limit}`);
+    return data; // Returns { success, data, pagination }
+};
+
 export const createTeacher = async (teacherData) => {
     const { data } = await api.post('/teachers', teacherData);
     return data;

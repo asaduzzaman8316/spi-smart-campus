@@ -11,7 +11,9 @@ import TeacherAccountManager from "./TeacherAccountManager";
 import TeacherRoutine from "./TeacherRoutine";
 import TeacherToday from "./TeacherToday";
 import TeacherProfile from "./TeacherProfile";
-import { PlusCircle, List, LayoutDashboard, Users, Building2, BookOpen, Building } from 'lucide-react';
+import AdminManager from "./AdminManager";
+import AdminProfile from "./AdminProfile";
+import { PlusCircle, List, LayoutDashboard, Users, Building2, BookOpen, Building, Shield } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useSidebar } from '@/context/SidebarContext';
 
@@ -21,10 +23,13 @@ export default function DashboardPage() {
     const { isCollapsed } = useSidebar();
     const { user } = useAuth();
 
-    // Redirect teacher to profile if they are on home view
+    // Redirect teacher/admin to profile if they are on home view
     // We do this during render to avoid cascading updates/flicker
     if (user && user.role === 'teacher' && view === 'home') {
         setView('profile');
+    } else if (user && user.role === 'super_admin' && view === 'profile') {
+        // Super admin has a distinct profile view
+        // Actually, let's allow super_admin to see home as default, but if they click profile, show AdminProfile
     }
 
     const handleEditRoutine = (routine) => {
@@ -60,7 +65,10 @@ export default function DashboardPage() {
             case 'today-routine':
                 return <TeacherToday onBack={() => setView('home')} />;
             case 'profile':
+                if (user?.role === 'super_admin') return <AdminProfile onBack={() => setView('home')} />;
                 return <TeacherProfile onBack={() => setView('home')} />;
+            case 'admins':
+                return <AdminManager onBack={() => setView('home')} />;
             case 'home':
             default:
                 return (
@@ -107,6 +115,15 @@ export default function DashboardPage() {
                             desc="Create and manage teacher accounts."
                             onClick={() => setView('accounts')}
                         />
+                        {user?.role === 'super_admin' && (
+                            <DashboardCard
+                                title="Manage Admins"
+                                icon={Shield}
+                                color="purple"
+                                desc="Create and manage department admins."
+                                onClick={() => setView('admins')}
+                            />
+                        )}
                     </div>
                 );
         }
