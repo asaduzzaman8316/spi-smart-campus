@@ -9,8 +9,10 @@ const {
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { subjectValidation, idValidation } = require('../validators/validators');
 
+const { paginate } = require('../middleware/pagination');
+
 // Public routes
-router.route('/').get(getSubjects);
+router.route('/').get(paginate, getSubjects);
 
 // Protected routes (require admin)
 router.route('/').post(protect, authorize('admin'), subjectValidation.create, createSubject);

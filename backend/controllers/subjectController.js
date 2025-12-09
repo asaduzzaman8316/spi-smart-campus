@@ -35,7 +35,7 @@ const getSubjects = async (req, res) => {
         const subjects = await Subject.find(query)
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: -1, _id: 1 })
             .lean();
 
         res.status(200).json(createPaginatedResponse(subjects, total, req.pagination));

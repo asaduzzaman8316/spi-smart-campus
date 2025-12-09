@@ -46,7 +46,7 @@ const getTeachers = async (req, res) => {
             .select('-__v +password')
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: -1, _id: 1 })
             .lean();
 
         // Add hasAccount flag and remove password

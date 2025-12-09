@@ -27,7 +27,7 @@ const getRooms = async (req, res) => {
         const rooms = await Room.find(query)
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 }) // or name? Usually creation for management logs
+            .sort({ createdAt: -1, _id: 1 }) // or name? Usually creation for management logs
             .lean();
 
         res.status(200).json(createPaginatedResponse(rooms, total, req.pagination));
