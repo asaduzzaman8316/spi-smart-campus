@@ -5,11 +5,15 @@ const { createPaginatedResponse } = require('../middleware/pagination');
 // @access  Public
 const getRooms = async (req, res) => {
     try {
-        if (!req.pagination) {
-            throw new Error('Req.pagination is missing!');
+        let pagination = req.pagination;
+        if (!pagination) {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+            pagination = { page, limit, skip };
         }
 
-        const { skip, limit } = req.pagination;
+        const { skip, limit } = pagination;
         const { search, type } = req.query;
 
         const query = {};
@@ -30,7 +34,7 @@ const getRooms = async (req, res) => {
             .sort({ createdAt: -1, _id: 1 }) // or name? Usually creation for management logs
             .lean();
 
-        res.status(200).json(createPaginatedResponse(rooms, total, req.pagination));
+        res.status(200).json(createPaginatedResponse(rooms, total, pagination));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -5,16 +5,15 @@ const { createPaginatedResponse } = require('../middleware/pagination');
 // @access  Public
 const getSubjects = async (req, res) => {
     try {
-        if (!req.pagination) {
-            // If pagination middleware didn't run (e.g. public access without it?), default or fetch all?
-            // Assuming middleware is applied on route. If not, we might crash.
-            // But let's fallback or error. Given previous pattens, error is safer to ensure config is right.
-            // However, for broad safety, I'll default if missing, or stick to pattern.
-            // Pattern in teacherController was throwing. I'll stick to that.
-            throw new Error('Req.pagination is missing!');
+        let pagination = req.pagination;
+        if (!pagination) {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+            pagination = { page, limit, skip };
         }
 
-        const { skip, limit } = req.pagination;
+        const { skip, limit } = pagination;
         const { search, department, semester } = req.query;
 
         const query = {};
@@ -38,7 +37,7 @@ const getSubjects = async (req, res) => {
             .sort({ createdAt: -1, _id: 1 })
             .lean();
 
-        res.status(200).json(createPaginatedResponse(subjects, total, req.pagination));
+        res.status(200).json(createPaginatedResponse(subjects, total, pagination));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
