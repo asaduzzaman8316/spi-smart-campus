@@ -6,7 +6,6 @@ const compression = require('compression');
 const morgan = require('morgan');
 const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
-const { apiLimiter } = require('./middleware/rateLimiter');
 
 dotenv.config();
 
@@ -53,9 +52,6 @@ app.use(cors({
 
 // Body Parser
 app.use(express.json());
-
-// Apply rate limiting to all API routes
-app.use('/api/', apiLimiter);
 
 // Health check
 app.get('/', (req, res) => {
