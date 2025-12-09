@@ -1,12 +1,17 @@
 const mongoose = require('mongoose');
 const Admin = require('../models/Admin');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const seedAdmin = async () => {
     try {
-        const uri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/spi_db'; // Fallback
-        console.log('Connecting to MongoDB at:', uri);
+        const uri = process.env.MONGO_URI;
+        if (!uri) {
+            console.error('MONGO_URI is not defined in .env');
+            process.exit(1);
+        }
+        console.log('Connecting to MongoDB at:', uri.split('@')[1]); // Log safe part of URI
         await mongoose.connect(uri);
         console.log('MongoDB Connected');
 
