@@ -12,8 +12,8 @@ const connectDB = async () => {
         }
 
         const conn = await mongoose.connect(uri, {
-            // Buffer commands to avoid timeouts (default is true, but explicit is good)
-            bufferCommands: false,
+            // Re-enable buffering so requests wait for connection
+            bufferCommands: true,
             serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
             socketTimeoutMS: 45000,
         });
