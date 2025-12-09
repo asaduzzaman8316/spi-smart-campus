@@ -10,7 +10,7 @@ const {
     unregisterTeacher
 } = require('../controllers/teacherController');
 const { protect, authorize, authorizeOwnerOrAdmin } = require('../middleware/authMiddleware');
-const { teacherValidation, idValidation } = require('../validators/validators');
+const { idValidation } = require('../validators/validators');
 // Public routes
 router.route('/profile/:uid').get(getTeacherByUid);
 router.route('/').get(getTeachers);
