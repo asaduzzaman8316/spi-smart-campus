@@ -140,9 +140,77 @@ const optionalAuth = async (req, res, next) => {
     }
 };
 
+/**
+ * Middleware to check if user is super admin
+ * Must be used after verifyToken middleware
+ */
+const requireSuperAdmin = async (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            error: {
+                message: 'Authentication required.',
+                code: 'NOT_AUTHENTICATED'
+            }
+        });
+    }
+
+    // Check if user is in Admin collection with super_admin role
+    const Admin = require('../models/Admin');
+    const admin = await Admin.findOne({ firebaseUid: req.user.uid });
+
+    if (!admin || admin.role !== 'super_admin') {
+        return res.status(403).json({
+            success: false,
+            error: {
+                message: 'Access denied. Super Admin privileges required.',
+                code: 'FORBIDDEN'
+            }
+        });
+    }
+
+    req.admin = admin; // Attach admin to request
+    next();
+};
+
+/**
+ * Middleware to check if user is any type of admin (super or department)
+ * Must be used after verifyToken middleware
+ */
+const requireAnyAdmin = async (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({
+            success: false,
+            error: {
+                message: 'Authentication required.',
+                code: 'NOT_AUTHENTICATED'
+            }
+        });
+    }
+
+    // Check if user is in Admin collection
+    const Admin = require('../models/Admin');
+    const admin = await Admin.findOne({ firebaseUid: req.user.uid });
+
+    if (!admin) {
+        return res.status(403).json({
+            success: false,
+            error: {
+                message: 'Access denied. Admin privileges required.',
+                code: 'FORBIDDEN'
+            }
+        });
+    }
+
+    req.admin = admin; // Attach admin to request
+    next();
+};
+
 module.exports = {
     verifyToken,
     requireAdmin,
     requireTeacher,
+    requireSuperAdmin,
+    requireAnyAdmin,
     optionalAuth
 };

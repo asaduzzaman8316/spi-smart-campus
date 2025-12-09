@@ -1,0 +1,45 @@
+const mongoose = require('mongoose');
+
+const adminSchema = mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    firebaseUid: {
+        type: String,
+        unique: true,
+        sparse: true // Allows null/undefined values to be non-unique
+    },
+    role: {
+        type: String,
+        required: true,
+        enum: ['super_admin', 'department_admin'],
+        default: 'department_admin'
+    },
+    department: {
+        type: String,
+        // Only required for department_admin
+        required: function () {
+            return this.role === 'department_admin';
+        }
+    },
+    phone: String,
+    image: {
+        type: String,
+        default: ''
+    }
+}, {
+    timestamps: true
+});
+
+// Indexes for better query performance
+adminSchema.index({ email: 1 });
+adminSchema.index({ firebaseUid: 1 });
+adminSchema.index({ role: 1 });
+
+module.exports = mongoose.model('Admin', adminSchema);

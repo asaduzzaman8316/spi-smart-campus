@@ -49,6 +49,8 @@ app.use('/api/routines', require('./routes/routineRoutes'));
 app.use('/api/subjects', require('./routes/subjectRoutes'));
 app.use('/api/rooms', require('./routes/roomRoutes'));
 app.use('/api/stats', require('./routes/statsRoutes'));
+app.use('/api/admins', require('./routes/adminRoutes'));
+app.use('/api/setup', require('./routes/setupRoutes')); // One-time setup routes
 
 
 // 404 handler for undefined routes
