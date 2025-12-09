@@ -37,7 +37,7 @@ const getTeachers = async (req, res) => {
 
         // Add hasAccount flag and remove password
         teachers = teachers.map(teacher => {
-            const hasAccount = !!teacher.password;
+            const hasAccount = !!teacher.password && teacher.password !== 'NO_ACCOUNT_YET';
             if (teacher.password) delete teacher.password;
             return {
                 ...teacher,

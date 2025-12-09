@@ -273,18 +273,26 @@ export default function TeacherManager({ onBack }) {
                                                     {teacher.name}
                                                 </h3>
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${teacher.userType === 'super_admin'
-                                                        ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                                                        : teacher.userType === 'admin'
-                                                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                                                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                                                        }`}>
-                                                        {teacher.userType === 'super_admin' ? 'Super Admin' : teacher.userType === 'admin' ? 'Dept Admin' : 'Teacher'}
-                                                    </span>
-                                                    {teacher.role && (
-                                                        <span className="text-gray-600 dark:text-gray-400 text-sm">
-                                                            • {teacher.role}
+                                                    {/* Show Admin badges, but for Teacher type show Role instead */}
+                                                    {teacher.userType !== 'teacher' && (
+                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${teacher.userType === 'super_admin'
+                                                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                                                : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                                            }`}>
+                                                            {teacher.userType === 'super_admin' ? 'Super Admin' : 'Dept Admin'}
                                                         </span>
+                                                    )}
+
+                                                    {/* Show Role (Job Title) - effectively replaces "Teacher" tag */}
+                                                    {teacher.role ? (
+                                                        <span className={`text-sm font-medium ${teacher.userType === 'teacher' ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}>
+                                                            {teacher.userType !== 'teacher' && ' • '}
+                                                            {teacher.role}
+                                                        </span>
+                                                    ) : (
+                                                        teacher.userType === 'teacher' && (
+                                                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Teacher</span>
+                                                        )
                                                     )}
                                                 </div>
                                             </div>
