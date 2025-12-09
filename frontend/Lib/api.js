@@ -113,3 +113,9 @@ export const deleteSubject = async (id) => {
     return data;
 };
 
+// Departments
+export const fetchDepartments = async () => {
+    const { data } = await api.get('/departments');
+    return data;
+};
+
