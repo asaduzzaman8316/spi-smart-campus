@@ -1,3 +1,4 @@
+'use client'
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation'
 import Image from 'next/image';
@@ -5,6 +6,7 @@ import ThemeSwitcher from '../ThemeSwitcher';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
 import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
+import { useState } from 'react';
 
 
 export default function Header() {

@@ -4,6 +4,7 @@ import { fetchAdminProfile, updateAdminProfile } from '@/Lib/adminApi';
 import { User, Mail, Phone, Shield, Edit2, Save, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 export default function AdminProfile() {
     const { user } = useAuth(); // Admin profile should come from AuthContext user
@@ -116,9 +117,11 @@ export default function AdminProfile() {
                     <div className="flex items-start justify-between mb-6">
                         <div className="flex items-center gap-4">
                             {admin.image ? (
-                                <img
+                                <Image
                                     src={admin.image}
                                     alt={admin.name}
+                                    width={40}
+                                    height={40}
                                     className="w-20 h-20 rounded-full object-cover border-4 border-purple-500"
                                 />
                             ) : (

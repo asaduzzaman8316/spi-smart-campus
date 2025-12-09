@@ -5,6 +5,7 @@ import { fetchDepartments } from '@/Lib/api';
 import { UserPlus, Trash2, Search, Shield } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '@/components/Ui/Pagination';
+import Image from 'next/image';
 
 export default function AdminManager() {
     const [admins, setAdmins] = useState([]);
@@ -160,9 +161,9 @@ export default function AdminManager() {
                                             <tr key={admin._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center">
-                                                        <div className="flex-shrink-0 h-10 w-10">
+                                                        <div className="shrink-0 h-10 w-10">
                                                             {admin.image ? (
-                                                                <img className="h-10 w-10 rounded-full" src={admin.image} alt="" />
+                                                                <Image width={40} height={40} className="h-10 w-10 rounded-full" src={admin.image} alt="" />
                                                             ) : (
                                                                 <div className="h-10 w-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-semibold">
                                                                     {admin.name.charAt(0).toUpperCase()}
