@@ -75,6 +75,12 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL ERROR: JWT_SECRET is not defined in environment variables.');
+    // We don't exit here to allow server to start, but auth will fail.
+    // Ideally we should exit, but for debugging in Vercel seeing the log is better.
+}
+
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);

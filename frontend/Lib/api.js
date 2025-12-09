@@ -23,8 +23,9 @@ api.interceptors.request.use(
 
 export default api;
 export const fetchTeachers = async () => {
-    const { data } = await api.get('/teachers');
-    return data && data.data ? data.data : data; // Handle pagination structure
+    // Request a large limit to get all teachers for the list/dropdowns
+    const { data } = await api.get('/teachers?limit=1000');
+    return data && data.data ? data.data : data;
 };
 
 export const createTeacher = async (teacherData) => {
@@ -52,8 +53,9 @@ export const fetchTeacherByUid = async (uid) => {
 
 // Routines
 export const fetchRoutines = async () => {
-    const { data } = await api.get('/routines');
-    return data;
+    // Request a large limit to get all routines (since filtering happens on frontend)
+    const { data } = await api.get('/routines?limit=1000');
+    return data && data.data ? data.data : data;
 };
 
 export const createRoutine = async (routineData) => {
@@ -94,8 +96,8 @@ export const deleteRoom = async (id) => {
 
 // Subjects
 export const fetchSubjects = async () => {
-    const { data } = await api.get('/subjects');
-    return data;
+    const { data } = await api.get('/subjects?limit=1000');
+    return data && data.data ? data.data : data;
 };
 
 export const createSubject = async (subjectData) => {
@@ -116,6 +118,7 @@ export const deleteSubject = async (id) => {
 // Departments
 export const fetchDepartments = async () => {
     const { data } = await api.get('/departments');
-    return data;
+    // Departments might not use pagination middleware everywhere, but safekeeping:
+    return data && data.data ? data.data : data;
 };
 
