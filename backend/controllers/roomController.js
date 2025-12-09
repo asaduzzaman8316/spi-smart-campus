@@ -1,3 +1,4 @@
+const Room = require('../models/Room');
 const { createPaginatedResponse } = require('../middleware/pagination');
 
 // @desc    Get all rooms
