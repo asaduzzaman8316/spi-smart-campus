@@ -1,5 +1,4 @@
 const Teacher = require('../models/Teacher');
-const { createPaginatedResponse } = require('../middleware/pagination');
 const bcrypt = require('bcryptjs');
 
 // @desc    Get all teachers
