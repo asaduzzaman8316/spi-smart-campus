@@ -31,3 +31,7 @@ coverage/
 # Security
 serviceAccountKey.json
 config/serviceAccountKey.json
+
+# Test files
+test-*.js
+*.test.local.js

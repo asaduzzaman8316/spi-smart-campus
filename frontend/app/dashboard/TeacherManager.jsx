@@ -137,14 +137,15 @@ export default function TeacherManager({ onBack }) {
                 phone: currentTeacher.phone,
                 department: currentTeacher.department,
                 shift: currentTeacher.shift,
-                image: currentTeacher.image
+                image: currentTeacher.image,
+                userType: currentTeacher.userType || 'teacher',
+                role: currentTeacher.role || ''
             };
 
             // Include password if provided (only for new teachers)
             if (modalMode === 'add' && currentTeacher.password) {
                 teacherData.password = currentTeacher.password;
             }
-            // Don't send role or id field - let backend use default 'teacher'
 
             if (modalMode === 'add') {
                 const response = await createTeacher(teacherData);
@@ -282,9 +283,21 @@ export default function TeacherManager({ onBack }) {
                                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                                                     {teacher.name}
                                                 </h3>
-                                                <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">
-                                                    {teacher.role}
-                                                </p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${teacher.userType === 'super_admin'
+                                                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                                            : teacher.userType === 'admin'
+                                                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                                                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                                        }`}>
+                                                        {teacher.userType === 'super_admin' ? 'Super Admin' : teacher.userType === 'admin' ? 'Dept Admin' : 'Teacher'}
+                                                    </span>
+                                                    {teacher.role && (
+                                                        <span className="text-gray-600 dark:text-gray-400 text-sm">
+                                                            • {teacher.role}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -426,7 +439,23 @@ export default function TeacherManager({ onBack }) {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                                        Role
+                                        Account Type <span className="text-red-500 dark:text-red-400">*</span>
+                                    </label>
+                                    <select
+                                        name="userType"
+                                        value={currentTeacher.userType || 'teacher'}
+                                        onChange={handleInputChange}
+                                        required
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                                    >
+                                        <option value="teacher">Teacher</option>
+                                        <option value="admin">Department Admin</option>
+                                        <option value="super_admin">Super Admin</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                        Job Title/Position
                                     </label>
                                     <input
                                         type="text"
@@ -434,7 +463,7 @@ export default function TeacherManager({ onBack }) {
                                         value={currentTeacher.role || ''}
                                         onChange={handleInputChange}
                                         className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
-                                        placeholder="Professor"
+                                        placeholder="e.g., Professor, Lecturer, Assistant Professor"
                                     />
                                 </div>
                                 <div>

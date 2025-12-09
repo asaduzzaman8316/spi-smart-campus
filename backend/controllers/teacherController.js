@@ -62,7 +62,7 @@ const getTeachers = async (req, res) => {
 const createTeacher = async (req, res) => {
     try {
         console.log('Creating teacher with data:', req.body);
-        const { name, email, department, phone, image, shift, password } = req.body;
+        const { name, email, department, phone, image, shift, password, userType, role } = req.body;
 
         const teacherExists = await Teacher.findOne({ email });
         if (teacherExists) {
@@ -83,7 +83,9 @@ const createTeacher = async (req, res) => {
             phone,
             image,
             shift,
-            password: hashedPassword
+            password: hashedPassword,
+            userType: userType || 'teacher',
+            role: role || ''
         });
 
         // Send account creation email with credentials
@@ -99,6 +101,7 @@ const createTeacher = async (req, res) => {
             _id: teacher._id,
             name: teacher.name,
             email: teacher.email,
+            userType: teacher.userType,
             role: teacher.role,
             emailSent: emailResult.success
         });

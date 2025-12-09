@@ -19,10 +19,14 @@ const teacherSchema = mongoose.Schema({
         required: true,
         select: false // Do not return password by default
     },
-    role: {
+    userType: {
         type: String,
         default: 'teacher',
-        enum: ['teacher', 'admin']
+        enum: ['teacher', 'admin', 'super_admin']
+    },
+    role: {
+        type: String, // Job title/position (e.g., "Professor", "Lecturer", "Assistant Professor")
+        default: ''
     },
     email: {
         type: String,
