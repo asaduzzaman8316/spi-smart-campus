@@ -62,20 +62,15 @@ const getTeachers = async (req, res) => {
 const createTeacher = async (req, res) => {
     try {
         console.log('Creating teacher with data:', req.body);
-        const { name, email, department, phone, image, shift, password, userType, role } = req.body;
+        const { name, email, department, phone, image, shift, userType, role } = req.body;
 
         const teacherExists = await Teacher.findOne({ email });
         if (teacherExists) {
             return res.status(400).json({ message: 'Teacher already exists' });
         }
 
-        // Generate password if not provided
-        const plainPassword = password || `${name.replace(/\s/g, '').toLowerCase().slice(0, 5)}${Math.floor(1000 + Math.random() * 9000)}!`;
-
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(plainPassword, salt);
-
+        // Create teacher WITHOUT account (no password)
+        // Account will be created later from Manage Teacher Account
         const teacher = await Teacher.create({
             name,
             email,
@@ -83,27 +78,17 @@ const createTeacher = async (req, res) => {
             phone,
             image,
             shift,
-            password: hashedPassword,
             userType: userType || 'teacher',
-            role: role || ''
+            role: role || '',
+            password: 'NO_ACCOUNT_YET' // Placeholder - will be set when account is created
         });
-
-        // Send account creation email with credentials
-        const { sendAccountCreationEmail } = require('../config/emailService');
-        const emailResult = await sendAccountCreationEmail(email, name, plainPassword);
-
-        if (!emailResult.success) {
-            console.error('Failed to send account creation email:', emailResult.error);
-            // Continue even if email fails - account is created
-        }
 
         res.status(201).json({
             _id: teacher._id,
             name: teacher.name,
             email: teacher.email,
             userType: teacher.userType,
-            role: teacher.role,
-            emailSent: emailResult.success
+            role: teacher.role
         });
     } catch (error) {
         console.error(error);
@@ -119,10 +104,11 @@ const updateTeacher = async (req, res) => {
         const { password, ...otherUpdates } = req.body;
         let plainPassword = null;
 
-        // If updating password
+        // If updating password (creating account from Manage Teacher Account)
         if (password) {
             const salt = await bcrypt.genSalt(10);
             otherUpdates.password = await bcrypt.hash(password, salt);
+            otherUpdates.userType = 'teacher'; // Set userType when creating account
             plainPassword = password; // Store plain password for email
         }
 
@@ -132,7 +118,7 @@ const updateTeacher = async (req, res) => {
             return res.status(404).json({ message: 'Teacher not found' });
         }
 
-        // Send email if password was updated
+        // Send email if password was updated (account created)
         if (plainPassword) {
             const { sendAccountCreationEmail } = require('../config/emailService');
             const emailResult = await sendAccountCreationEmail(teacher.email, teacher.name, plainPassword);

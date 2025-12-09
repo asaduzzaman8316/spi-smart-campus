@@ -141,19 +141,9 @@ export default function TeacherManager({ onBack }) {
                 userType: currentTeacher.userType || 'teacher',
                 role: currentTeacher.role || ''
             };
-
-            // Include password if provided (only for new teachers)
-            if (modalMode === 'add' && currentTeacher.password) {
-                teacherData.password = currentTeacher.password;
-            }
-
             if (modalMode === 'add') {
-                const response = await createTeacher(teacherData);
-                if (response.emailSent) {
-                    toast.success("Teacher added successfully! Welcome email sent.");
-                } else {
-                    toast.success("Teacher added successfully! (Email failed to send)");
-                }
+                await createTeacher(teacherData);
+                toast.success("Teacher added successfully! Create account in Manage Teacher Accounts.");
             } else {
                 await updateTeacher(currentTeacher.docId, teacherData);
                 toast.success("Teacher updated successfully");
@@ -285,10 +275,10 @@ export default function TeacherManager({ onBack }) {
                                                 </h3>
                                                 <div className="flex items-center gap-2">
                                                     <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${teacher.userType === 'super_admin'
-                                                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                                                            : teacher.userType === 'admin'
-                                                                ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                                                                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                                        ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                                        : teacher.userType === 'admin'
+                                                            ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                                                         }`}>
                                                         {teacher.userType === 'super_admin' ? 'Super Admin' : teacher.userType === 'admin' ? 'Dept Admin' : 'Teacher'}
                                                     </span>
