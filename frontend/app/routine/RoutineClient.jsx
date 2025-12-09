@@ -36,7 +36,7 @@ export default function RoutineDisplay() {
 
         setDepartments(departmentsData.map(d => ({ ...d, id: d._id })));
         setRoutines(routinesData.map(r => ({ ...r, id: r._id })));
-        setRooms(roomsData);
+        setRooms(Array.isArray(roomsData) ? roomsData : (roomsData.data || []));
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

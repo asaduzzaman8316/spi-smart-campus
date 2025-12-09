@@ -38,7 +38,7 @@ const adminSchema = mongoose.Schema({
 });
 
 // Indexes for better query performance
-adminSchema.index({ email: 1 });
+// Note: email already has index from unique: true
 adminSchema.index({ firebaseUid: 1 });
 adminSchema.index({ role: 1 });
 
