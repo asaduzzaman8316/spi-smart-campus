@@ -16,11 +16,11 @@ router.route('/profile/:uid').get(getTeacherByUid);
 router.route('/').get(getTeachers);
 
 // Protected routes (require admin)
-router.route('/').post(protect, authorize('admin'), teacherValidation.create, createTeacher);
-router.route('/register').post(teacherValidation.register, registerTeacher);
+router.route('/').post(protect, authorize('admin'), createTeacher);
+router.route('/register').post(registerTeacher);
 
 // Update: Allow admin OR the teacher themselves to update their profile
-router.route('/:id').put(protect, authorizeOwnerOrAdmin, teacherValidation.update, updateTeacher).delete(protect, authorize('admin'), idValidation, deleteTeacher);
+router.route('/:id').put(protect, authorizeOwnerOrAdmin, updateTeacher).delete(protect, authorize('admin'), idValidation, deleteTeacher);
 router.route('/unregister/:id').put(protect, authorize('admin'), idValidation, unregisterTeacher);
 
 module.exports = router;
