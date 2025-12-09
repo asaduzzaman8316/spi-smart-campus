@@ -79,11 +79,11 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     fetchRoutines()
                 ]);
 
-                setTeachers(teachersData.map(d => ({ ...d, id: d._id })));
-                setRooms(roomsData.map(d => ({ ...d, id: d._id })));
-                setSubjects(subjectsData.map(d => ({ ...d, id: d._id })));
-                setDepartments(departmentsData.map(d => ({ ...d, id: d._id })));
-                setAllRoutines(routinesData.map(d => ({ ...d, id: d._id })));
+                setTeachers(Array.isArray(teachersData) ? teachersData.map(d => ({ ...d, id: d._id })) : (teachersData.data || []).map(d => ({ ...d, id: d._id })));
+                setRooms(Array.isArray(roomsData) ? roomsData.map(d => ({ ...d, id: d._id })) : (roomsData.data || []).map(d => ({ ...d, id: d._id })));
+                setSubjects(Array.isArray(subjectsData) ? subjectsData.map(d => ({ ...d, id: d._id })) : (subjectsData.data || []).map(d => ({ ...d, id: d._id })));
+                setDepartments(Array.isArray(departmentsData) ? departmentsData.map(d => ({ ...d, id: d._id })) : (departmentsData.data || []).map(d => ({ ...d, id: d._id })));
+                setAllRoutines(Array.isArray(routinesData) ? routinesData.map(d => ({ ...d, id: d._id })) : (routinesData.data || []).map(d => ({ ...d, id: d._id })));
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
