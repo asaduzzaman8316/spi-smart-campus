@@ -89,8 +89,12 @@ export const deleteRoutine = async (id) => {
 };
 
 // Rooms
-export const fetchRooms = async () => {
-    const { data } = await api.get('/rooms');
+export const fetchRooms = async (search = '', type = '') => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (type) params.append('type', type);
+
+    const { data } = await api.get(`/rooms${params.toString() ? '?' + params.toString() : ''}`);
     return data;
 };
 

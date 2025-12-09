@@ -1,10 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { fetchPaginatedRooms, createRoom, updateRoom, deleteRoom } from '../../Lib/api';
+import { fetchRooms, createRoom, updateRoom, deleteRoom } from '../../Lib/api';
 import { ArrowLeft, Plus, Edit, Trash2, Search, X, Building, Grid, Users } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import Pagination from '@/components/Ui/Pagination';
+
 
 const INITIAL_ROOM = {
     number: '',
@@ -24,20 +24,18 @@ export default function RoomManager({ onBack }) {
     const [typeFilter, setTypeFilter] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pagination, setPagination] = useState(null);
+
 
     useEffect(() => {
         loadRooms();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, searchQuery, typeFilter]);
+    }, [searchQuery, typeFilter]);
 
     const loadRooms = async () => {
         try {
             setLoading(true);
-            const response = await fetchPaginatedRooms(currentPage, 9, searchQuery, typeFilter);
-            const rawData = response.data || [];
-            const paginationData = response.pagination;
+            const response = await fetchRooms(searchQuery, typeFilter);
+            const rawData = Array.isArray(response) ? response : (response.data || []);
 
             const roomsData = rawData.map(r => ({
                 docId: r._id,
@@ -46,7 +44,6 @@ export default function RoomManager({ onBack }) {
             }));
 
             setRooms(roomsData);
-            setPagination(paginationData);
         } catch (error) {
             console.error("Error fetching rooms:", error);
             toast.error("Failed to load rooms");
@@ -57,12 +54,10 @@ export default function RoomManager({ onBack }) {
 
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
-        setCurrentPage(1);
     };
 
     const handleTypeChange = (e) => {
         setTypeFilter(e.target.value);
-        setCurrentPage(1);
     };
 
     const handleAddRoom = () => {
@@ -119,7 +114,8 @@ export default function RoomManager({ onBack }) {
             loadRooms();
         } catch (error) {
             console.error("Error saving room:", error);
-            toast.error("Failed to save room");
+            const errorMessage = error.response?.data?.message || error.message || "Failed to save room";
+            toast.error(errorMessage);
         } finally {
             setSaving(false);
         }
@@ -211,62 +207,54 @@ export default function RoomManager({ onBack }) {
                     </div>
                 ) : (
                     <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                        {rooms.map((room, index) => (
-                            <div
-                                key={index}
-                                className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-blue-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
-                            >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border-2 border-blue-100 dark:border-blue-500/30">
-                                            <Building className="text-blue-600 dark:text-blue-500" size={20} />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                                                {room.number}
-                                            </h3>
-                                            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 text-sm font-medium">
-                                                <Grid size={14} className="text-purple-400 dark:text-purple-500" />
-                                                {room.type}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                            {rooms.map((room, index) => (
+                                <div
+                                    key={index}
+                                    className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-blue-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border-2 border-blue-100 dark:border-blue-500/30">
+                                                <Building className="text-blue-600 dark:text-blue-500" size={20} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                                                    {room.number}
+                                                </h3>
+                                                <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 text-sm font-medium">
+                                                    <Grid size={14} className="text-purple-400 dark:text-purple-500" />
+                                                    {room.type}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
-                                        <Users size={14} className="text-gray-400 dark:text-slate-400" />
-                                        <span>Capacity: {room.capacity}</span>
+                                    <div className="space-y-2 mb-4">
+                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                            <Users size={14} className="text-gray-400 dark:text-slate-400" />
+                                            <span>Capacity: {room.capacity}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 justify-end opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => handleEditRoom(room)}
+                                            className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => setDeleteConfirm(room)}
+                                            className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors border border-red-100 dark:border-transparent"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="flex gap-2 justify-end opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        onClick={() => handleEditRoom(room)}
-                                        className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
-                                    >
-                                        <Edit size={18} />
-                                    </button>
-                                    <button
-                                        onClick={() => setDeleteConfirm(room)}
-                                        className="p-2 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors border border-red-100 dark:border-transparent"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {pagination && (
-                        <div className="mt-8 flex justify-center">
-                            <Pagination
-                                pagination={pagination}
-                                onPageChange={setCurrentPage}
-                            />
+                            ))}
                         </div>
-                    )}
+
+
                     </>
                 )}
 
