@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { fetchPaginatedTeachers, fetchDepartments, createTeacher, updateTeacher, deleteTeacher } from '../../Lib/api';
+import { fetchTeachers, fetchDepartments, createTeacher, updateTeacher, deleteTeacher } from '../../Lib/api';
 import { ArrowLeft, Plus, Edit, Trash2, Search, X, Users, Briefcase, Mail, Phone, User } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Image from 'next/image';
-import Pagination from '@/components/Ui/Pagination';
+
 
 const INITIAL_TEACHER = {
     name: '',
@@ -29,23 +29,21 @@ export default function TeacherManager({ onBack }) {
     const [departmentFilter, setDepartmentFilter] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [pagination, setPagination] = useState(null);
+
 
     useEffect(() => {
         loadTeachers();
         loadDepartments();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, searchQuery, departmentFilter]);
+    }, [searchQuery, departmentFilter]);
 
     const loadTeachers = async () => {
         try {
             setLoading(true);
-            const response = await fetchPaginatedTeachers(currentPage, 9, searchQuery, departmentFilter);
-            const rawData = response.data || [];
-            const paginationData = response.pagination;
+            const response = await fetchTeachers(searchQuery, departmentFilter);
+            const rawData = Array.isArray(response) ? response : (response.data || []);
 
-            // Map _id to docId and ensure id is present if needed for UI, or use _id as key
+            // Map _id to docId
             const teachersData = rawData.map(t => ({
                 docId: t._id,
                 ...t,
@@ -58,7 +56,6 @@ export default function TeacherManager({ onBack }) {
             }));
 
             setTeachers(teachersData);
-            setPagination(paginationData);
         } catch (error) {
             console.error("Error fetching teachers:", error);
             toast.error("Failed to load teachers");
@@ -80,12 +77,10 @@ export default function TeacherManager({ onBack }) {
 
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
-        setCurrentPage(1); // Reset to page 1 on search
     };
 
     const handleDepartmentChange = (e) => {
         setDepartmentFilter(e.target.value);
-        setCurrentPage(1); // Reset to page 1 on filter
     };
 
 
@@ -156,7 +151,8 @@ export default function TeacherManager({ onBack }) {
             loadTeachers();
         } catch (error) {
             console.error("Error saving teacher:", error);
-            toast.error("Failed to save teacher");
+            const errorMessage = error.response?.data?.message || error.message || "Failed to save teacher";
+            toast.error(errorMessage);
         } finally {
             setSaving(false);
         }
@@ -325,15 +321,7 @@ export default function TeacherManager({ onBack }) {
                             ))}
                         </div>
 
-                        {/* Pagination Controls */}
-                        {pagination && (
-                            <div className="mt-8 flex justify-center">
-                                <Pagination
-                                    pagination={pagination}
-                                    onPageChange={setCurrentPage}
-                                />
-                            </div>
-                        )}
+
                     </>
                 )}
 

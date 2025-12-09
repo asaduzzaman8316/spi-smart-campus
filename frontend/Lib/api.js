@@ -22,9 +22,12 @@ api.interceptors.request.use(
 );
 
 export default api;
-export const fetchTeachers = async () => {
-    // Request a large limit to get all teachers for the list/dropdowns
-    const { data } = await api.get('/teachers?limit=1000');
+export const fetchTeachers = async (search = '', department = '') => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (department) params.append('department', department);
+
+    const { data } = await api.get(`/teachers${params.toString() ? '?' + params.toString() : ''}`);
     return data && data.data ? data.data : data;
 };
 
