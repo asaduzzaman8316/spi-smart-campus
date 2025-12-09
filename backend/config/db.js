@@ -12,7 +12,7 @@ const connectDB = async () => {
         }
 
         const conn = await mongoose.connect(uri, {
-            bufferCommands: false, // Disable buffering in serverless
+            bufferCommands: true, // Enable buffering so queries wait for connection
             serverSelectionTimeoutMS: 30000, // Increase to 30s for cold starts
             socketTimeoutMS: 45000,
             maxPoolSize: 10, // Limit connections in serverless
