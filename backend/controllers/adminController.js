@@ -1,5 +1,4 @@
 const Admin = require('../models/Admin');
-const { createPaginatedResponse } = require('../middleware/pagination');
 const bcrypt = require('bcryptjs');
 
 // @desc    Get all admins
@@ -7,17 +6,17 @@ const bcrypt = require('bcryptjs');
 // @access  Private (Super Admin only)
 const getAdmins = async (req, res) => {
     try {
-        const { skip, limit } = req.pagination;
-
         const total = await Admin.countDocuments();
         const admins = await Admin.find()
             .select('-__v -password')
-            .skip(skip)
-            .limit(limit)
             .sort({ createdAt: -1 })
             .lean();
 
-        res.json(createPaginatedResponse(admins, total, req.pagination));
+        res.json({
+            success: true,
+            data: admins,
+            count: total
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

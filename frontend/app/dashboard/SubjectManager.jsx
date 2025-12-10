@@ -4,7 +4,7 @@ import { fetchPaginatedSubjects, fetchDepartments, createSubject, updateSubject,
 import { ArrowLeft, Plus, Edit, Trash2, Search, X, BookOpen, Briefcase, Hash, Calendar } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import Pagination from '@/components/Ui/Pagination';
+// import Pagination from '@/components/Ui/Pagination'; // Removed
 
 const INITIAL_SUBJECT = {
     name: '',
@@ -29,20 +29,18 @@ export default function SubjectManager({ onBack }) {
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [saving, setSaving] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pagination, setPagination] = useState(null);
 
     useEffect(() => {
         loadSubjects();
         loadDepartments();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage, searchQuery, departmentFilter, semesterFilter]);
+    }, [searchQuery, departmentFilter, semesterFilter]);
 
     const loadSubjects = async () => {
         try {
             setLoading(true);
-            const response = await fetchPaginatedSubjects(currentPage, 9, searchQuery, departmentFilter, semesterFilter);
+            const response = await fetchPaginatedSubjects(1, 1000, searchQuery, departmentFilter, semesterFilter);
             const rawData = response.data || [];
-            const paginationData = response.pagination;
 
             const subjectsData = rawData.map(s => ({
                 docId: s._id,
@@ -53,7 +51,6 @@ export default function SubjectManager({ onBack }) {
             }));
 
             setSubjects(subjectsData);
-            setPagination(paginationData);
         } catch (error) {
             console.error("Error fetching subjects:", error);
             toast.error("Failed to load subjects");
@@ -297,14 +294,7 @@ export default function SubjectManager({ onBack }) {
                         </div>
 
                         {/* Pagination Controls */}
-                        {pagination && (
-                            <div className="mt-8 flex justify-center">
-                                <Pagination
-                                    pagination={pagination}
-                                    onPageChange={setCurrentPage}
-                                />
-                            </div>
-                        )}
+                        {/* Pagination Controls - Removed */}
                     </>
                 )}
 

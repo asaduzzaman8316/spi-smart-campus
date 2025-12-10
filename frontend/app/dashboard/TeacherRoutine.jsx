@@ -27,7 +27,7 @@ export default function TeacherRoutine({ onBack }) {
                     fetchRooms()
                 ]);
 
-                setRooms(roomsData);
+                setRooms(Array.isArray(roomsData) ? roomsData : []);
 
                 // Filter routines where the teacher has at least one class
                 const teacherRoutines = routinesData.filter(routine =>
@@ -300,7 +300,7 @@ export default function TeacherRoutine({ onBack }) {
                                                                         <span>
                                                                             {classInfo.room}
                                                                             {(() => {
-                                                                                const room = rooms.find(r => r.number === classInfo.room || r.name === classInfo.room);
+                                                                                const room = Array.isArray(rooms) ? rooms.find(r => r.number === classInfo.room || r.name === classInfo.room) : null;
                                                                                 return room && room.type ? ` (${room.type})` : '';
                                                                             })()}
                                                                         </span>

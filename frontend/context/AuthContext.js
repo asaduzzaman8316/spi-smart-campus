@@ -11,24 +11,23 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    useEffect(() => {
-        // Check for token on load
-        const checkAuth = async () => {
-            const token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    const { data } = await api.get('/auth/me');
-                    setUser(data);
-                } catch (error) {
-                    console.error('Auth verification failed', error);
-                    localStorage.removeItem('token');
-                    setUser(null);
-                }
+    const checkUser = async () => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const { data } = await api.get('/auth/me');
+                setUser(data);
+            } catch (error) {
+                console.error('Auth verification failed', error);
+                localStorage.removeItem('token');
+                setUser(null);
             }
-            setLoading(false);
-        };
+        }
+        setLoading(false);
+    };
 
-        checkAuth();
+    useEffect(() => {
+        checkUser();
     }, []);
 
     const login = async (email, password) => {
@@ -42,7 +41,7 @@ export function AuthProvider({ children }) {
 
             // Redirect based on role
             if (data.role === 'teacher') {
-                router.push('/teacher/profile'); // Or wherever teachers go
+                router.push('/dashboard'); // Teachers go to dashboard (which defaults to profile)
             } else {
                 router.push('/dashboard');
             }
@@ -63,8 +62,8 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
-            {children}
+        <AuthContext.Provider value={{ user, loading, login, logout, checkUser }}>
+            {!loading && children}
         </AuthContext.Provider>
     );
 }

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation'; // Added import
 import { User, Mail, Phone, Briefcase, Hash, Clock, Shield, Edit2, Key, Save, X, Camera, Menu } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { toast } from 'react-toastify';
@@ -9,8 +10,9 @@ import { InfoCard } from './InfoCard';
 import { updateTeacher } from '../../Lib/api';
 
 export default function TeacherProfile() {
-    const { user, login } = useAuth(); // login to update user state if needed
+    const { user, checkUser, logout } = useAuth(); // login to update user state if needed
     const { toggleMobileSidebar } = useSidebar();
+    const router = useRouter(); // Import useRouter
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [showHint, setShowHint] = useState(true);
@@ -38,15 +40,10 @@ export default function TeacherProfile() {
         setLoading(true);
         try {
             // Update in MongoDB
-            const updatedUser = await updateTeacher(user._id, formData);
+            await updateTeacher(user._id, formData);
 
-            // Update Auth Context user
-            // Assuming useAuth exposes a method to update user, or we relying on next fetch.
-            // But simple way is to reload or we can just update local state if context supports direct update.
-            // For now, toast success.
-            // Ideally AuthContext should provide `updateUser`.
-            // As a fallback, we can trigger a profile re-fetch or login again with new data?
-            // Let's assume we just note success.
+            // Refetch user data to update UI
+            await checkUser();
 
             toast.success("Profile updated successfully!");
             setIsEditing(false);
@@ -69,9 +66,16 @@ export default function TeacherProfile() {
             // Update password via API
             await updateTeacher(user._id, { password: passwords.new });
 
-            toast.success("Password changed successfully!");
+            toast.success("Password changed successfully! Please login again.");
             setIsChangingPassword(false);
             setPasswords({ current: '', new: '', confirm: '' });
+            
+            // Logout and redirect
+            logout();
+            // router.push('/login'); // logout usually handles redirect, but if not:
+            // Since logout is likely async or clears state, the AuthContext/ProtectedRoute might handle it.
+            // But let's be explicit if needed. 
+            // Actually usually logout clears user and redirects. 
         } catch (error) {
             console.error("Error changing password:", error);
             toast.error("Failed to change password. Please try again.");

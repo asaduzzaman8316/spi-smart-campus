@@ -9,18 +9,18 @@ const {
     getTeacherByUid,
     unregisterTeacher
 } = require('../controllers/teacherController');
-const { protect, authorize, authorizeOwnerOrAdmin } = require('../middleware/authMiddleware');
+// const { protect, authorize, authorizeOwnerOrAdmin } = require('../middleware/authMiddleware'); // Removed for public access
 const { idValidation } = require('../validators/validators');
 // Public routes
 router.route('/profile/:uid').get(getTeacherByUid);
 router.route('/').get(getTeachers);
 
-// Protected routes (require admin)
-router.route('/').post(protect, authorize('admin'), createTeacher);
+// Public routes (formerly protected)
+router.route('/').post(createTeacher);
 router.route('/register').post(registerTeacher);
 
-// Update: Allow admin OR the teacher themselves to update their profile
-router.route('/:id').put(protect, authorizeOwnerOrAdmin, updateTeacher).delete(protect, authorize('admin'), idValidation, deleteTeacher);
-router.route('/unregister/:id').put(protect, authorize('admin'), idValidation, unregisterTeacher);
+// Update: Allow anyone to update/delete/unregister (Public)
+router.route('/:id').put(updateTeacher).delete(idValidation, deleteTeacher);
+router.route('/unregister/:id').put(idValidation, unregisterTeacher);
 
 module.exports = router;

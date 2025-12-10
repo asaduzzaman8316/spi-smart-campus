@@ -16,12 +16,11 @@ const protect = async (req, res, next) => {
             // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            // Get user from the token.role
-            // We embed role in token to know which collection to query
-            // Assuming token payload: { id, role, ... }
-            if (decoded.role === 'teacher') {
-                req.user = await Teacher.findById(decoded.id).select('-password');
-            } else {
+            // Try to find user in Teacher collection
+            req.user = await Teacher.findById(decoded.id).select('-password');
+
+            // If not found, try Admin collection
+            if (!req.user) {
                 req.user = await Admin.findById(decoded.id).select('-password');
             }
 
@@ -30,7 +29,10 @@ const protect = async (req, res, next) => {
             }
 
             // Extend req.user with role from token just in case
-            if (!req.user.role) req.user.role = decoded.role;
+            // Extend req.user with role from token or userType
+            if (!req.user.role) {
+                req.user.role = req.user.userType || decoded.role;
+            }
 
             next();
         } catch (error) {

@@ -15,6 +15,7 @@ const INITIAL_TEACHER = {
     shift: '',
     role: '',
     image: '',
+    userType: 'teacher',
     id: 0
 };
 
@@ -138,11 +139,12 @@ export default function TeacherManager({ onBack }) {
                 department: currentTeacher.department,
                 shift: currentTeacher.shift,
                 image: currentTeacher.image,
-                role: currentTeacher.role || ''
+                role: currentTeacher.role || '',
+                userType: currentTeacher.userType || 'teacher'
             };
             if (modalMode === 'add') {
                 await createTeacher(teacherData);
-                toast.success("Teacher added successfully! Create account in Manage Teacher Accounts.");
+                toast.success("Teacher profile created. Note: No email sent (account not active yet).");
             } else {
                 await updateTeacher(currentTeacher.docId, teacherData);
                 toast.success("Teacher updated successfully");
@@ -276,8 +278,8 @@ export default function TeacherManager({ onBack }) {
                                                     {/* Show Admin badges, but for Teacher type show Role instead */}
                                                     {teacher.userType !== 'teacher' && (
                                                         <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${teacher.userType === 'super_admin'
-                                                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                                                                : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                                            : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                                                             }`}>
                                                             {teacher.userType === 'super_admin' ? 'Super Admin' : 'Dept Admin'}
                                                         </span>

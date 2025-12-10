@@ -31,16 +31,9 @@ export const fetchTeachers = async (search = '', department = '') => {
     return data && data.data ? data.data : data;
 };
 
+// Deprecated: kept for backward compatibility if needed, but redirects to non-paginated
 export const fetchPaginatedTeachers = async (page = 1, limit = 9, search = '', department = '') => {
-    const params = new URLSearchParams({
-        page,
-        limit,
-    });
-    if (search) params.append('search', search);
-    if (department) params.append('department', department);
-
-    const { data } = await api.get(`/teachers?${params.toString()}`);
-    return data; // Returns { success, data, pagination }
+    return fetchTeachers(search, department);
 };
 
 export const createTeacher = async (teacherData) => {
@@ -130,10 +123,14 @@ export const fetchPaginatedRooms = async (page = 1, limit = 9, search = '', type
 // ... existing code ...
 
 export const fetchPaginatedSubjects = async (page = 1, limit = 9, search = '', department = '', semester = '') => {
-    const params = new URLSearchParams({ page, limit });
+    // Ignoring page/limit, fetching all matching subjects
+    const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (department) params.append('department', department);
     if (semester) params.append('semester', semester);
+    // Use large limit to simulate 'all'
+    params.append('limit', '1000');
+
     const { data } = await api.get(`/subjects?${params.toString()}`);
     return data;
 };

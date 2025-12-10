@@ -108,7 +108,9 @@ const updateTeacher = async (req, res) => {
         if (password) {
             const salt = await bcrypt.genSalt(10);
             otherUpdates.password = await bcrypt.hash(password, salt);
-            otherUpdates.userType = 'teacher'; // Set userType when creating account
+            // Use provided userType or default to 'teacher' if not specified
+            // This allows creating Admins/Super Admins via this flow
+            otherUpdates.userType = req.body.userType || 'teacher';
             plainPassword = password; // Store plain password for email
         }
 

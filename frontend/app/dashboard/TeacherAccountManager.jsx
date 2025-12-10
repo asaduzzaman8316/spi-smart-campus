@@ -6,7 +6,10 @@ import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Image from 'next/image';
 
+import { useAuth } from '../../context/AuthContext';
+
 export default function TeacherAccountManager() {
+    const { user } = useAuth(); // Get current user
     const [teachers, setTeachers] = useState([]);
     const [filteredTeachers, setFilteredTeachers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,6 +22,7 @@ export default function TeacherAccountManager() {
     const [processing, setProcessing] = useState(false);
     const [createdAccount, setCreatedAccount] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(null); // Teacher to delete
+    const [accountType, setAccountType] = useState('teacher');
 
     useEffect(() => {
         loadTeachers();
@@ -52,6 +56,7 @@ export default function TeacherAccountManager() {
         const password = generatePassword(teacher.name);
         setSelectedTeacher(teacher);
         setGeneratedPassword(password);
+        setAccountType(teacher.userType || 'teacher');
         setCreatedAccount(null);
         setShowModal(true);
     };
@@ -288,7 +293,9 @@ export default function TeacherAccountManager() {
                                             >
                                                 <option value="teacher">Teacher</option>
                                                 <option value="admin">Department Admin</option>
-                                                <option value="super_admin">Super Admin</option>
+                                                {user?.userType === 'super_admin' && (
+                                                    <option value="super_admin">Super Admin</option>
+                                                )}
                                             </select>
                                         </div>
 

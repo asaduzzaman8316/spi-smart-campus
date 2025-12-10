@@ -15,7 +15,7 @@ const adminSchema = mongoose.Schema({
         required: true,
         select: false
     },
-    role: {
+    userType: {
         type: String,
         required: true,
         enum: ['super_admin', 'department_admin'],
@@ -25,7 +25,7 @@ const adminSchema = mongoose.Schema({
         type: String,
         // Only required for department_admin
         required: function () {
-            return this.role === 'department_admin';
+            return this.userType === 'department_admin';
         }
     },
     phone: String,
@@ -40,6 +40,6 @@ const adminSchema = mongoose.Schema({
 // Indexes for better query performance
 // Note: email already has index from unique: true
 adminSchema.index({ firebaseUid: 1 });
-adminSchema.index({ role: 1 });
+adminSchema.index({ userType: 1 });
 
 module.exports = mongoose.model('Admin', adminSchema);

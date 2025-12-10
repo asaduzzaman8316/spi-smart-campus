@@ -30,7 +30,7 @@ const loginUser = async (req, res) => {
         }
 
         if (user && (await bcrypt.compare(password, user.password))) {
-            const token = generateToken(user._id, user.role || 'teacher');
+            const token = generateToken(user._id, user.userType || 'teacher');
 
             // Remove password from response
             const userResponse = user.toObject();

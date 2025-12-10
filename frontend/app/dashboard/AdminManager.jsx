@@ -4,7 +4,6 @@ import { fetchAdmins, createAdmin, deleteAdmin } from '@/Lib/adminApi';
 import { fetchDepartments } from '@/Lib/api';
 import { UserPlus, Trash2, Search, Shield } from 'lucide-react';
 import { toast } from 'react-toastify';
-import Pagination from '@/components/Ui/Pagination';
 import Image from 'next/image';
 
 export default function AdminManager() {
@@ -13,8 +12,6 @@ export default function AdminManager() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [pagination, setPagination] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -27,14 +24,13 @@ export default function AdminManager() {
     useEffect(() => {
         loadAdmins();
         loadDepartments();
-    }, [currentPage]);
+    }, []);
 
     const loadAdmins = async () => {
         try {
             setLoading(true);
-            const response = await fetchAdmins(currentPage, 20);
+            const response = await fetchAdmins();
             setAdmins(response.data || []);
-            setPagination(response.pagination);
         } catch (error) {
             toast.error('Failed to load admins');
             console.error(error);
@@ -215,12 +211,7 @@ export default function AdminManager() {
                         </div>
 
                         {/* Pagination */}
-                        {pagination && (
-                            <Pagination
-                                pagination={pagination}
-                                onPageChange={setCurrentPage}
-                            />
-                        )}
+                        {/* Pagination - Removed */}
                     </>
                 )}
             </div>

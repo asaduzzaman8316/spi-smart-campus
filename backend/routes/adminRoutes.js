@@ -10,7 +10,6 @@ const {
     unregisterAdmin
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/authMiddleware');
-const { paginate } = require('../middleware/pagination');
 const { idValidation } = require('../validators/validators');
 
 // Public routes
@@ -23,7 +22,7 @@ router.route('/profile')
 
 // Protected routes (super admin only)
 router.route('/')
-    .get(protect, authorize('super_admin'), paginate, getAdmins)
+    .get(protect, authorize('super_admin'), getAdmins)
     .post(protect, authorize('super_admin'), createAdmin);
 
 router.route('/:id')

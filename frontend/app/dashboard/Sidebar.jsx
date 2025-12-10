@@ -20,17 +20,18 @@ export default function Sidebar({ currentView, setView }) {
         { id: 'home', label: 'Overview', icon: Home, roles: ['admin', 'teacher', 'super_admin'] },
         { id: 'create', label: 'Create Routine', icon: PlusCircle, roles: ['admin', 'super_admin'] },
         { id: 'show', label: 'Show Routines', icon: List, roles: ['admin', 'super_admin'] },
-        { id: 'my-routine', label: 'My Routine', icon: List, roles: ['teacher'] },
-        { id: 'today-routine', label: "Today's Routine", icon: Briefcase, roles: ['teacher'] },
-        { id: 'profile', label: 'Profile', icon: User, roles: ['teacher'] },
+        { id: 'my-routine', label: 'My Routine', icon: List, roles: ['teacher', 'admin'] },
+        { id: 'today-routine', label: "Today's Routine", icon: Briefcase, roles: ['teacher', 'admin'] },
+        { id: 'profile', label: 'Profile', icon: User, roles: ['teacher', 'admin', 'super_admin'] },
         { id: 'teachers', label: 'Manage Teachers', icon: Users, roles: ['admin', 'super_admin'] },
         { id: 'subjects', label: 'Manage Subjects', icon: BookOpen, roles: ['admin', 'super_admin'] },
         { id: 'rooms', label: 'Manage Rooms', icon: Building, roles: ['admin', 'super_admin'] },
-        { id: 'accounts', label: 'Teacher Accounts', icon: Users, roles: ['admin', 'super_admin'] },
+        { id: 'accounts', label: 'Teacher Accounts', icon: Users, roles: ['admin', 'super_admin'] }, // Shared access
         { id: 'admins', label: 'Manage Admins', icon: Shield, roles: ['super_admin'] },
     ];
 
-    const menuItems = allMenuItems.filter(item => item.roles.includes(user?.role || 'admin'));
+    const userRole = user?.userType || user?.role || 'teacher';
+    const menuItems = allMenuItems.filter(item => item.roles.includes(userRole === 'department_admin' ? 'admin' : userRole));
 
     const handleItemClick = (viewId) => {
         setView(viewId);
