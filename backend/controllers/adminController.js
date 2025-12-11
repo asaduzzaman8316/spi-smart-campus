@@ -147,7 +147,36 @@ const deleteAdmin = async (req, res) => {
 // @route   PUT /api/admins/unregister/:id
 // @access  Private (Super Admin only)
 const unregisterAdmin = async (req, res) => {
-    res.status(501).json({ message: 'Unregister functionality deprecated in JWT version.' });
+    try {
+        const admin = await Admin.findById(req.params.id);
+        if (!admin) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+
+        // Prevent unregistering super admin
+        if (admin.role === 'super_admin') {
+            return res.status(403).json({ message: 'Cannot unregister super admin' });
+        }
+
+        // Reset password to indicate no account
+        admin.password = 'NO_ACCOUNT_YET';
+        await admin.save();
+
+        // Send notification email
+        const { sendAccountUnregisterEmail } = require('../config/emailService');
+        const emailResult = await sendAccountUnregisterEmail(admin.email, admin.name);
+
+        if (!emailResult.success) {
+            console.error('Failed to send unregister email:', emailResult.error);
+        }
+
+        res.status(200).json({
+            message: 'Admin account unregistered successfully',
+            emailSent: emailResult.success
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
 module.exports = {

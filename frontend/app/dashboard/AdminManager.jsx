@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { fetchAdmins, createAdmin, deleteAdmin } from '@/Lib/adminApi';
+import { fetchAdmins, unregisterAdmin } from '@/Lib/adminApi';
 import { fetchDepartments } from '@/Lib/api';
 import { UserPlus, Trash2, Search, Shield } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -8,22 +8,11 @@ import Image from 'next/image';
 
 export default function AdminManager() {
     const [admins, setAdmins] = useState([]);
-    const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        department: '',
-        phone: '',
-        image: ''
-    });
-    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         loadAdmins();
-        loadDepartments();
     }, []);
 
     const loadAdmins = async () => {
@@ -39,48 +28,19 @@ export default function AdminManager() {
         }
     };
 
-    const loadDepartments = async () => {
-        try {
-            const data = await fetchDepartments();
-            setDepartments(data);
-        } catch (error) {
-            console.error('Failed to load departments:', error);
-        }
-    };
 
-    const handleCreate = async (e) => {
-        e.preventDefault();
 
-        if (!formData.name || !formData.email || !formData.department) {
-            toast.error('Please fill in all required fields');
+    const handleUnregister = async (id, name) => {
+        if (!confirm(`Are you sure you want to unregister ${name}? This will remove their login access but keep their profile data.`)) {
             return;
         }
 
         try {
-            setSaving(true);
-            await createAdmin(formData);
-            toast.success('Department admin created successfully');
-            setShowModal(false);
-            setFormData({ name: '', email: '', department: '', phone: '', image: '' });
+            await unregisterAdmin(id);
+            toast.success('Admin access removed successfully');
             loadAdmins();
         } catch (error) {
-            toast.error(error.message || 'Failed to create admin');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleDelete = async (id, name) => {
-        if (!confirm(`Are you sure you want to delete ${name}?`)) {
-            return;
-        }
-
-        try {
-            await deleteAdmin(id);
-            toast.success('Admin deleted successfully');
-            loadAdmins();
-        } catch (error) {
-            toast.error(error.message || 'Failed to delete admin');
+            toast.error(error.message || 'Failed to unregister admin');
         }
     };
 
@@ -94,22 +54,13 @@ export default function AdminManager() {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                            Admin Management
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1">
-                            Manage department administrators
-                        </p>
-                    </div>
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                    >
-                        <UserPlus size={20} />
-                        Create Department Admin
-                    </button>
+                <div className="mb-6">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        Admin Management
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                        View and manage department administrators
+                    </p>
                 </div>
 
                 {/* Search */}
@@ -192,15 +143,13 @@ export default function AdminManager() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     {admin.role !== 'super_admin' && (
-                                                        <div className="flex items-center gap-2">
-                                                            <button
-                                                                onClick={() => handleDelete(admin._id, admin.name)}
-                                                                className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                                                title="Delete"
-                                                            >
-                                                                <Trash2 size={18} />
-                                                            </button>
-                                                        </div>
+                                                        <button
+                                                            onClick={() => handleUnregister(admin._id, admin.name)}
+                                                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                            title="Unregister"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
                                                     )}
                                                 </td>
                                             </tr>
@@ -216,90 +165,7 @@ export default function AdminManager() {
                 )}
             </div>
 
-            {/* Create Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                            Create Department Admin
-                        </h2>
-                        <form onSubmit={handleCreate} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Name *
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Email *
-                                </label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Department *
-                                </label>
-                                <select
-                                    required
-                                    value={formData.department}
-                                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                >
-                                    <option value="">Select Department</option>
-                                    {departments.map((dept) => (
-                                        <option key={dept._id} value={dept.name}>
-                                            {dept.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Phone
-                                </label>
-                                <input
-                                    type="tel"
-                                    value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                />
-                            </div>
-                            <div className="flex gap-2 pt-4">
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-                                >
-                                    {saving ? 'Creating...' : 'Create Admin'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowModal(false);
-                                        setFormData({ name: '', email: '', department: '', phone: '', image: '' });
-                                    }}
-                                    className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 }

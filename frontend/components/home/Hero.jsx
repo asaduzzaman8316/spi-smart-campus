@@ -29,20 +29,9 @@ export default function Hero() {
                         Sylhet Polytechnic
                     </span>
                     <br />
-                    <Typewriter
-                        options={{
-                            strings: [
-                                'Institute',
-                                'Institute'
-                            ],
-
-                            autoStart: true,
-                            loop: true,
-                            delay: 85,
-                            deleteSpeed: 100,
-                            wrapperClassName: 'pl-2'
-                        }}
-                    />
+                    <span className="text-5xl text-gray-900 dark:text-white md:text-7xl lg:text-8xl font-bold mb-6 animate-fade-in-up">
+                        Institute
+                    </span>
                 </h1>
 
                 {/* Subtitle */}
