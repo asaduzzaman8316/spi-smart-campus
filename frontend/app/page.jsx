@@ -14,7 +14,7 @@ export const metadata = {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 overflow-x-clip transition-colors duration-300">
+    <div className="min-h-screen bg-background overflow-x-clip transition-colors duration-300">
       <ParticleBackground />
       <Hero />
       <Stats />

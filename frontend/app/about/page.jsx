@@ -15,7 +15,7 @@ export const metadata = {
 export default function AboutPage() {
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-white">
+    <div className="min-h-screen overflow-x-clip bg-background text-foreground">
       {/* Hero Section */}
       <Hero />
 

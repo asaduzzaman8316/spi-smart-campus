@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoutineBuilder from "./RoutineBuilder";
@@ -11,219 +11,232 @@ import TeacherAccountManager from "./TeacherAccountManager";
 import TeacherRoutine from "./TeacherRoutine";
 import TeacherToday from "./TeacherToday";
 import TeacherProfile from "./TeacherProfile";
-import AdminManager from "./AdminManager";
 import AdminProfile from "./AdminProfile";
-import { PlusCircle, List, LayoutDashboard, Users, BookOpen, Building, Shield } from 'lucide-react';
+import AdminManager from "./AdminManager";
 import Sidebar from './Sidebar';
-import { useSidebar } from '@/context/SidebarContext';
+import { useRouter } from 'next/navigation';
+import {
+    Calendar,
+    Users,
+    FileText,
+    Clock,
+    BookOpen,
+    Building,
+    List
+} from 'lucide-react';
+
+const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
+    <button
+        onClick={onClick}
+        className="group relative overflow-hidden bg-card-bg p-6 rounded-2xl border border-border-color hover:border-brand-mid transition-all duration-300 text-left hover:shadow-xl hover:shadow-brand-mid/10 hover:-translate-y-1"
+    >
+        <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity duration-300 rotate-12 scale-150`}>
+            <Icon size={120} className="text-brand-mid" />
+        </div>
+
+        <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 shadow-lg ${colorClass}`}>
+            <Icon size={28} className="text-white" />
+        </div>
+
+        <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-brand-mid transition-colors">{label}</h3>
+        <p className="text-text-secondary text-sm leading-relaxed">{description}</p>
+
+        <div className="mt-6 flex items-center text-sm font-medium text-brand-mid opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+            <span>Access Module</span>
+            <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+        </div>
+    </button>
+);
 
 export default function DashboardPage() {
-    const [view, setView] = useState('home'); 
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [activeView, setActiveView] = useState('overview');
+    const { user: authUser, loading: authLoading } = useAuth();
+    const router = useRouter();
+
+    const userRole = authUser?.userType;
     const [editingRoutine, setEditingRoutine] = useState(null);
-    const { isCollapsed } = useSidebar();
-    const { user } = useAuth();
 
-    const handleEditRoutine = (routine) => {
-        setEditingRoutine(routine);
-        setView('create');
-    };
-
-    const handleBack = () => {
-        setView('home');
-        setEditingRoutine(null);
-    };
+    useEffect(() => {
+        if (!authLoading && !authUser) {
+            router.push('/login');
+        }
+    }, [authUser, authLoading, router]);
 
     const renderContent = () => {
-        switch (view) {
-            case 'create':
+        switch (activeView) {
+            case 'overview':
                 return (
-                    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <RoutineBuilder onBack={handleBack} initialData={editingRoutine} />
-                    </div>
-                );
-            case 'show':
-                return <RoutineViewer onBack={() => setView('home')} onEdit={handleEditRoutine} />;
-            case 'teachers':
-                return <TeacherManager onBack={() => setView('home')} />;
-            case 'subjects':
-                return <SubjectManager onBack={() => setView('home')} />;
-            case 'rooms':
-                return <RoomManager onBack={() => setView('home')} />;
-            case 'accounts':
-                return <TeacherAccountManager onBack={() => setView('home')} />;
-            case 'my-routine':
-                return <TeacherRoutine onBack={() => setView('home')} />;
-            case 'today-routine':
-                return <TeacherToday onBack={() => setView('home')} />;
-            case 'profile':
-                if (user?.userType === 'super_admin') return <AdminProfile onBack={() => setView('home')} />;
-                return <TeacherProfile onBack={() => setView('home')} />;
-            case 'admins':
-                return <AdminManager onBack={() => setView('home')} />;
-            case 'home':
-            default:
-                if (user?.userType === 'teacher') {
-                    return (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
-                            <DashboardCard
-                                title="My Routine"
-                                icon={List}
-                                color="blue"
-                                desc="Check your complete class schedule."
-                                onClick={() => setView('my-routine')}
-                            />
-                            <DashboardCard
-                                title="Today's Classes"
-                                icon={LayoutDashboard}
-                                color="purple"
-                                desc="See what you have for today."
-                                onClick={() => setView('today-routine')}
-                            />
-                            <DashboardCard
-                                title="My Profile"
-                                icon={Users}
-                                color="emerald"
-                                desc="View and edit your personal information."
-                                onClick={() => setView('profile')}
-                            />
-                        </div>
-                    );
-                }
+                    <div className="space-y-8 animate-fade-in">
+                        {/* Welcome Header */}
+                        <div className="relative rounded-3xl overflow-hidden p-8 md:p-12">
+                            <div className="absolute inset-0 bg-linear-to-r from-brand-start via-brand-mid to-brand-end opacity-90"></div>
+                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                            {/* Abstract Shapes */}
+                            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
+                            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-black opacity-10 rounded-full blur-3xl"></div>
 
-                return (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
-                        <DashboardCard
-                            title="Create Routine"
-                            icon={PlusCircle}
-                            color="blue"
-                            desc="Build a new class routine from scratch."
-                            onClick={() => { setEditingRoutine(null); setView('create'); }}
-                        />
-                        <DashboardCard
-                            title="Show Routines"
-                            icon={List}
-                            color="purple"
-                            desc="View and manage existing routines."
-                            onClick={() => setView('show')}
-                        />
-                        <DashboardCard
-                            title="Manage Teachers"
-                            icon={Users}
-                            color="emerald"
-                            desc="Add, edit, and manage teacher information."
-                            onClick={() => setView('teachers')}
-                        />
-                        <DashboardCard
-                            title="Manage Subjects"
-                            icon={BookOpen}
-                            color="cyan"
-                            desc="Add, edit, and manage subjects."
-                            onClick={() => setView('subjects')}
-                        />
-                        <DashboardCard
-                            title="Manage Rooms"
-                            icon={Building}
-                            color="orange"
-                            desc="Add, edit, and manage rooms."
-                            onClick={() => setView('rooms')}
-                        />
-                        <DashboardCard
-                            title="Manage Accounts"
-                            icon={Users}
-                            color="teal"
-                            desc="Create and manage teacher accounts."
-                            onClick={() => setView('accounts')}
-                        />
-                        {
-                            user?.userType !== 'super_admin' &&
-                            (
-                                <DashboardCard
-                                    title="My Routine"
-                                    icon={List}
-                                    color="blue"
-                                    desc="Check your complete class schedule."
-                                    onClick={() => setView('my-routine')}
-                                />
-                            )
-                        }
-                        {
-                            user?.userType !== 'super_admin' &&
-                            (<DashboardCard
-                                title="Today's Classes"
-                                icon={LayoutDashboard}
-                                color="purple"
-                                desc="See what you have for today."
-                                onClick={() => setView('today-routine')}
-                            />)
-                        }
-                        <DashboardCard
-                            title="My Profile"
-                            icon={Users}
-                            color="emerald"
-                            desc="View and edit your personal information."
-                            onClick={() => setView('profile')}
-                        />
-                        {user?.userType === 'super_admin' && (
+                            <div className="relative z-10 text-white">
+                                <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
+                                    Welcome Back, {userRole === 'admin' ? 'Admin' : 'Teacher'}
+                                </h1>
+                                <p className="text-lg text-white/90 max-w-2xl font-light leading-relaxed">
+                                    Here&apos;s your command center for managing the academic schedule. Overview your metrics and manage resources efficiently.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Quick Access Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             <DashboardCard
-                                title="Manage Admins"
-                                icon={Shield}
-                                color="purple"
-                                desc="Create and manage department admins."
-                                onClick={() => setView('admins')}
+                                icon={Calendar}
+                                label="Routine Management"
+                                description="Create, edit, and manage class schedules with the intelligent builder."
+                                onClick={() => setActiveView('routine-builder')}
+                                colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
                             />
-                        )}
+                            <DashboardCard
+                                icon={List}
+                                label="Show Routines"
+                                description="View and manage existing class schedules."
+                                onClick={() => setActiveView('show')}
+                                colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
+                            />
+                            <DashboardCard
+                                icon={Users}
+                                label="Teacher Directory"
+                                description="Manage faculty members, view profiles, and assign responsibilities."
+                                onClick={() => setActiveView('teachers')}
+                                colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
+                            />
+                            <DashboardCard
+                                icon={FileText}
+                                label="Department Reports"
+                                description="Generate comprehensive reports and view academic insights."
+                                onClick={() => setActiveView('overview')} // Placeholder for now
+                                colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
+                            />
+                            {(userRole === 'admin' || userRole === 'super_admin') && (
+                                <>
+                                    <DashboardCard
+                                        icon={BookOpen}
+                                        label="Manage Subjects"
+                                        description="Add and edit subjects for your department."
+                                        onClick={() => setActiveView('subjects')}
+                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
+                                    />
+                                    <DashboardCard
+                                        icon={Building}
+                                        label="Manage Rooms"
+                                        description="Configure classrooms and labs."
+                                        onClick={() => setActiveView('rooms')}
+                                        colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
+                                    />
+                                </>
+                            )}
+                        </div>
+
+                        {/* Recent Activity / Stats Placeholder */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="bg-card-bg p-6 rounded-2xl border border-border-color shadow-sm">
+                                <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
+                                    <Clock size={20} className="text-brand-mid" />
+                                    System Status
+                                </h3>
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-4 bg-background rounded-xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                            <span className="text-text-secondary">Server Status</span>
+                                        </div>
+                                        <span className="text-green-500 font-medium bg-green-500/10 px-3 py-1 rounded-full text-sm">Operational</span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-4 bg-background rounded-xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 rounded-full bg-brand-mid"></div>
+                                            <span className="text-text-secondary">Last Sync</span>
+                                        </div>
+                                        <span className="text-foreground font-medium">Just now</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-linear-to-br from-brand-start/5 to-brand-mid/5 p-6 rounded-2xl border border-brand-mid/20 flex flex-col justify-center items-center text-center">
+                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
+                                    <BookOpen size={32} className="text-brand-mid" />
+                                </div>
+                                <h3 className="text-xl font-bold text-foreground mb-2">Need Help?</h3>
+                                <p className="text-text-secondary mb-4 max-w-xs">
+                                    Check the documentation for guides on how to use the routine builder.
+                                </p>
+                                <button className="text-brand-mid font-medium hover:underline">
+                                    View Documentation
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 );
+
+
+            case 'routine-builder':
+                return <RoutineBuilder initialData={editingRoutine} onBack={() => {
+                    setEditingRoutine(null);
+                    setActiveView('overview');
+                }} />;
+            case 'show':
+                return <RoutineViewer
+                    onBack={() => setActiveView('overview')}
+                    onEdit={(routine) => {
+                        setEditingRoutine(routine);
+                        setActiveView('routine-builder');
+                    }}
+                />;
+            case 'teachers':
+                return <TeacherManager onBack={() => setActiveView('overview')} />;
+            case 'subjects':
+                return <SubjectManager onBack={() => setActiveView('overview')} />;
+            case 'rooms':
+                return <RoomManager onBack={() => setActiveView('overview')} />;
+            case 'accounts':
+                return <TeacherAccountManager onBack={() => setActiveView('overview')} />;
+            case 'my-routine':
+                return <TeacherRoutine onBack={() => setActiveView('overview')} />;
+            case 'today-routine':
+                return <TeacherToday onBack={() => setActiveView('overview')} />;
+            case 'profile':
+                if (authUser?.userType === 'super_admin') return <AdminProfile onBack={() => setActiveView('overview')} />;
+                return <TeacherProfile onBack={() => setActiveView('overview')} />;
+            case 'admins':
+                return <AdminManager onBack={() => setActiveView('overview')} />;
+            default:
+                return <div>Select a view</div>;
         }
     };
 
+
     return (
         <ProtectedRoute>
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pt-16">
-                <Sidebar currentView={view} setView={setView} />
+            <div className="min-h-screen bg-background text-foreground font-sans selection:bg-brand-mid/30">
+                <Sidebar
+                    isOpen={isSidebarOpen}
+                    setIsOpen={setIsSidebarOpen}
+                    activeView={activeView}
+                    setActiveView={setActiveView}
+                    userRole={userRole}
+                />
 
-                <div
-                    className={`transition-all duration-300 p-2 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'
-                        }`}
+                <main
+                    className={`transition-all duration-300 ease-in-out min-h-screen
+                    ${isSidebarOpen ? 'md:ml-64' : 'md:ml-20'}
+                `}
                 >
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex items-center gap-3 mb-8">
-                            <LayoutDashboard className="text-blue-500" size={32} />
-                            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-                        </div>
+                    <div className="p-4 md:p-8 pt-20 md:pt-8 max-w-[1600px] mx-auto">
                         {renderContent()}
                     </div>
-                </div>
+                </main>
             </div>
         </ProtectedRoute>
     );
-}
-
-function DashboardCard({ title, icon: Icon, color, desc, onClick }) {
-    const colorClasses = {
-        blue: 'hover:border-blue-500 text-blue-500 bg-blue-500/10',
-        purple: 'hover:border-purple-500 text-purple-500 bg-purple-500/10',
-        emerald: 'hover:border-emerald-500 text-emerald-500 bg-emerald-500/10',
-        cyan: 'hover:border-cyan-500 text-cyan-500 bg-cyan-500/10',
-        orange: 'hover:border-orange-500 text-orange-500 bg-orange-500/10',
-        teal: 'hover:border-teal-500 text-teal-500 bg-teal-500/10'
-    };
-
-    return (
-        <button
-            onClick={onClick}
-            className={`group relative overflow-hidden bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 transition-all duration-300 text-left shadow-lg dark:shadow-none ${colorClasses[color]?.split(' ')[0] || colorClasses.blue}`}
-        >
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Icon size={120} />
-            </div>
-            <div className="relative z-10">
-                <div className={`${colorClasses[color]?.split(' ').slice(2).join(' ') || colorClasses.blue} w-16 h-16 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className={colorClasses[color]?.split(' ')[1] || 'text-blue-500'} size={32} />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{title}</h2>
-                <p className="text-gray-500 dark:text-gray-400">{desc}</p>
-            </div>
-        </button>
-    )
 }

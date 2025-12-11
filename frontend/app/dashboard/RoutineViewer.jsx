@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { fetchRoutines, deleteRoutine, fetchDepartments } from '../../Lib/api';
-import { Trash2, Calendar, Clock, Users, BookOpen, Pencil } from 'lucide-react';
+import { Trash2, Calendar, BookOpen, Pencil } from 'lucide-react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 export default function RoutineViewer({ onBack, onEdit }) {

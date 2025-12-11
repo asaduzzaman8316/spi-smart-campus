@@ -6,7 +6,23 @@
   --animate-float: float 6s linear infinite;
   --animate-fade-in: fadeInUp 0.8s ease-out;
   --animate-fade-in-up: fadeInUp 0.8s ease-out;
+
+  /* Map Tailwind colors to CSS variables for dynamic theming */
+  --color-brand-start: var(--brand-start);
+  --color-brand-mid: var(--brand-mid);
+  --color-brand-end: var(--brand-end);
   
+  --color-brand-dark-start: var(--brand-dark-start);
+  --color-brand-dark-mid: var(--brand-dark-mid);
+  --color-brand-dark-end: var(--brand-dark-end);
+
+  /* Semantic Colors */
+  --color-icon: var(--icon-color);
+  --color-icon-bg: var(--icon-bg);
+  --color-text-secondary: var(--text-secondary);
+  --color-border-color: var(--border-color);
+  --color-card-bg: var(--card-bg);
+
   --keyframes-float: {
     0%, 100% { transform: translateY(0) translateX(0); }
     25% { transform: translateY(-20px) translateX(10px); }
@@ -20,9 +36,64 @@
   };
 }
 
+/* Color System - Modern Gradient Theme */
+:root {
+  /* Brand Palette */
+  --brand-start: #06b6d4;  /* cyan-500 */
+  --brand-mid: #3b82f6;    /* blue-500 */
+  --brand-end: #14b8a6;    /* teal-500 */
+  
+  --brand-dark-start: #a855f7; /* purple-500 */
+  --brand-dark-mid: #ec4899;   /* pink-500 */
+  --brand-dark-end: #ef4444;   /* red-500 */
+
+  /* Base Colors */
+  --background: #ffffff;
+  --foreground: #000000;
+  
+  /* Semantic Mappings (Edit these to change specific elements globally) */
+  --icon-color: var(--brand-mid);
+  --icon-bg: rgba(59, 130, 246, 0.1); /* brand-mid with opacity */
+  --text-secondary: #4b5563; /* gray-600 */
+  --border-color: #e5e7eb;   /* gray-200 */
+  --card-bg: #ffffff;
+}
+
+.dark {
+  /* Brand Palette */
+  --brand-start: #a855f7; 
+  --brand-mid: #ec4899;   
+  --brand-end: #ef4444;   
+
+  /* Base Colors */
+  --background: #030712;   /* gray-950 */
+  --foreground: #ffffff;
+
+  /* Semantic Mappings */
+  --icon-color: var(--brand-start);
+  --icon-bg: rgba(168, 85, 247, 0.2); /* brand-start with opacity */
+  --text-secondary: #9ca3af; /* gray-400 */
+  --border-color: #374151;   /* gray-700 */
+  --card-bg: #111827;        /* gray-900 */
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
 /* Custom Utilities for delays if not using Tailwind's delay utilities */
 .delay-200 { animation-delay: 0.2s; }
 .delay-300 { animation-delay: 0.3s; }
 .delay-500 { animation-delay: 0.5s; }
 .delay-700 { animation-delay: 0.7s; }
 .delay-1000 { animation-delay: 1s; }
+
+/* Hide Scrollbar Utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -1,4 +1,4 @@
-
+'use client'
 import Link from 'next/link'
 import { GraduationCap, Users } from 'lucide-react'
 
@@ -6,7 +6,7 @@ export default function CTA() {
     return (
         <section
             className="py-20 px-4 relative">
-            <div className="absolute inset-0 bg-linear-to-r from-cyan-500/10 via-blue-500/10 to-teal-500/10 dark:from-purple-900/20 dark:via-pink-900/20 dark:to-red-900/20" />
+            <div className="absolute inset-0 bg-linear-to-r from-brand-start/10 via-brand-mid/10 to-brand-end/10" />
             <div
                 data-aos='fade-up'
                 className="max-w-4xl mx-auto text-center relative z-10">
@@ -19,14 +19,14 @@ export default function CTA() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Link
                         href="/about"
-                        className="bg-linear-to-r from-cyan-500 via-blue-500 to-teal-500 dark:from-purple-500 dark:via-pink-500 dark:to-red-500 hover:from-cyan-600 hover:via-blue-600 hover:to-teal-600 dark:hover:from-purple-600 dark:hover:via-pink-600 dark:hover:to-red-600 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 shadow-lg shadow-cyan-500/50 dark:shadow-purple-500/50 hover:shadow-xl hover:shadow-cyan-500/60 dark:hover:shadow-purple-500/60 hover:scale-105 inline-flex items-center justify-center gap-2"
+                        className="bg-linear-to-r from-brand-start via-brand-mid to-brand-end hover:from-brand-mid hover:via-brand-mid hover:to-brand-end text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 shadow-lg shadow-brand-start/50 hover:shadow-xl hover:shadow-brand-start/60 hover:scale-105 inline-flex items-center justify-center gap-2"
                     >
                         <GraduationCap className="w-5 h-5" />
                         <span>Explore SPI</span>
                     </Link>
                     <Link
                         href="/teacher"
-                        className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 hover:border-cyan-500 dark:hover:border-purple-500 text-gray-900 dark:text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 inline-flex items-center justify-center gap-2"
+                        className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 hover:border-brand-mid text-gray-900 dark:text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 inline-flex items-center justify-center gap-2"
                     >
                         <Users className="w-5 h-5" />
                         <span>Meet Our Faculty</span>

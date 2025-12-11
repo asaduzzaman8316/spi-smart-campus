@@ -51,28 +51,28 @@ export default function AdminLogin() {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4 py-12 relative overflow-hidden pt-18 transition-colors duration-300">
+        <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12 relative overflow-hidden pt-18 transition-colors duration-300">
             {/* Animated Background Elements */}
             <div className="absolute inset-0 overflow-hidden ">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-700"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+                <div className="absolute -top-40 -right-40 w-80 h-80 bg-brand-start/20 rounded-full blur-3xl animate-pulse"></div>
+                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-brand-mid/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-end/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
             </div>
 
             <div className="w-full max-w-md relative z-10">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-purple-500 to-pink-500 rounded-2xl mb-4 shadow-lg shadow-purple-500/50">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-brand-start to-brand-mid rounded-2xl mb-4 shadow-lg shadow-brand-start/50">
                         <Shield className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-600 via-pink-600 to-red-600 dark:from-purple-400 dark:via-pink-400 dark:to-red-400 bg-clip-text text-transparent mb-2">
+                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-brand-start via-brand-mid to-brand-end bg-clip-text text-transparent mb-2">
                         Admin Login
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400">Access the SPI Dashboard</p>
+                    <p className="text-text-secondary">Access the SPI Dashboard</p>
                 </div>
 
                 {/* Login Card */}
-                <div className="bg-white dark:bg-gray-900/80 rounded-3xl p-8 border border-gray-200 dark:border-gray-700 shadow-xl dark:shadow-2xl backdrop-blur-sm transition-colors duration-300">
+                <div className="bg-card-bg/80 rounded-3xl p-8 border border-border-color shadow-xl dark:shadow-2xl backdrop-blur-sm transition-colors duration-300">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Success Message */}
                         {success && (
@@ -96,12 +96,12 @@ export default function AdminLogin() {
 
                         {/* Email Input */}
                         <div className="space-y-2">
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label htmlFor="email" className="block text-sm font-medium text-text-secondary">
                                 Email Address
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-purple-400" />
+                                    <Mail className="h-5 w-5 text-brand-mid" />
                                 </div>
                                 <input
                                     id="email"
@@ -113,19 +113,19 @@ export default function AdminLogin() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={loading}
                                     placeholder="admin@example.com"
-                                    className="block w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="block w-full pl-12 pr-4 py-3 bg-background border border-border-color rounded-xl text-foreground placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-mid transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </div>
 
                         {/* Password Input */}
                         <div className="space-y-2">
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
                                 Password
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-pink-400" />
+                                    <Lock className="h-5 w-5 text-brand-end" />
                                 </div>
                                 <input
                                     id="password"
@@ -137,7 +137,7 @@ export default function AdminLogin() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={loading}
                                     placeholder="••••••••"
-                                    className="block w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="block w-full pl-12 pr-4 py-3 bg-background border border-border-color rounded-xl text-foreground placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-mid transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </div>
@@ -146,7 +146,7 @@ export default function AdminLogin() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-linear-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-purple-500/50 hover:shadow-xl hover:shadow-purple-500/60 hover:scale-105"
+                            className="w-full bg-linear-to-r from-brand-start via-brand-mid to-brand-end hover:from-brand-mid hover:via-brand-mid hover:to-brand-end text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-brand-start/50 hover:shadow-xl hover:shadow-brand-start/60 hover:scale-105"
                         >
                             {loading ? (
                                 <>
@@ -166,8 +166,8 @@ export default function AdminLogin() {
                     </form>
 
                     {/* Footer */}
-                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+                    <div className="mt-6 pt-6 border-t border-border-color">
+                        <p className="text-center text-sm text-text-secondary">
                             Secure admin access for Sylhet Polytechnic Institute
                         </p>
                     </div>
@@ -175,7 +175,7 @@ export default function AdminLogin() {
 
                 {/* Additional Info */}
                 <div className="mt-6 text-center">
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-text-secondary">
                         Protected by Firebase Authentication
                     </p>
                 </div>

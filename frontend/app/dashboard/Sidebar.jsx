@@ -1,11 +1,11 @@
-import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut, Shield } from 'lucide-react';
+import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut, Shield, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
-export default function Sidebar({ currentView, setView }) {
-    const { isCollapsed, isMobileOpen, closeMobileSidebar, toggleSidebar } = useSidebar();
-    const { user, logout } = useAuth();
+export default function Sidebar({ isOpen, setIsOpen, activeView, setActiveView, userRole }) {
+    const { isMobileOpen, closeMobileSidebar } = useSidebar();
+    const { logout } = useAuth();
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -17,8 +17,8 @@ export default function Sidebar({ currentView, setView }) {
     };
 
     const allMenuItems = [
-        { id: 'home', label: 'Overview', icon: Home, roles: ['admin', 'teacher', 'super_admin'] },
-        { id: 'create', label: 'Create Routine', icon: PlusCircle, roles: ['admin', 'super_admin'] },
+        { id: 'overview', label: 'Overview', icon: Home, roles: ['admin', 'teacher', 'super_admin'] },
+        { id: 'routine-builder', label: 'Routine Management', icon: Calendar, roles: ['admin', 'super_admin'] },
         { id: 'show', label: 'Show Routines', icon: List, roles: ['admin', 'super_admin'] },
         { id: 'my-routine', label: 'My Routine', icon: List, roles: ['teacher', 'admin'] },
         { id: 'today-routine', label: "Today's Routine", icon: Briefcase, roles: ['teacher', 'admin'] },
@@ -30,97 +30,115 @@ export default function Sidebar({ currentView, setView }) {
         { id: 'admins', label: 'Manage Admins', icon: Shield, roles: ['super_admin'] },
     ];
 
-    const userRole = user?.userType || user?.role || 'teacher';
-    const menuItems = allMenuItems.filter(item => item.roles.includes(userRole === 'department_admin' ? 'admin' : userRole));
+    const filteredMenuItems = allMenuItems.filter(item => {
+        const effectiveRole = userRole === 'department_admin' ? 'admin' : userRole;
+        // Default to teacher if no role found
+        return item.roles.includes(effectiveRole || 'teacher');
+    });
 
-    const handleItemClick = (viewId) => {
-        setView(viewId);
-        closeMobileSidebar();
+    const handleMenuClick = (viewId) => {
+        setActiveView(viewId);
+        if (window.innerWidth < 768) {
+            setIsOpen(false);
+            // If utilizing the context mobile sidebar, use closeMobileSidebar()
+            closeMobileSidebar();
+        }
     };
-
-    const sidebarClass = isCollapsed ? 'w-20' : 'w-64';
 
     return (
         <>
-            {/* Mobile Sidebar Overlay & Drawer */}
-            {isMobileOpen && (
-                <div className="fixed inset-0 z-50 md:hidden">
-                    <div
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-                        onClick={closeMobileSidebar}
-                    />
-                    <aside className="fixed top-0 left-0 w-64 h-full bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 shadow-2xl flex flex-col">
-                        <div className="flex flex-col py-4 gap-2 flex-1 overflow-y-auto mt-16">
-                            {menuItems.map((item) => (
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-20 md:hidden backdrop-blur-sm transition-opacity"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
+            {/* Sidebar Container */}
+            <div
+                className={`fixed top-0 left-0 h-full bg-card-bg border-r border-border-color z-30 transition-all duration-300 ease-in-out flex flex-col shadow-2xl
+                ${isOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'}
+            `}
+            >
+                {/* Logo Area */}
+                <div className="h-16 flex items-center justify-between px-4 border-b border-border-color bg-card-bg/50 backdrop-blur-xl">
+                    <div className={`flex items-center gap-3 transition-opacity duration-300 ${!isOpen && 'md:opacity-0 md:hidden'}`}>
+                        <div className="w-8 h-8 rounded-lg bg-linear-to-br from-brand-start to-brand-mid flex items-center justify-center shadow-lg shadow-brand-start/20">
+                            <span className="text-white font-bold text-lg">S</span>
+                        </div>
+                        <span className="font-bold text-lg bg-linear-to-r from-brand-start to-brand-mid bg-clip-text text-transparent">
+                            SPI Admin
+                        </span>
+                    </div>
+                </div>
+
+                {/* Navigation Items */}
+                <div className="flex-1 py-6 overflow-y-auto no-scrollbar">
+                    <nav className="space-y-2 px-3">
+                        {filteredMenuItems.map((item) => {
+                            const isActive = activeView === item.id;
+                            const Icon = item.icon;
+
+                            return (
                                 <button
                                     key={item.id}
-                                    onClick={() => handleItemClick(item.id)}
-                                    className={`flex items-center px-6 py-4 mx-2 rounded-xl transition-colors
-                                        ${currentView === item.id
-                                            ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-500'
-                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}
-                                    `}
+                                    onClick={() => handleMenuClick(item.id)}
+                                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden
+                                    ${isActive
+                                            ? 'bg-linear-to-r from-brand-start/10 to-brand-mid/10 text-brand-mid shadow-sm'
+                                            : 'text-text-secondary hover:bg-icon-bg hover:text-foreground'
+                                        }
+                                `}
                                 >
-                                    <item.icon size={24} className="mr-4" />
-                                    <span className="font-medium">{item.label}</span>
+                                    {isActive && (
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-mid rounded-r-full" />
+                                    )}
+
+                                    <Icon
+                                        size={22}
+                                        className={`shrink-0 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-brand-mid' : 'text-text-secondary group-hover:text-brand-mid'}`}
+                                    />
+
+                                    <span className={`font-medium whitespace-nowrap transition-all duration-300 ${!isOpen && 'md:opacity-0 md:w-0 md:hidden'}`}>
+                                        {item.label}
+                                    </span>
+
+                                    {!isOpen && (
+                                        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 transition-opacity duration-200 shadow-xl">
+                                            {item.label}
+                                        </div>
+                                    )}
                                 </button>
-                            ))}
-                        </div>
-
-                        <div className="p-2 border-t border-gray-200 dark:border-gray-800">
-                            <button
-                                onClick={handleLogout}
-                                className="w-full flex items-center px-6 py-4 rounded-xl transition-colors text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            >
-                                <LogOut size={24} className="mr-4" />
-                                <span className="font-medium">Logout</span>
-                            </button>
-                        </div>
-                    </aside>
-                </div>
-            )}
-            {/* Desktop Sidebar */}
-            <aside className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 hidden md:flex flex-col z-40 ${sidebarClass}`}>
-                <div className="flex flex-col py-4 gap-2 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                    {/* Toggle Button in Sidebar */}
-                    <button
-                        onClick={toggleSidebar}
-                        className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'px-6'} py-4 mx-2 rounded-xl transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800`}
-                        title={isCollapsed ? "Expand" : "Collapse"}
-                    >
-                        <List size={24} className={isCollapsed ? "" : "mr-4"} />
-                        {!isCollapsed && <span className="font-medium truncate">Menu</span>}
-                    </button>
-
-                    {menuItems.map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => handleItemClick(item.id)}
-                            className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'px-6'} py-4 mx-2 rounded-xl transition-colors
-                                ${currentView === item.id
-                                    ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-500'
-                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}
-                            `}
-                            title={isCollapsed ? item.label : ''}
-                        >
-                            <item.icon size={24} className={isCollapsed ? "" : "mr-4"} />
-                            {!isCollapsed && <span className="font-medium truncate">{item.label}</span>}
-                        </button>
-                    ))}
+                            );
+                        })}
+                    </nav>
                 </div>
 
-                {/* Logout Button */}
-                <div className="p-2 border-t border-gray-200 dark:border-gray-800">
+                {/* Footer / Logout */}
+                <div className="p-4 border-t border-border-color bg-card-bg/50 backdrop-blur-sm">
                     <button
                         onClick={handleLogout}
-                        className={`w-full flex items-center px-6 py-4 rounded-xl transition-colors text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20`}
-                        title={isCollapsed ? "Logout" : ""}
+                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group
+                        text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 hover:shadow-sm
+                    `}
                     >
-                        <LogOut size={24} className={isCollapsed ? "mx-auto" : "mr-4"} />
-                        {!isCollapsed && <span className="font-medium truncate">Logout</span>}
+                        <LogOut size={22} className="shrink-0 transition-transform duration-300 group-hover:-translate-x-1" />
+                        <span className={`font-medium whitespace-nowrap transition-all duration-300 ${!isOpen && 'md:opacity-0 md:w-0 md:hidden'}`}>
+                            Sign Out
+                        </span>
                     </button>
                 </div>
-            </aside>
+
+                {/* Collapse Toggle (Desktop only) */}
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="absolute -right-3 top-20 bg-card-bg border border-border-color rounded-full p-1.5 text-text-secondary hover:text-brand-mid shadow-lg cursor-pointer hidden md:flex items-center justify-center transition-transform hover:scale-110 z-40"
+                    title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+                >
+                    {isOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                </button>
+            </div>
         </>
     );
 }

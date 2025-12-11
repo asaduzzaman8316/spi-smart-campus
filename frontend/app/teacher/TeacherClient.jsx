@@ -53,15 +53,15 @@ export default function TeacherList() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
+        <div className="min-h-screen bg-background p-6">
             <div className="max-w-7xl pt-18 mx-auto">
 
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent mb-4">
+                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-brand-start via-brand-mid to-brand-end bg-clip-text text-transparent mb-4">
                         Our Teachers
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-300 mb-6">
+                    <p className="text-text-secondary mb-6">
                         Meet our dedicated faculty members
                     </p>
 
@@ -70,30 +70,30 @@ export default function TeacherList() {
                         <select
                             value={filter}
                             onChange={(e) => setFilter(e.target.value)}
-                            className="px-6 py-3 bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all shadow-md"
+                            className="px-6 py-3 bg-card-bg border border-border-color rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-brand-mid focus:border-brand-mid transition-all shadow-md"
                         >
-                            <option value="all" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">All Departments</option>
+                            <option value="all" className="bg-card-bg text-foreground">All Departments</option>
                             {departments.map(dept => (
-                                <option key={dept._id} value={dept.name} className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">{dept.name}</option>
+                                <option key={dept._id} value={dept.name} className="bg-card-bg text-foreground">{dept.name}</option>
                             ))}
                         </select>
                     </div>
                 </div>
 
                 {filteredTeachers.length === 0 ? (
-                    <div className="text-center py-12 bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg">
-                        <p className="text-gray-500 dark:text-gray-400 text-xl">No teachers found</p>
+                    <div className="text-center py-12 bg-card-bg border border-border-color rounded-2xl shadow-lg">
+                        <p className="text-text-secondary text-xl">No teachers found</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         {filteredTeachers.map((teacher) => (
                             <div
                                 key={teacher._id}
-                                className="bg-white dark:bg-linear-to-br dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 hover:border-purple-500 dark:hover:border-purple-500 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 hover:scale-105"
+                                className="bg-card-bg border border-border-color rounded-2xl p-6 hover:border-brand-mid hover:shadow-xl hover:shadow-brand-mid/20 transition-all duration-300 hover:scale-105"
                             >
                                 <div className="flex items-center gap-4 mb-4">
                                     {teacher.image ? (
-                                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-purple-500/30">
+                                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-brand-mid/30">
                                             <Image
                                                 src={teacher.image}
                                                 alt={teacher.name}
@@ -104,34 +104,34 @@ export default function TeacherList() {
                                             />
                                         </div>
                                     ) : (
-                                        <div className="w-16 h-16 rounded-full bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center border-2 border-purple-500/30">
-                                            <User size={32} className="text-purple-500" />
+                                        <div className="w-16 h-16 rounded-full bg-icon-bg flex items-center justify-center border-2 border-brand-mid/30">
+                                            <User size={32} className="text-icon" />
                                         </div>
                                     )}
 
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{teacher.name}</h3>
-                                        <p className="text-purple-600 dark:text-purple-400 text-sm font-medium">
+                                        <h3 className="text-xl font-bold text-foreground">{teacher.name}</h3>
+                                        <p className="text-brand-mid text-sm font-medium">
                                             {teacher.role}
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                    <div className="flex items-center gap-2 text-text-secondary text-sm">
                                         <Briefcase size={14} />
                                         <span>{teacher.department}</span>
                                     </div>
 
                                     {teacher.email && (
-                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                        <div className="flex items-center gap-2 text-text-secondary text-sm">
                                             <Mail size={14} />
                                             <span className="truncate">{teacher.email}</span>
                                         </div>
                                     )}
 
                                     {teacher.phone && (
-                                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
+                                        <div className="flex items-center gap-2 text-text-secondary text-sm">
                                             <Phone size={14} />
                                             <span>{teacher.phone}</span>
                                         </div>
@@ -139,7 +139,7 @@ export default function TeacherList() {
                                 </div>
 
                                 {teacher.shift && (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 border-t pt-3">
+                                    <p className="text-xs text-text-secondary border-t border-border-color pt-3">
                                         Shift: <strong>{teacher.shift}</strong>
                                     </p>
                                 )}
