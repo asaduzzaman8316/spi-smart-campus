@@ -3,14 +3,10 @@ const bcrypt = require('bcryptjs');
 
 // @desc    Get all admins
 // @route   GET /api/admins
-// @access  Private (Super Admin only)
 const getAdmins = async (req, res) => {
     try {
         const total = await Admin.countDocuments();
-        const admins = await Admin.find()
-            .select('-__v -password')
-            .sort({ createdAt: -1 })
-            .lean();
+        const admins = await Admin.find().select('-__v -password').sort({ createdAt: -1 }).lean();
 
         res.json({
             success: true,
@@ -42,12 +38,10 @@ const getAdminProfile = async (req, res) => {
 
 // @desc    Create new admin (department admin)
 // @route   POST /api/admins
-// @access  Private (Super Admin only)
 const createAdmin = async (req, res) => {
     try {
         const { name, email, department, phone, image, password } = req.body;
 
-        // Check if admin already exists
         const existingAdmin = await Admin.findOne({ email });
         if (existingAdmin) {
             return res.status(400).json({ message: 'Admin with this email already exists' });
@@ -57,7 +51,6 @@ const createAdmin = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(passwordToHash, salt);
 
-        // Create new department admin
         const admin = await Admin.create({
             name,
             email,
@@ -143,9 +136,8 @@ const deleteAdmin = async (req, res) => {
     }
 };
 
-// @desc    Unregister admin (remove Firebase access) -> Deprecated
+// @desc    Unregister admin (remove access)
 // @route   PUT /api/admins/unregister/:id
-// @access  Private (Super Admin only)
 const unregisterAdmin = async (req, res) => {
     try {
         const admin = await Admin.findById(req.params.id);
@@ -153,22 +145,15 @@ const unregisterAdmin = async (req, res) => {
             return res.status(404).json({ message: 'Admin not found' });
         }
 
-        // Prevent unregistering super admin
         if (admin.role === 'super_admin') {
             return res.status(403).json({ message: 'Cannot unregister super admin' });
         }
 
-        // Reset password to indicate no account
         admin.password = 'NO_ACCOUNT_YET';
         await admin.save();
 
-        // Send notification email
         const { sendAccountUnregisterEmail } = require('../config/emailService');
         const emailResult = await sendAccountUnregisterEmail(admin.email, admin.name);
-
-        if (!emailResult.success) {
-            console.error('Failed to send unregister email:', emailResult.error);
-        }
 
         res.status(200).json({
             message: 'Admin account unregistered successfully',

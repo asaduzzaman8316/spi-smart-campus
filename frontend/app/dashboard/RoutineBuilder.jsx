@@ -27,16 +27,14 @@ export default function RoutineBuilder({ onBack, initialData }) {
     const [saving, setSaving] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
 
-    // Data from Firebase
     const [departments, setDepartments] = useState([]);
     const [teachers, setTeachers] = useState([]);
     const [rooms, setRooms] = useState([]);
     const [subjects, setSubjects] = useState([]);
-    const [allRoutines, setAllRoutines] = useState([]); // Store all routines for conflict checking
+    const [allRoutines, setAllRoutines] = useState([]);
 
-    // Resource Filters State
     const [teacherFilterDept, setTeacherFilterDept] = useState('');
-    const [roomFilterType, setRoomFilterType] = useState(''); // '' (All), 'Theory', 'Lab'
+    const [roomFilterType, setRoomFilterType] = useState('');
 
     // Filtered lists
     const filteredTeachers = teacherFilterDept
@@ -47,12 +45,10 @@ export default function RoutineBuilder({ onBack, initialData }) {
         ? rooms.filter(r => r.type === roomFilterType)
         : rooms;
 
-    // Use all subjects as filter is removed
     const filteredSubjects = subjects;
 
     useEffect(() => {
         if (initialData) {
-            // Ensure all classes have IDs to prevent key warnings
             const sanitizedData = {
                 ...initialData,
                 days: initialData.days.map(day => ({
@@ -99,10 +95,10 @@ export default function RoutineBuilder({ onBack, initialData }) {
         }));
     };
 
-    // Helper to check time overlap
+    // Check overlapping times
     const isTimeOverlap = (start1, end1, start2, end2) => {
         if (!start1 || !end1 || !start2 || !end2) return false;
-        // Convert times to minutes for easier comparison
+
         const getMinutes = (time) => {
             const [h, m] = time.split(':').map(Number);
             return h * 60 + m;
@@ -115,13 +111,11 @@ export default function RoutineBuilder({ onBack, initialData }) {
         return Math.max(s1, s2) < Math.min(e1, e2);
     };
 
-    // Get unavailable teachers for a specific time slot
     const getUnavailableTeachers = (dayName, startTime, endTime, currentClassId) => {
         if (!startTime || !endTime) return new Set();
 
         const busyTeachers = new Set();
 
-        // Check against all other routines
         allRoutines.forEach(r => {
             if (r.id === routine.id && isEditMode) return;
 
@@ -135,8 +129,6 @@ export default function RoutineBuilder({ onBack, initialData }) {
             }
         });
 
-        // Also check against other classes in the CURRENT routine (local state)
-        // to prevent assigning the same teacher to two overlapping classes in the same routine
         const currentDay = routine.days.find(d => d.name === dayName);
         if (currentDay) {
             currentDay.classes.forEach(c => {

@@ -1,20 +1,17 @@
 const Routine = require('../models/Routine');
 
-// @desc    Get all routines (with optional filters)
+// @desc    Get all routines
 // @route   GET /api/routines
-// @access  Public
 const getRoutines = async (req, res) => {
     try {
         const { department, semester, shift, group } = req.query;
 
-        // Build filter object from query params
-        let query = {};
+        const query = {};
         if (department) query.department = department;
         if (semester) query.semester = semester;
         if (shift) query.shift = shift;
         if (group) query.group = group;
 
-        // Get all routines
         const routines = await Routine.find(query)
             .select('-__v')
             .sort({ department: 1, semester: 1, shift: 1, group: 1 })
@@ -48,15 +45,10 @@ const findRoutine = async (req, res) => {
 
 // @desc    Create or Update a routine
 // @route   POST /api/routines
-// @access  Private
 const createOrUpdateRoutine = async (req, res) => {
     try {
         const { department, semester, shift, group, days } = req.body;
 
-        // Check availability logic could go here (conflict detection), 
-        // but often handled on frontend or separate helper.
-
-        // Upsert logic
         const filter = { department, semester, shift, group };
         const update = {
             department,
@@ -69,7 +61,7 @@ const createOrUpdateRoutine = async (req, res) => {
 
         const routine = await Routine.findOneAndUpdate(filter, update, {
             new: true,
-            upsert: true // Create if not exists
+            upsert: true
         });
 
         res.status(200).json(routine);

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoutineBuilder from "./RoutineBuilder";
@@ -13,12 +13,12 @@ import TeacherToday from "./TeacherToday";
 import TeacherProfile from "./TeacherProfile";
 import AdminManager from "./AdminManager";
 import AdminProfile from "./AdminProfile";
-import { PlusCircle, List, LayoutDashboard, Users, Building2, BookOpen, Building, Shield } from 'lucide-react';
+import { PlusCircle, List, LayoutDashboard, Users, BookOpen, Building, Shield } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useSidebar } from '@/context/SidebarContext';
 
 export default function DashboardPage() {
-    const [view, setView] = useState('home'); // 'home', 'create', 'show', 'teachers', 'subjects', 'rooms', 'accounts', 'my-routine', 'today-routine', 'profile'
+    const [view, setView] = useState('home'); 
     const [editingRoutine, setEditingRoutine] = useState(null);
     const { isCollapsed } = useSidebar();
     const { user } = useAuth();
@@ -74,14 +74,14 @@ export default function DashboardPage() {
                             />
                             <DashboardCard
                                 title="Today's Classes"
-                                icon={LayoutDashboard} // Or Calendar check if imported
+                                icon={LayoutDashboard}
                                 color="purple"
                                 desc="See what you have for today."
                                 onClick={() => setView('today-routine')}
                             />
                             <DashboardCard
                                 title="My Profile"
-                                icon={Users} // Or User icon if imported
+                                icon={Users}
                                 color="emerald"
                                 desc="View and edit your personal information."
                                 onClick={() => setView('profile')}
@@ -90,7 +90,6 @@ export default function DashboardPage() {
                     );
                 }
 
-                // Default Admin Grid
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
                         <DashboardCard

@@ -13,26 +13,13 @@ export const metadata = {
 };
 
 export default function Home() {
-
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 overflow-x-clip transition-colors duration-300">
-      {/* Particle Background Effect */}
       <ParticleBackground />
-
-      {/* Hero Section */}
       <Hero />
-
-      {/* Stats Section */}
       <Stats />
-
-      {/* Features Section */}
       <Features />
-
-      {/* Departments Section */}
       <Departments />
-
-      {/* CTA Section */}
       <CTA />
     </div>
   )

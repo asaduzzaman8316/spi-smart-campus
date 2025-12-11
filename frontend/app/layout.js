@@ -31,11 +31,11 @@ export const metadata = {
   openGraph: {
     title: "SPI Smart Campus - Sylhet Polytechnic Institute",
     description: "Access class routines, teacher profiles, and campus updates for Sylhet Polytechnic Institute.",
-    url: "https://spi-smart-campus.vercel.app", // Placeholder, ideally should be dynamic or env var
+    url: "https://spi-smart-campus.vercel.app",
     siteName: "SPI Smart Campus",
     images: [
       {
-        url: '/sy.png', // Assuming this exists as per previous icon
+        url: '/sy.png',
         width: 800,
         height: 600,
         alt: 'Sylhet Polytechnic Institute Logo',

@@ -18,13 +18,13 @@ export function AuthProvider({ children }) {
                 const { data } = await api.get('/auth/me');
                 setUser(data);
             } catch (error) {
-                console.error('Auth verification failed', error);
                 localStorage.removeItem('token');
                 setUser(null);
             }
         }
         setLoading(false);
     };
+
     useEffect(() => {
         checkUser();
     }, []);
@@ -35,18 +35,11 @@ export function AuthProvider({ children }) {
 
             localStorage.setItem('token', data.token);
             setUser(data);
-
             toast.success(`Welcome back, ${data.name}!`);
 
-            // Redirect based on role
-            if (data.role === 'teacher') {
-                router.push('/dashboard'); // Teachers go to dashboard (which defaults to profile)
-            } else {
-                router.push('/dashboard');
-            }
+            router.push('/dashboard');
             return { success: true };
         } catch (error) {
-            console.error('Login error:', error);
             const message = error.response?.data?.message || 'Login failed';
             toast.error(message);
             return { success: false, error: message };
