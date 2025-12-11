@@ -25,7 +25,6 @@ export function AuthProvider({ children }) {
         }
         setLoading(false);
     };
-
     useEffect(() => {
         checkUser();
     }, []);

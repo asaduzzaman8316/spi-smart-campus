@@ -23,15 +23,6 @@ export default function DashboardPage() {
     const { isCollapsed } = useSidebar();
     const { user } = useAuth();
 
-    // Redirect teacher/admin to profile if they are on home view
-    // We do this during render to avoid cascading updates/flicker
-    if (user && user.role === 'teacher' && view === 'home') {
-        setView('profile');
-    } else if (user && user.role === 'super_admin' && view === 'profile') {
-        // Super admin has a distinct profile view
-        // Actually, let's allow super_admin to see home as default, but if they click profile, show AdminProfile
-    }
-
     const handleEditRoutine = (routine) => {
         setEditingRoutine(routine);
         setView('create');
@@ -65,12 +56,41 @@ export default function DashboardPage() {
             case 'today-routine':
                 return <TeacherToday onBack={() => setView('home')} />;
             case 'profile':
-                if (user?.role === 'super_admin') return <AdminProfile onBack={() => setView('home')} />;
+                if (user?.userType === 'super_admin') return <AdminProfile onBack={() => setView('home')} />;
                 return <TeacherProfile onBack={() => setView('home')} />;
             case 'admins':
                 return <AdminManager onBack={() => setView('home')} />;
             case 'home':
             default:
+                if (user?.userType === 'teacher') {
+                    return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
+                            <DashboardCard
+                                title="My Routine"
+                                icon={List}
+                                color="blue"
+                                desc="Check your complete class schedule."
+                                onClick={() => setView('my-routine')}
+                            />
+                            <DashboardCard
+                                title="Today's Classes"
+                                icon={LayoutDashboard} // Or Calendar check if imported
+                                color="purple"
+                                desc="See what you have for today."
+                                onClick={() => setView('today-routine')}
+                            />
+                            <DashboardCard
+                                title="My Profile"
+                                icon={Users} // Or User icon if imported
+                                color="emerald"
+                                desc="View and edit your personal information."
+                                onClick={() => setView('profile')}
+                            />
+                        </div>
+                    );
+                }
+
+                // Default Admin Grid
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
                         <DashboardCard
@@ -115,7 +135,36 @@ export default function DashboardPage() {
                             desc="Create and manage teacher accounts."
                             onClick={() => setView('accounts')}
                         />
-                        {user?.role === 'super_admin' && (
+                        {
+                            user?.userType !== 'super_admin' &&
+                            (
+                                <DashboardCard
+                                    title="My Routine"
+                                    icon={List}
+                                    color="blue"
+                                    desc="Check your complete class schedule."
+                                    onClick={() => setView('my-routine')}
+                                />
+                            )
+                        }
+                        {
+                            user?.userType !== 'super_admin' &&
+                            (<DashboardCard
+                                title="Today's Classes"
+                                icon={LayoutDashboard}
+                                color="purple"
+                                desc="See what you have for today."
+                                onClick={() => setView('today-routine')}
+                            />)
+                        }
+                        <DashboardCard
+                            title="My Profile"
+                            icon={Users}
+                            color="emerald"
+                            desc="View and edit your personal information."
+                            onClick={() => setView('profile')}
+                        />
+                        {user?.userType === 'super_admin' && (
                             <DashboardCard
                                 title="Manage Admins"
                                 icon={Shield}
