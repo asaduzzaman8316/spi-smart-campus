@@ -22,13 +22,14 @@ import {
     Clock,
     BookOpen,
     Building,
-    List
+    List,
+    User
 } from 'lucide-react';
 
 const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
     <button
         onClick={onClick}
-        className="group relative overflow-hidden bg-card-bg p-6 rounded-2xl border border-border-color hover:border-brand-mid transition-all duration-300 text-left hover:shadow-xl hover:shadow-brand-mid/10 hover:-translate-y-1"
+        className="group relative overflow-hidden bg-card-bg p-6 rounded-[2.5rem] border border-border-color hover:border-brand-mid transition-all duration-300 text-left hover:shadow-xl hover:shadow-brand-mid/10 hover:-translate-y-1"
     >
         <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity duration-300 rotate-12 scale-150`}>
             <Icon size={120} className="text-brand-mid" />
@@ -71,7 +72,7 @@ export default function DashboardPage() {
                 return (
                     <div className="space-y-8 animate-fade-in">
                         {/* Welcome Header */}
-                        <div className="relative rounded-3xl overflow-hidden p-8 md:p-12">
+                        <div className="relative rounded-[2.5rem] overflow-hidden p-8 md:p-12">
                             <div className="absolute inset-0 bg-linear-to-r from-brand-start via-brand-mid to-brand-end opacity-90"></div>
                             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
                             {/* Abstract Shapes */}
@@ -90,34 +91,42 @@ export default function DashboardPage() {
 
                         {/* Quick Access Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <DashboardCard
-                                icon={Calendar}
-                                label="Routine Management"
-                                description="Create, edit, and manage class schedules with the intelligent builder."
-                                onClick={() => setActiveView('routine-builder')}
-                                colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                            />
-                            <DashboardCard
-                                icon={List}
-                                label="Show Routines"
-                                description="View and manage existing class schedules."
-                                onClick={() => setActiveView('show')}
-                                colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                            />
-                            <DashboardCard
-                                icon={Users}
-                                label="Teacher Directory"
-                                description="Manage faculty members, view profiles, and assign responsibilities."
-                                onClick={() => setActiveView('teachers')}
-                                colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
-                            />
-                            <DashboardCard
-                                icon={FileText}
-                                label="Department Reports"
-                                description="Generate comprehensive reports and view academic insights."
-                                onClick={() => setActiveView('overview')} // Placeholder for now
-                                colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
-                            />
+                            {(userRole === 'admin' || userRole === 'super_admin') && (
+                                <>
+                                    <DashboardCard
+                                        icon={Calendar}
+                                        label="Routine Create"
+                                        description="Create, edit, and manage class schedules with the intelligent builder."
+                                        onClick={() => setActiveView('routine-builder')}
+                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
+                                    />
+                                    <DashboardCard
+                                        icon={List}
+                                        label="Show Routines"
+                                        description="View and manage existing class schedules."
+                                        onClick={() => setActiveView('show')}
+                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
+                                    />
+                                </>
+                            )}
+                            {(userRole === 'admin' || userRole === 'super_admin') && (
+                                <DashboardCard
+                                    icon={Users}
+                                    label="Teacher Management"
+                                    description="Manage faculty members, view profiles, and assign responsibilities."
+                                    onClick={() => setActiveView('teachers')}
+                                    colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
+                                />
+                            )}
+                            {(userRole === 'admin' || userRole === 'super_admin') && (
+                                <DashboardCard
+                                    icon={FileText}
+                                    label="Department Reports"
+                                    description="Generate comprehensive reports and view academic insights."
+                                    onClick={() => setActiveView('overview')} // Placeholder for now
+                                    colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
+                                />
+                            )}
                             {(userRole === 'admin' || userRole === 'super_admin') && (
                                 <>
                                     <DashboardCard
@@ -134,13 +143,46 @@ export default function DashboardPage() {
                                         onClick={() => setActiveView('rooms')}
                                         colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
                                     />
+                                    <DashboardCard
+                                        icon={Users}
+                                        label="Teacher Accounts"
+                                        description="Create and manage teacher login accounts."
+                                        onClick={() => setActiveView('accounts')}
+                                        colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
+                                    />
+                                </>
+                            )}
+                            {(userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') && (
+                                <>
+                                    <DashboardCard
+                                        icon={List}
+                                        label="My Routine"
+                                        description="View your personal teaching schedule."
+                                        onClick={() => setActiveView('my-routine')}
+                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
+                                    />
+                                    <DashboardCard
+                                        icon={Clock}
+                                        label="Today's Schedule"
+                                        description="Quick view of today's classes."
+                                        onClick={() => setActiveView('today-routine')}
+                                        colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
+                                    />
+                                    <DashboardCard
+                                        icon={User}
+                                        label="Profile"
+                                        description="View and edit your profile information."
+                                        onClick={() => setActiveView('profile')}
+                                        colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
+                                    />
+
                                 </>
                             )}
                         </div>
 
                         {/* Recent Activity / Stats Placeholder */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div className="bg-card-bg p-6 rounded-2xl border border-border-color shadow-sm">
+                            <div className="bg-card-bg p-6 rounded-[2.5rem] border border-border-color shadow-sm">
                                 <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                                     <Clock size={20} className="text-brand-mid" />
                                     System Status
@@ -163,7 +205,9 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            <div className="bg-linear-to-br from-brand-start/5 to-brand-mid/5 p-6 rounded-2xl border border-brand-mid/20 flex flex-col justify-center items-center text-center">
+
+
+                            <div className="bg-linear-to-br from-brand-start/5 to-brand-mid/5 p-6 rounded-[2.5rem] border border-brand-mid/20 flex flex-col justify-center items-center text-center">
                                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
                                     <BookOpen size={32} className="text-brand-mid" />
                                 </div>
@@ -176,7 +220,7 @@ export default function DashboardPage() {
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </div >
                 );
 
 

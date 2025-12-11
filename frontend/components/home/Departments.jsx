@@ -28,7 +28,7 @@ export default function Departments() {
                     {departments.map((dept, index) => (
                         <div
                             key={index}
-                            className="group bg-white dark:bg-[#1E293B] p-6 rounded-2xl border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10 shadow-sm"
+                            className="group bg-white dark:bg-[#1E293B] p-6 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10 shadow-sm"
                         >
                             <div className="flex items-start gap-4">
                                 <div className="p-3 bg-[#FFFBF2] dark:bg-[#0B1120] border border-gray-100 dark:border-gray-800 shadow-sm rounded-full group-hover:scale-110 transition-transform duration-300">

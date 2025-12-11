@@ -147,7 +147,7 @@ export default function RoomManager({ onBack }) {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
             <div className="max-w-7xl mx-auto px-2">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
+                <div className="flex items-center justify-between mb-8 bg-white dark:bg-card-bg p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={onBack}
@@ -156,15 +156,15 @@ export default function RoomManager({ onBack }) {
                             <ArrowLeft className="text-gray-900 dark:text-white" size={24} />
                         </button>
                         <div className="flex items-center gap-3">
-                            <div className="bg-blue-50 dark:bg-blue-500/10 p-3 rounded-xl border border-blue-100 dark:border-transparent">
-                                <Building className="text-blue-600 dark:text-blue-500" size={28} />
+                            <div className="bg-[#FFFBF2] dark:bg-[#0B1120] p-4 rounded-full border border-gray-100 dark:border-gray-800">
+                                <Building className="text-[#FF5C35]" size={28} />
                             </div>
-                            <h1 className="text-3xl font-bold hidden lg:block text-gray-900 dark:text-white">Room Management</h1>
+                            <h1 className="text-3xl font-bold font-serif hidden lg:block text-[#2C1810] dark:text-white">Room Management</h1>
                         </div>
                     </div>
                     <button
                         onClick={handleAddRoom}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+                        className="flex items-center gap-2 bg-[#FF5C35] hover:bg-[#e04f2c] text-white px-8 py-4 rounded-full transition-all hover:scale-105 shadow-lg shadow-[#FF5C35]/20 font-medium"
                     >
                         <Plus size={20} />
                         Add Room
@@ -174,19 +174,19 @@ export default function RoomManager({ onBack }) {
                 {/* Search and Filter */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" size={20} />
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                         <input
                             type="text"
                             placeholder="Search by room number..."
                             value={searchQuery}
                             onChange={handleSearchChange}
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
+                            className="w-full pl-12 pr-6 py-4 bg-white dark:bg-card-bg border border-gray-100 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF5C35] shadow-sm"
                         />
                     </div>
                     <select
                         value={typeFilter}
                         onChange={handleTypeChange}
-                        className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 shadow-sm dark:shadow-none"
+                        className="px-6 py-4 bg-white dark:bg-card-bg border border-gray-100 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5C35] shadow-sm"
                     >
                         <option value="">All Types</option>
                         {ROOM_TYPES.map((type, index) => (
@@ -227,12 +227,12 @@ export default function RoomManager({ onBack }) {
                             {rooms.map((room, index) => (
                                 <div
                                     key={index}
-                                    className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-blue-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
+                                    className="bg-white dark:bg-card-bg group border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-8 hover:border-[#FF5C35]/30 hover:shadow-xl hover:shadow-[#FF5C35]/5 transition-all duration-300"
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center border-2 border-blue-100 dark:border-blue-500/30">
-                                                <Building className="text-blue-600 dark:text-blue-500" size={20} />
+                                            <div className="w-12 h-12 rounded-full bg-[#FFFBF2] dark:bg-[#0B1120] flex items-center justify-center border border-gray-100 dark:border-gray-800">
+                                                <Building className="text-[#FF5C35]" size={20} />
                                             </div>
                                             <div>
                                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">

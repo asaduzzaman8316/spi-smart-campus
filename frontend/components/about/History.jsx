@@ -30,7 +30,7 @@ function History() {
                     </div>
                     <div
                         className="relative">
-                        <div className="bg-white dark:bg-[#1E293B] rounded-4xl p-8 border border-gray-100 dark:border-gray-800 shadow-xl">
+                        <div className="bg-white dark:bg-[#1E293B] rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl">
                             <div className="space-y-6">
                                 <div className="flex items-center gap-4 p-4 bg-[#FFFBF2] dark:bg-[#0B1120] rounded-2xl border border-gray-100 dark:border-gray-800">
                                     <Calendar className="w-8 h-8 text-[#FF5C35]" />

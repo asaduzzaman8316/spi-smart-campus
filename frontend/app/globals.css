@@ -56,6 +56,11 @@
   --icon-bg: rgba(255, 92, 53, 0.1); 
   --text-secondary: #5D4A44; 
   --border-color: #E6E0D4;
+  
+  /* Base Colors (Light Mode) */
+  --background: #FFFBF2;   /* Cream */
+  --foreground: #2C1810;   /* Dark Brown */
+  --card-bg: #FFFFFF;      /* White */
 
   /* Fonts */
   --font-sans: 'Plus Jakarta Sans', sans-serif;

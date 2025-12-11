@@ -174,24 +174,24 @@ export default function TeacherManager({ onBack }) {
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8">
             <div className="max-w-7xl mx-auto px-2">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
+                <div className="flex items-center justify-between mb-8 bg-white dark:bg-card-bg p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={onBack}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                            className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-full transition-colors border border-gray-100 dark:border-gray-800"
                         >
                             <ArrowLeft className="text-gray-900 dark:text-white" size={24} />
                         </button>
                         <div className="flex items-center gap-3">
-                            <div className="bg-emerald-50 dark:bg-emerald-500/10 p-3 rounded-xl border border-emerald-100 dark:border-transparent">
-                                <Users className="text-emerald-600 dark:text-emerald-500" size={28} />
+                            <div className="bg-[#FFFBF2] dark:bg-[#0B1120] p-4 rounded-full border border-gray-100 dark:border-gray-800">
+                                <Users className="text-[#FF5C35]" size={28} />
                             </div>
-                            <h1 className="text-3xl font-bold hidden lg:block text-gray-900 dark:text-white">Teacher Management</h1>
+                            <h1 className="text-3xl font-bold font-serif hidden lg:block text-[#2C1810] dark:text-white">Teacher Management</h1>
                         </div>
                     </div>
                     <button
                         onClick={handleAddTeacher}
-                        className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+                        className="flex items-center gap-2 bg-[#FF5C35] hover:bg-[#e04f2c] text-white px-8 py-4 rounded-full transition-all hover:scale-105 shadow-lg shadow-[#FF5C35]/20 font-medium"
                     >
                         <Plus size={20} />
                         Add Teacher
@@ -201,19 +201,19 @@ export default function TeacherManager({ onBack }) {
                 {/* Search and Filter */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400" size={20} />
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                         <input
                             type="text"
                             placeholder="Search by name, email..."
                             value={searchQuery}
                             onChange={handleSearchChange}
-                            className="w-full pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:border-emerald-500 shadow-sm dark:shadow-none"
+                            className="w-full pl-12 pr-6 py-4 bg-white dark:bg-card-bg border border-gray-100 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF5C35] shadow-sm"
                         />
                     </div>
                     <select
                         value={departmentFilter}
                         onChange={handleDepartmentChange}
-                        className="px-4 py-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500 shadow-sm dark:shadow-none"
+                        className="px-6 py-4 bg-white dark:bg-card-bg border border-gray-100 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5C35] shadow-sm"
                     >
                         <option value="">All Departments</option>
                         {departments.map(dept => (
@@ -252,7 +252,7 @@ export default function TeacherManager({ onBack }) {
                             {teachers.map(teacher => (
                                 <div
                                     key={teacher.docId || teacher.id}
-                                    className="bg-white dark:bg-white/5 backdrop-blur-lg group border border-gray-200 dark:border-white/10 rounded-lg p-6 hover:border-emerald-500/30 dark:hover:bg-white/10 transition-all duration-200 shadow-sm dark:shadow-none"
+                                    className="bg-white dark:bg-card-bg group border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-8 hover:border-[#FF5C35]/30 hover:shadow-xl hover:shadow-[#FF5C35]/5 transition-all duration-300"
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-4">
@@ -320,10 +320,10 @@ export default function TeacherManager({ onBack }) {
                                             </div>
                                         )}
                                     </div>
-                                    <div className=" gap-2 absolute top-2 right-2 lg:hidden group-hover:flex">
+                                    <div className=" gap-2 absolute top-4 right-4 lg:hidden group-hover:flex">
                                         <button
                                             onClick={() => handleEditTeacher(teacher)}
-                                            className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"
+                                            className="p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 text-[#FF5C35] rounded-full transition-colors border border-gray-100 dark:border-gray-700 shadow-sm"
                                         >
                                             <Edit size={18} />
                                         </button>

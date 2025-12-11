@@ -18,15 +18,15 @@ export default function Sidebar({ isOpen, setIsOpen, activeView, setActiveView, 
 
     const allMenuItems = [
         { id: 'overview', label: 'Overview', icon: Home, roles: ['admin', 'teacher', 'super_admin'] },
-        { id: 'routine-builder', label: 'Routine Management', icon: Calendar, roles: ['admin', 'super_admin'] },
+        { id: 'routine-builder', label: 'Routine Create', icon: Calendar, roles: ['admin', 'super_admin'] },
         { id: 'show', label: 'Show Routines', icon: List, roles: ['admin', 'super_admin'] },
-        { id: 'my-routine', label: 'My Routine', icon: List, roles: ['teacher', 'admin'] },
-        { id: 'today-routine', label: "Today's Routine", icon: Briefcase, roles: ['teacher', 'admin'] },
-        { id: 'profile', label: 'Profile', icon: User, roles: ['teacher', 'admin', 'super_admin'] },
-        { id: 'teachers', label: 'Manage Teachers', icon: Users, roles: ['admin', 'super_admin'] },
+        { id: 'teachers', label: 'Teacher Management', icon: Users, roles: ['admin', 'super_admin'] },
         { id: 'subjects', label: 'Manage Subjects', icon: BookOpen, roles: ['admin', 'super_admin'] },
         { id: 'rooms', label: 'Manage Rooms', icon: Building, roles: ['admin', 'super_admin'] },
-        { id: 'accounts', label: 'Teacher Accounts', icon: Users, roles: ['admin', 'super_admin'] }, // Shared access
+        { id: 'accounts', label: 'Teacher Accounts', icon: Users, roles: ['admin', 'super_admin'] },
+        { id: 'my-routine', label: 'My Routine', icon: List, roles: ['teacher', 'admin', 'super_admin'] },
+        { id: 'today-routine', label: "Today's Schedule", icon: Briefcase, roles: ['teacher', 'admin', 'super_admin'] },
+        { id: 'profile', label: 'Profile', icon: User, roles: ['teacher', 'admin', 'super_admin'] },
         { id: 'admins', label: 'Manage Admins', icon: Shield, roles: ['super_admin'] },
     ];
 
@@ -84,7 +84,7 @@ export default function Sidebar({ isOpen, setIsOpen, activeView, setActiveView, 
                                 <button
                                     key={item.id}
                                     onClick={() => handleMenuClick(item.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden
+                                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-300 group relative overflow-hidden
                                     ${isActive
                                             ? 'bg-linear-to-r from-brand-start/10 to-brand-mid/10 text-brand-mid shadow-sm'
                                             : 'text-text-secondary hover:bg-icon-bg hover:text-foreground'

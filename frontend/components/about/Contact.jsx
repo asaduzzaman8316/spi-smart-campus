@@ -16,7 +16,7 @@ function Contact() {
                     </p>
                 </div>
                 <div data-aos='zoom-in' className="grid md:grid-cols-3 gap-6">
-                    <div className="bg-white dark:bg-[#1E293B] p-8 rounded-4xl border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10">
+                    <div className="bg-white dark:bg-[#1E293B] p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10">
                         <div className="flex flex-col items-center text-center space-y-4">
                             <div className="p-4 bg-[#FFFBF2] dark:bg-[#0B1120] rounded-full border border-gray-100 dark:border-gray-800">
                                 <MapPin className="w-8 h-8 text-[#FF5C35]" />
@@ -29,7 +29,7 @@ function Contact() {
                             </p>
                         </div>
                     </div>
-                    <div className="bg-white dark:bg-[#1E293B] p-8 rounded-4xl border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10">
+                    <div className="bg-white dark:bg-[#1E293B] p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10">
                         <div className="flex flex-col items-center text-center space-y-4">
                             <div className="p-4 bg-[#FFFBF2] dark:bg-[#0B1120] rounded-full border border-gray-100 dark:border-gray-800">
                                 <Phone className="w-8 h-8 text-[#FF5C35]" />
@@ -40,7 +40,7 @@ function Contact() {
                             </p>
                         </div>
                     </div>
-                    <div className="bg-white dark:bg-[#1E293B] p-8 rounded-4xl border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10">
+                    <div className="bg-white dark:bg-[#1E293B] p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10">
                         <div className="flex flex-col items-center text-center space-y-4">
                             <div className="p-4 bg-[#FFFBF2] dark:bg-[#0B1120] rounded-full border border-gray-100 dark:border-gray-800">
                                 <Mail className="w-8 h-8 text-[#FF5C35]" />

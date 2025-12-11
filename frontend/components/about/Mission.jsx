@@ -7,7 +7,7 @@ function Mission() {
                 <div className="grid md:grid-cols-2 gap-8">
                     <div
                         data-aos='flip-right'
-                        className="bg-white dark:bg-[#1E293B] p-8 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-lg">
+                        className="bg-white dark:bg-[#1E293B] p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-lg">
                         <h3 className="text-3xl font-bold font-serif text-[#2C1810] dark:text-white mb-6">
                             Our Mission
                         </h3>
@@ -17,7 +17,7 @@ function Mission() {
                     </div>
                     <div
                         data-aos='flip-left'
-                        className="bg-white dark:bg-[#1E293B] p-8 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-lg">
+                        className="bg-white dark:bg-[#1E293B] p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-lg">
                         <h3 className="text-3xl font-bold font-serif text-[#FF5C35] mb-6">
                             Our Vision
                         </h3>

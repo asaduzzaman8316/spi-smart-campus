@@ -26,7 +26,7 @@ function Facilities() {
                         <div
                             data-aos='fade-up'
                             key={index}
-                            className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10"
+                            className="bg-white dark:bg-[#1E293B] p-6 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10"
                         >
                             <div className="flex flex-col items-center text-center space-y-4">
                                 <div className="p-4 bg-[#FFFBF2] dark:bg-[#0B1120] rounded-full border border-gray-100 dark:border-gray-800">

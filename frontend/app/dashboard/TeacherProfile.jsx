@@ -69,7 +69,7 @@ export default function TeacherProfile() {
             toast.success("Password changed successfully! Please login again.");
             setIsChangingPassword(false);
             setPasswords({ current: '', new: '', confirm: '' });
-            
+
             // Logout and redirect
             logout();
             // router.push('/login'); // logout usually handles redirect, but if not:
@@ -134,7 +134,7 @@ export default function TeacherProfile() {
                                 </button>
                                 <button
                                     onClick={() => setIsEditing(true)}
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+                                    className="px-8 py-3 bg-[#FF5C35] hover:bg-[#e04f2c] text-white rounded-full font-medium transition-all hover:scale-105 shadow-lg shadow-[#FF5C35]/20 flex items-center gap-2"
                                 >
                                     <Edit2 size={16} /> Edit Profile
                                 </button>
@@ -148,8 +148,8 @@ export default function TeacherProfile() {
                     {/* Info Cards Column */}
                     <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                         {isEditing ? (
-                            <form onSubmit={handleUpdateProfile} className="col-span-1 md:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
-                                <h3 className="font-bold text-lg mb-4">Edit Details</h3>
+                            <form onSubmit={handleUpdateProfile} className="col-span-1 md:col-span-2 bg-white dark:bg-card-bg p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
+                                <h3 className="font-bold font-serif text-xl mb-4 text-[#2C1810] dark:text-white">Edit Details</h3>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
@@ -157,7 +157,7 @@ export default function TeacherProfile() {
                                         type="tel"
                                         value={formData.phone}
                                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent"
+                                        className="w-full p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-bg focus:outline-none focus:border-[#FF5C35]"
                                     />
                                 </div>
                                 <div>
@@ -166,7 +166,7 @@ export default function TeacherProfile() {
                                         type="text"
                                         value={formData.image}
                                         onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                                        className="w-full p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent"
+                                        className="w-full p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-bg focus:outline-none focus:border-[#FF5C35]"
                                         placeholder="https://..."
                                     />
                                 </div>
@@ -181,7 +181,7 @@ export default function TeacherProfile() {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                                        className="px-6 py-3 bg-[#FF5C35] hover:bg-[#e04f2c] text-white rounded-full transition-all hover:scale-105 shadow-lg shadow-[#FF5C35]/20 flex items-center gap-2"
                                     >
                                         {loading ? 'Saving...' : <><Save size={16} /> Save Changes</>}
                                     </button>
@@ -201,9 +201,9 @@ export default function TeacherProfile() {
                     {/* Password Change Column */}
                     {isChangingPassword && (
                         <div className="lg:col-span-1">
-                            <form onSubmit={handleChangePassword} className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm space-y-4">
+                            <form onSubmit={handleChangePassword} className="bg-white dark:bg-card-bg p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-bold text-lg">Change Password</h3>
+                                    <h3 className="font-bold font-serif text-xl text-[#2C1810] dark:text-white">Change Password</h3>
                                     <button onClick={() => setIsChangingPassword(false)} className="text-gray-400 hover:text-gray-600">
                                         <X size={20} />
                                     </button>
@@ -243,7 +243,7 @@ export default function TeacherProfile() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mt-4"
+                                    className="w-full py-3 bg-[#FF5C35] hover:bg-[#e04f2c] text-white rounded-full transition-all hover:scale-105 shadow-lg shadow-[#FF5C35]/20 mt-4 font-medium"
                                 >
                                     {loading ? 'Updating...' : 'Update Password'}
                                 </button>

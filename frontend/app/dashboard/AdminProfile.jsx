@@ -108,12 +108,12 @@ export default function AdminProfile() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+                <h1 className="text-3xl font-bold font-serif text-[#2C1810] dark:text-white mb-8">
                     Admin Profile
                 </h1>
 
                 {/* Profile Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+                <div className="bg-white dark:bg-card-bg rounded-[2.5rem] shadow-lg p-8 mb-6 border border-gray-100 dark:border-gray-800">
                     <div className="flex items-start justify-between mb-6">
                         <div className="flex items-center gap-4">
                             {admin.image ? (
@@ -148,7 +148,7 @@ export default function AdminProfile() {
                         {!editing ? (
                             <button
                                 onClick={() => setEditing(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                className="flex items-center gap-2 px-8 py-3 bg-[#FF5C35] hover:bg-[#e04f2c] text-white rounded-full transition-all hover:scale-105 shadow-lg shadow-[#FF5C35]/20"
                             >
                                 <Edit2 size={18} />
                                 Edit Profile
@@ -191,7 +191,7 @@ export default function AdminProfile() {
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    className="w-full px-4 py-3 border border-gray-100 dark:border-gray-800 rounded-xl bg-white dark:bg-card-bg text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5C35]"
                                 />
                             ) : (
                                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -220,7 +220,7 @@ export default function AdminProfile() {
                                     type="tel"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    className="w-full px-4 py-3 border border-gray-100 dark:border-gray-800 rounded-xl bg-white dark:bg-card-bg text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5C35]"
                                 />
                             ) : (
                                 <div className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -252,7 +252,7 @@ export default function AdminProfile() {
                                     value={formData.image}
                                     onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                                     placeholder="https://example.com/image.jpg"
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    className="w-full px-4 py-3 border border-gray-100 dark:border-gray-800 rounded-xl bg-white dark:bg-card-bg text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5C35]"
                                 />
                             </div>
                         )}
@@ -260,8 +260,8 @@ export default function AdminProfile() {
                 </div>
 
                 {/* Change Password Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                <div className="bg-white dark:bg-card-bg rounded-[2.5rem] shadow-lg p-8 border border-gray-100 dark:border-gray-800">
+                    <h3 className="text-2xl font-bold font-serif text-[#2C1810] dark:text-white mb-6">
                         Change Password
                     </h3>
                     <form onSubmit={handlePasswordChange} className="space-y-4">
@@ -305,7 +305,7 @@ export default function AdminProfile() {
                         <button
                             type="submit"
                             disabled={changingPassword}
-                            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                            className="px-8 py-3 bg-[#FF5C35] hover:bg-[#e04f2c] text-white rounded-full transition-all hover:scale-105 shadow-lg shadow-[#FF5C35]/20 disabled:opacity-50 font-medium"
                         >
                             {changingPassword ? 'Changing...' : 'Change Password'}
                         </button>

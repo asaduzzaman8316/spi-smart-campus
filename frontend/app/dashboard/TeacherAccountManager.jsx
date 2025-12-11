@@ -134,28 +134,28 @@ export default function TeacherAccountManager() {
     </div>;
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <UserPlus className="text-blue-500" size={24} />
+        <div className="bg-white dark:bg-card-bg rounded-[2.5rem] shadow-lg border border-gray-100 dark:border-gray-800 p-8">
+            <h2 className="text-2xl font-bold font-serif text-[#2C1810] dark:text-white mb-6 flex items-center gap-3">
+                <UserPlus className="text-[#FF5C35]" size={28} />
                 Manage Teacher Accounts
             </h2>
 
             {/* Search */}
             <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                     type="text"
                     placeholder="Search teachers..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full pl-12 pr-6 py-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-card-bg text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF5C35] outline-none shadow-sm"
                 />
             </div>
 
             {/* List */}
             <div className="space-y-3 max-h-[600px] overflow-y-auto">
                 {filteredTeachers.map(teacher => (
-                    <div key={teacher.email} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:border-blue-500 border border-transparent transition-all">
+                    <div key={teacher.email} className="flex items-center justify-between p-6 bg-white dark:bg-card-bg rounded-2xl hover:border-[#FF5C35]/30 border border-gray-100 dark:border-gray-800 transition-all shadow-sm hover:shadow-md">
                         <div className="flex items-center gap-4">
                             {teacher.image ? (
                                 <Image
@@ -221,7 +221,7 @@ export default function TeacherAccountManager() {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => handleCreateAccountClick(teacher)}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                                    className="px-6 py-3 bg-[#FF5C35] hover:bg-[#e04f2c] text-white text-sm font-medium rounded-full transition-all hover:scale-105 shadow-lg shadow-[#FF5C35]/20 flex items-center gap-2"
                                 >
                                     <UserPlus size={16} /> <p className='hidden md:block'>Create Account</p>
                                 </button>

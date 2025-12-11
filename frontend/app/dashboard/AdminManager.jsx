@@ -49,24 +49,24 @@ export default function AdminManager() {
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             <div className="max-w-7xl mx-auto">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <div className="mb-8 bg-white dark:bg-card-bg p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <h1 className="text-3xl font-bold font-serif text-[#2C1810] dark:text-white mb-2">
                         Admin Management
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-gray-600 dark:text-gray-400">
                         View and manage department administrators
                     </p>
                 </div>
 
                 <div className="mb-6">
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                         <input
                             type="text"
                             placeholder="Search by name, email, or department..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="w-full pl-12 pr-6 py-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-card-bg text-gray-900 dark:text-white shadow-sm focus:outline-none focus:border-[#FF5C35]"
                         />
                     </div>
                 </div>
@@ -76,7 +76,7 @@ export default function AdminManager() {
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
                     </div>
                 ) : (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                    <div className="bg-white dark:bg-card-bg rounded-[2.5rem] shadow-lg overflow-hidden border border-gray-100 dark:border-gray-800">
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
