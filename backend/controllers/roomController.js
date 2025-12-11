@@ -5,21 +5,28 @@ const Room = require('../models/Room');
 // @access  Public
 const getRooms = async (req, res) => {
     try {
-        const { search, type } = req.query;
+        const { search, type, location, department, sort } = req.query;
 
         const query = {};
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },
-                { roomNumber: { $regex: search, $options: 'i' } }
+                { number: { $regex: search, $options: 'i' } } // Fix: search by 'number' not 'roomNumber' if schema uses 'number'
             ];
         }
-        if (type) {
-            query.type = type;
+        if (type) query.type = type;
+        if (location) query.location = location;
+        if (department) query.department = department;
+
+        let sortOption = { createdAt: -1 };
+        if (sort === 'capacity_desc') {
+            sortOption = { capacity: -1 };
+        } else if (sort === 'capacity_asc') {
+            sortOption = { capacity: 1 };
         }
 
         const rooms = await Room.find(query)
-            .sort({ createdAt: -1, _id: 1 })
+            .sort(sortOption)
             .lean();
 
         res.status(200).json({

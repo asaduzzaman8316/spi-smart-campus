@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
 const SHIFTS = ["1st", "2nd"];
-const GROUPS = ["A1", "A2", "B1", "B2"];
+const GROUPS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
 const INITIAL_ROUTINE = {
     id: '',
@@ -35,15 +35,20 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
     const [teacherFilterDept, setTeacherFilterDept] = useState('');
     const [roomFilterType, setRoomFilterType] = useState('');
+    const [roomFilterLocation, setRoomFilterLocation] = useState('');
+    const [roomFilterDept, setRoomFilterDept] = useState('');
 
     // Filtered lists
     const filteredTeachers = teacherFilterDept
         ? teachers.filter(t => t.department === teacherFilterDept)
         : teachers;
 
-    const filteredRooms = roomFilterType
-        ? rooms.filter(r => r.type === roomFilterType)
-        : rooms;
+    const filteredRooms = rooms.filter(r => {
+        if (roomFilterType && r.type !== roomFilterType) return false;
+        if (roomFilterLocation && r.location !== roomFilterLocation) return false;
+        if (roomFilterDept && r.department !== roomFilterDept) return false;
+        return true;
+    });
 
     const filteredSubjects = subjects;
 
@@ -340,289 +345,337 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 mt-12 gap-8">
+                {/* 1. Days Navigation (Horizontal) */}
+                <div className="flex overflow-x-auto pb-2 gap-2 mt-6 mb-6 no-scrollbar">
+                     {DAYS.map((day, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setActiveDay(day)}
+                            className={`whitespace-nowrap px-6 py-3 rounded-xl transition-all font-medium flex items-center gap-2 border ${
+                                activeDay === day
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30'
+                                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+                            }`}
+                        >
+                            <span>{day}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                activeDay === day 
+                                ? 'bg-white/20 text-white' 
+                                : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400'
+                            }`}>
+                                {routine.days.find(d => d.name === day)?.classes.length || 0}
+                            </span>
+                        </button>
+                    ))}
+                </div>
 
-                    {/* Left Sidebar: Controls & Day Nav */}
-                    <div className="space-y-6 lg:col-span-1">
-                        <div className="bg-white dark:bg-slate-800 shadow rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                            <div className="bg-gray-50 dark:bg-slate-700 px-4 py-3 border-b border-gray-200 dark:border-gray-700 font-semibold text-gray-900 dark:text-white">Configuration</div>
-                            <div className="p-4 space-y-4">
+                {/* 2. Configuration & Filters (Grid) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                     {/* Configuration Panel */}
+                    <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+                        <div className="bg-gray-50/50 dark:bg-slate-800/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <GripVertical size={18} className="text-gray-400" />
+                                Routine Configuration
+                             </h3>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Department</label>
+                                    <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Department</label>
                                     <select
                                         name="department"
                                         value={routine.department}
                                         onChange={handleMetaChange}
-                                        className="w-full outline-none bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white border-gray-300 dark:border-slate-600 rounded-md shadow-sm p-2 border focus:border-blue-500"
+                                        className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                                         disabled={isEditMode}
                                     >
-                                        <option className='text-gray-500 dark:text-slate-400' value="">Select Department</option>
+                                        <option value="">Select Department</option>
                                         {departments.slice(0, 7).map((dept, index) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={dept.name}>{dept.name}</option>
+                                            <option key={index} value={dept.name}>{dept.name}</option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Semester</label>
+                                    <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Semester</label>
                                     <select
                                         name="semester"
                                         value={routine.semester}
                                         onChange={handleMetaChange}
-                                        className="w-full outline-none bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white border-gray-300 dark:border-slate-600 rounded-md shadow-sm p-2 border focus:border-blue-500"
+                                        className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                                         disabled={isEditMode}
                                     >
-                                        <option className='text-gray-500 dark:text-slate-400' value="">Select Semester</option>
+                                        <option value="">Select Semester</option>
                                         {SEMESTERS.map((sem, index) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={sem}>{sem}</option>
+                                            <option key={index} value={sem}>{sem}</option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Shift</label>
+                                    <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Shift</label>
                                     <select
                                         name="shift"
                                         value={routine.shift}
                                         onChange={handleMetaChange}
-                                        className="w-full outline-none bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white border-gray-300 dark:border-slate-600 rounded-md shadow-sm p-2 border focus:border-blue-500"
+                                        className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                                         disabled={isEditMode}
                                     >
-                                        <option className='text-gray-500 dark:text-slate-400' value="">Select Shift</option>
+                                        <option value="">Select Shift</option>
                                         {SHIFTS.map((shift, index) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={shift}>{shift}</option>
+                                            <option key={index} value={shift}>{shift}</option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">Group</label>
+                                    <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Group</label>
                                     <select
                                         name="group"
                                         value={routine.group}
                                         onChange={handleMetaChange}
-                                        className="w-full outline-none bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white border-gray-300 dark:border-slate-600 rounded-md shadow-sm p-2 border focus:border-blue-500"
+                                        className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                                         disabled={isEditMode}
                                     >
-                                        <option className='text-gray-500 dark:text-slate-400' value="">Select Group</option>
+                                        <option value="">Select Group</option>
                                         {GROUPS.filter((grp, index) => {
                                             if (routine.shift === "1st") return ["A1", "B1"].includes(grp);
                                             if (routine.shift === "2nd") return ["A2", "B2"].includes(grp);
                                             return true;
                                         }).map((grp, index) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={grp}>{grp}</option>
+                                            <option key={index} value={grp}>{grp}</option>
                                         ))}
                                     </select>
                                 </div>
-                            </div>
-
-                            {/* Resource Filters */}
-                            <div className="px-4 pb-4 pt-2 border-t border-gray-200 dark:border-slate-700">
-                                <h3 className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-3">Resource Filters</h3>
-
-                                <div className="mb-3">
-                                    <label className="block text-xs font-medium text-gray-600 dark:text-slate-300 mb-1">Filter Teachers by Dept</label>
-                                    <select
-                                        value={teacherFilterDept}
-                                        onChange={(e) => setTeacherFilterDept(e.target.value)}
-                                        className="w-full bg-gray-50 dark:bg-slate-800 border-gray-300 dark:border-slate-600 rounded-md text-sm p-2 border text-gray-900 dark:text-white focus:border-blue-500 outline-none"
-                                    >
-                                        <option className='text-gray-500 dark:text-slate-400' value="">All Departments</option>
-                                        {departments.map((dept, index) => (
-                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={dept.name}>{dept.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="mb-3">
-                                    <label className="block text-xs font-medium text-gray-600 dark:text-slate-300 mb-1">Filter Rooms by Type</label>
-                                    <select
-                                        value={roomFilterType}
-                                        onChange={(e) => setRoomFilterType(e.target.value)}
-                                        className="w-full bg-gray-50 dark:bg-slate-800 border-gray-300 dark:border-slate-600 rounded-md text-sm p-2 border text-gray-900 dark:text-white focus:border-blue-500 outline-none"
-                                    >
-                                        <option className='text-gray-500 dark:text-slate-400' value="">All Types</option>
-                                        <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' value="Theory">Theory</option>
-                                        <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' value="Lab">Lab</option>
-                                    </select>
-                                </div>
-
-                            </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-col space-y-1">
-                        <label className="text-xs font-semibold uppercase text-gray-500 dark:text-white mb-2 px-2">Days of Week</label>
-                        {DAYS.map((day, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setActiveDay(day)}
-                                className={`text-left px-4 py-3 rounded-md transition-colors flex justify-between items-center ${activeDay === day
-                                    ? 'bg-blue-600 text-white shadow-md'
-                                    : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-700 border border-transparent dark:border-transparent'
-                                    }`}
-                            >
-                                <span className="font-medium">{day}</span>
-                                <span className={`text-xs px-2 py-0.5 rounded-full ${activeDay === day ? 'bg-white/20' : 'bg-gray-200 dark:bg-slate-700'}`}>
-                                    {routine.days.find(d => d.name === day)?.classes.length || 0}
-                                </span>
-                            </button>
-                        ))}
+                    {/* Resources Panel */}
+                    <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+                        <div className="bg-gray-50/50 dark:bg-slate-800/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Plus size={18} className="text-gray-400" />
+                                Resource Filters
+                             </h3>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Teachers by Dept</label>
+                                <select
+                                    value={teacherFilterDept}
+                                    onChange={(e) => setTeacherFilterDept(e.target.value)}
+                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                >
+                                    <option value="">All Departments</option>
+                                    {departments.map((dept, index) => (
+                                        <option key={index} value={dept.name}>{dept.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Type</label>
+                                <select
+                                    value={roomFilterType}
+                                    onChange={(e) => setRoomFilterType(e.target.value)}
+                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                >
+                                    <option value="">All Types</option>
+                                    <option value="Theory">Theory</option>
+                                    <option value="Lab">Lab</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Location</label>
+                                <select
+                                    value={roomFilterLocation}
+                                    onChange={(e) => setRoomFilterLocation(e.target.value)}
+                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                >
+                                    <option value="">All Locations</option>
+                                    <option value="Computer Building">Computer Building</option>
+                                    <option value="Administration Building">Administration Building</option>
+                                    <option value="New Building">New Building</option>
+                                    <option value="Old Building">Old Building</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Dept</label>
+                                <select
+                                    value={roomFilterDept}
+                                    onChange={(e) => setRoomFilterDept(e.target.value)}
+                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                >
+                                    <option value="">All Departments</option>
+                                    {departments.map((dept, index) => (
+                                        <option key={index} value={dept.name}>{dept.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Right Content: Class Editor */}
-                <div className="lg:col-span-3">
-                    <div className="bg-white dark:bg-slate-800 shadow rounded-lg min-h-[500px] flex flex-col border border-gray-200 dark:border-gray-700">
-                        <div className="bg-gray-50 dark:bg-slate-700 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10 rounded-t-lg">
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{activeDay} Schedule</h2>
-                            <button
-                                onClick={addClass}
-                                className="flex items-center text-sm bg-gray-200 dark:bg-slate-100 hover:bg-gray-300 dark:hover:bg-slate-200 text-gray-900 dark:text-slate-700 px-3 py-1.5 rounded-md transition-colors"
-                            >
-                                <Plus size={16} className="mr-1" /> Add Class
-                            </button>
-                        </div>
-                        <div className="p-6 space-y-4 flex-1">
-                            {routine.days.find(d => d.name === activeDay)?.classes.length === 0 ? (
-                                <div className="text-center py-16 border-2 border-dashed border-gray-300 dark:border-slate-200 rounded-lg h-full flex flex-col items-center justify-center">
-                                    <p className="text-gray-600 dark:text-white mb-2">No classes added for {activeDay}</p>
-                                    <button onClick={addClass} className="text-blue-600 hover:underline">Add First Class</button>
+                {/* 3. Class Editor (Full Width) */}
+                <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 min-h-[500px] flex flex-col">
+                    <div className="bg-gray-50/50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10 rounded-t-xl">
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <span className="w-2 h-6 bg-blue-500 rounded-full inline-block"></span>
+                            {activeDay} Schedule
+                        </h2>
+                        <button
+                            onClick={addClass}
+                            className="flex items-center text-sm font-medium bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-lg transition-colors border border-blue-100 dark:border-blue-500/20"
+                        >
+                            <Plus size={16} className="mr-1.5" /> Add New Class
+                        </button>
+                    </div>
+                    <div className="p-6 space-y-4 flex-1">
+                        {routine.days.find(d => d.name === activeDay)?.classes.length === 0 ? (
+                            <div className="text-center py-20 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl h-full flex flex-col items-center justify-center bg-gray-50/50 dark:bg-slate-800/50">
+                                <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
+                                    <Plus className="text-gray-400" size={32} />
                                 </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {routine.days.find(d => d.name === activeDay)?.classes.map((cls, index) => {
-                                        const unavailableTeachers = getUnavailableTeachers(activeDay, cls.startTime, cls.endTime, cls.id);
-                                        const unavailableRooms = getUnavailableRooms(activeDay, cls.startTime, cls.endTime, cls.id);
-                                        return (
-                                            <div key={index} className="group flex flex-col md:flex-row gap-3 items-start md:items-center bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-200 dark:border-slate-200 hover:border-blue-400 transition-colors shadow-sm dark:shadow-none">
-                                                {/* Adjusted Grid for Code input */}
-                                                <div className="grid grid-cols-2 md:grid-cols-12 gap-3 w-full">
-                                                    <div className="col-span-1 md:col-span-2">
-                                                        <label className="text-xs text-gray-700 dark:text-white mb-1 block">Start</label>
-                                                        <input
-                                                            type="time"
-                                                            value={cls.startTime || ''}
-                                                            onChange={(e) => updateClass(cls.id, 'startTime', e.target.value)}
-                                                            className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
-                                                        />
-                                                    </div>
-                                                    <div className="col-span-1 md:col-span-2">
-                                                        <label className="text-xs text-gray-700 dark:text-white mb-1 block">End</label>
-                                                        <input
-                                                            type="time"
-                                                            value={cls.endTime || ''}
-                                                            onChange={(e) => updateClass(cls.id, 'endTime', e.target.value)}
-                                                            className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
-                                                        />
-                                                    </div>
-                                                    <div className="col-span-2 md:col-span-2">
-                                                        <label className="text-xs text-gray-700 dark:text-white mb-1 block">Code</label>
-                                                        <input
-                                                            type="text"
-                                                            placeholder="66611"
-                                                            value={cls.subjectCode || ''}
-                                                            onChange={(e) => updateClass(cls.id, 'subjectCode', e.target.value)}
-                                                            onKeyDown={(e) => handleCodeKeyDown(e, cls.id, cls.subjectCode)}
-                                                            className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
-                                                        />
-                                                    </div>
-                                                    <div className="col-span-2 md:col-span-3">
-                                                        <label className="text-xs text-gray-700 dark:text-white mb-1 block">Subject</label>
-                                                        <select
-                                                            value={cls.subject || ''}
-                                                            onChange={(e) => updateClass(cls.id, 'subject', e.target.value)}
-                                                            className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
-                                                        >
-                                                            <option className='text-gray-500 dark:text-slate-400' value="">Select Subject</option>
-                                                            {filteredSubjects.map((sub, index) => (
-                                                                <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={sub.name}>{sub.name}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div className="col-span-2 md:col-span-2">
-                                                        <label className="text-xs text-gray-700 dark:text-white mb-1 block">Teacher</label>
-                                                        <select
-                                                            value={cls.teacher || ''}
-                                                            onChange={(e) => updateClass(cls.id, 'teacher', e.target.value)}
-                                                            className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
-                                                        >
-                                                            <option className='text-gray-500 dark:text-slate-400' value="">Select Teacher</option>
-                                                            {(() => {
-                                                                const selectedTeacherObj = teachers.find(t => t.name === cls.teacher);
-                                                                let teachersToShow = filteredTeachers;
-
-                                                                // If selected teacher exists but is filtered out, add them back for this specific dropdown
-                                                                if (selectedTeacherObj && !teachersToShow.find(t => t.id === selectedTeacherObj.id)) {
-                                                                    teachersToShow = [...teachersToShow, selectedTeacherObj];
-                                                                    // Optional: keep sorted
-                                                                    teachersToShow.sort((a, b) => a.name.localeCompare(b.name));
-                                                                }
-
-                                                                return teachersToShow.map((t, index) => {
-                                                                    const isBusy = unavailableTeachers.has(t.name);
-                                                                    return (
-                                                                        <option
-                                                                            className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500 dark:text-red-400' : ''}`}
-                                                                            key={index}
-                                                                            value={t.name}
-                                                                            disabled={isBusy && t.name !== cls.teacher} // Allow keeping current teacher if already selected, or just disable
-                                                                        >
-                                                                            {t.name} {isBusy ? '(Busy)' : ''}
-                                                                        </option>
-                                                                    );
-                                                                });
-                                                            })()}
-                                                        </select>
-                                                    </div>
-                                                    <div className="col-span-2 md:col-span-1">
-                                                        <label className="text-xs text-gray-700 dark:text-white mb-1 block">Room</label>
-                                                        <select
-                                                            value={cls.room || ''}
-                                                            onChange={(e) => updateClass(cls.id, 'room', e.target.value)}
-                                                            className="w-full text-sm bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white rounded-md p-2 border focus:border-blue-500 outline-none"
-                                                        >
-                                                            <option className='text-gray-500 dark:text-slate-400' value="">Room</option>
-                                                            {(() => {
-                                                                const selectedRoomObj = rooms.find(r => (r.number || r.name) === cls.room);
-                                                                let roomsToShow = filteredRooms;
-
-                                                                // If selected room exists but is filtered out, add it back for this specific dropdown
-                                                                if (selectedRoomObj && !roomsToShow.find(r => r.id === selectedRoomObj.id)) {
-                                                                    roomsToShow = [...roomsToShow, selectedRoomObj];
-                                                                    // Optional: keep sorted
-                                                                    roomsToShow.sort((a, b) => (a.number || a.name).localeCompare(b.number || b.name));
-                                                                }
-
-                                                                return roomsToShow.map((r, index) => {
-                                                                    const isBusy = unavailableRooms.has(r.number || r.name);
-                                                                    return (
-                                                                        <option
-                                                                            className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500 dark:text-red-400' : ''}`}
-                                                                            key={index}
-                                                                            value={r.number || r.name}
-                                                                            disabled={isBusy && (r.number || r.name) !== cls.room}
-                                                                        >
-                                                                            {r.number || r.name} {r.type ? `(${r.type})` : ''} {isBusy ? '(Busy)' : ''}
-                                                                        </option>
-                                                                    );
-                                                                });
-                                                            })()}
-                                                        </select>
-                                                    </div>
+                                <p className="text-gray-600 dark:text-slate-300 font-medium mb-1">No classes added for {activeDay}</p>
+                                <p className="text-gray-400 text-sm mb-4">Get started by adding your first class</p>
+                                <button onClick={addClass} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Add First Class</button>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {routine.days.find(d => d.name === activeDay)?.classes.map((cls, index) => {
+                                    const unavailableTeachers = getUnavailableTeachers(activeDay, cls.startTime, cls.endTime, cls.id);
+                                    const unavailableRooms = getUnavailableRooms(activeDay, cls.startTime, cls.endTime, cls.id);
+                                    return (
+                                        <div key={index} className="group flex flex-col xl:flex-row gap-4 items-start xl:items-center bg-white dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all shadow-sm hover:shadow-md dark:shadow-none">
+                                            {/* Adjusted Grid for Code input */}
+                                            <div className="grid grid-cols-2 md:grid-cols-12 gap-4 w-full">
+                                                <div className="col-span-1 md:col-span-2">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Start Time</label>
+                                                    <input
+                                                        type="time"
+                                                        value={cls.startTime || ''}
+                                                        onChange={(e) => updateClass(cls.id, 'startTime', e.target.value)}
+                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                    />
                                                 </div>
-                                                <button
-                                                    onClick={() => removeClass(cls.id)}
-                                                    className="p-2 text-gray-500 dark:text-white hover:text-red-500  rounded-md transition-colors self-end md:self-center"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
+                                                <div className="col-span-1 md:col-span-2">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">End Time</label>
+                                                    <input
+                                                        type="time"
+                                                        value={cls.endTime || ''}
+                                                        onChange={(e) => updateClass(cls.id, 'endTime', e.target.value)}
+                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <div className="col-span-2 md:col-span-2">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Sub Code</label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Code"
+                                                        value={cls.subjectCode || ''}
+                                                        onChange={(e) => updateClass(cls.id, 'subjectCode', e.target.value)}
+                                                        onKeyDown={(e) => handleCodeKeyDown(e, cls.id, cls.subjectCode)}
+                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-400"
+                                                    />
+                                                </div>
+                                                <div className="col-span-2 md:col-span-3">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Subject</label>
+                                                    <select
+                                                        value={cls.subject || ''}
+                                                        onChange={(e) => updateClass(cls.id, 'subject', e.target.value)}
+                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                    >
+                                                        <option className='text-gray-500' value="">Select Subject</option>
+                                                        {filteredSubjects.map((sub, index) => (
+                                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={sub.name}>{sub.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-2 md:col-span-2">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Teacher</label>
+                                                    <select
+                                                        value={cls.teacher || ''}
+                                                        onChange={(e) => updateClass(cls.id, 'teacher', e.target.value)}
+                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                    >
+                                                        <option className='text-gray-500' value="">Select Teacher</option>
+                                                        {(() => {
+                                                            const selectedTeacherObj = teachers.find(t => t.name === cls.teacher);
+                                                            let teachersToShow = filteredTeachers;
+
+                                                            // If selected teacher exists but is filtered out, add them back for this specific dropdown
+                                                            if (selectedTeacherObj && !teachersToShow.find(t => t.id === selectedTeacherObj.id)) {
+                                                                teachersToShow = [...teachersToShow, selectedTeacherObj];
+                                                                // Optional: keep sorted
+                                                                teachersToShow.sort((a, b) => a.name.localeCompare(b.name));
+                                                            }
+
+                                                            return teachersToShow.map((t, index) => {
+                                                                const isBusy = unavailableTeachers.has(t.name);
+                                                                return (
+                                                                    <option
+                                                                        className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500' : ''}`}
+                                                                        key={index}
+                                                                        value={t.name}
+                                                                        disabled={isBusy && t.name !== cls.teacher} // Allow keeping current teacher if already selected, or just disable
+                                                                    >
+                                                                        {t.name} {isBusy ? '(Busy)' : ''}
+                                                                    </option>
+                                                                );
+                                                            });
+                                                        })()}
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-2 md:col-span-1">
+                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Room</label>
+                                                    <select
+                                                        value={cls.room || ''}
+                                                        onChange={(e) => updateClass(cls.id, 'room', e.target.value)}
+                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                    >
+                                                        <option className='text-gray-500' value="">Room</option>
+                                                        {(() => {
+                                                            const selectedRoomObj = rooms.find(r => (r.number || r.name) === cls.room);
+                                                            let roomsToShow = filteredRooms;
+
+                                                            // If selected room exists but is filtered out, add it back for this specific dropdown
+                                                            if (selectedRoomObj && !roomsToShow.find(r => r.id === selectedRoomObj.id)) {
+                                                                roomsToShow = [...roomsToShow, selectedRoomObj];
+                                                                // Optional: keep sorted
+                                                                roomsToShow.sort((a, b) => (a.number || a.name).localeCompare(b.number || b.name));
+                                                            }
+
+                                                            return roomsToShow.map((r, index) => {
+                                                                const isBusy = unavailableRooms.has(r.number || r.name);
+                                                                return (
+                                                                    <option
+                                                                        className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500' : ''}`}
+                                                                        key={index}
+                                                                        value={r.number || r.name}
+                                                                        disabled={isBusy && (r.number || r.name) !== cls.room}
+                                                                    >
+                                                                        {r.number || r.name} {r.type ? `(${r.type})` : ''} {r.capacity ? `[Cap: ${r.capacity}]` : ''} {isBusy ? '(Busy)' : ''}
+                                                                    </option>
+                                                                );
+                                                            });
+                                                        })()}
+                                                    </select>
+                                                </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
+                                            <button
+                                                onClick={() => removeClass(cls.id)}
+                                                className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-100 dark:hover:border-red-500/20 xl:self-center self-end"
+                                                title="Remove Class"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

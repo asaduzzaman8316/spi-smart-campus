@@ -26,6 +26,18 @@ export default function RoomManager({ onBack }) {
     const [saving, setSaving] = useState(false);
 
 
+    const [departments, setDepartments] = useState([]);
+
+    // Filters removed as per request, logic moved to RoutineBuilder
+
+    useEffect(() => {
+        const init = async () => {
+            const depts = await import('../../Lib/api').then(m => m.fetchDepartments());
+            setDepartments(depts);
+        }
+        init();
+    }, []);
+
     useEffect(() => {
         loadRooms();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,7 +110,9 @@ export default function RoomManager({ onBack }) {
             const roomData = {
                 number: currentRoom.number,
                 type: currentRoom.type,
-                capacity: Number(currentRoom.capacity)
+                capacity: Number(currentRoom.capacity),
+                location: currentRoom.location || 'Computer Building',
+                department: currentRoom.type === 'Lab' ? currentRoom.department : undefined
             };
 
             if (modalMode === 'add') {
@@ -181,6 +195,8 @@ export default function RoomManager({ onBack }) {
                     </select>
                 </div>
 
+                {/* Advanced Filters removed */}
+
                 {/* Rooms Grid */}
                 {loading ? (
                     <div className="text-center py-16">
@@ -228,6 +244,17 @@ export default function RoomManager({ onBack }) {
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 rounded font-medium">
+                                            {room.location}
+                                        </span>
+                                        {room.department && (
+                                            <span className="text-xs px-2 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded font-medium border border-indigo-100 dark:border-indigo-500/20">
+                                                {room.department}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="space-y-2 mb-4">
@@ -303,6 +330,42 @@ export default function RoomManager({ onBack }) {
                                         ))}
                                     </select>
                                 </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                        Location
+                                    </label>
+                                    <select
+                                        name="location"
+                                        value={currentRoom.location || 'Computer Building'}
+                                        onChange={handleInputChange}
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                                    >
+                                        <option value="Computer Building">Computer Building</option>
+                                        <option value="Administration Building">Administration Building</option>
+                                        <option value="New Building">New Building</option>
+                                        <option value="Old Building">Old Building</option>
+                                    </select>
+                                </div>
+
+                                {currentRoom.type === 'Lab' && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                                            Department
+                                        </label>
+                                        <select
+                                            name="department"
+                                            value={currentRoom.department || ''}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
+                                        >
+                                            <option value="">Select Department</option>
+                                            {departments.map((d, i) => (
+                                                <option key={i} value={d.name}>{d.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                                         Capacity
