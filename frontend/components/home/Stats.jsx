@@ -3,10 +3,10 @@ import { GraduationCap, BookOpen, Users, Award } from 'lucide-react'
 
 export default function Stats() {
     const stats = [
-        { icon: Users, value: '5,500+', label: 'Students', color: 'from-brand-start to-brand-mid' },
-        { icon: GraduationCap, value: '120+', label: 'Faculty', color: 'from-brand-mid to-brand-end' },
-        { icon: BookOpen, value: '7', label: 'Departments', color: 'from-brand-end to-brand-start' },
-        { icon: Award, value: '69+', label: 'Years', color: 'from-brand-start to-brand-mid' },
+        { icon: Users, value: '5,500+', label: 'Students', color: 'bg-white' },
+        { icon: GraduationCap, value: '120+', label: 'Faculty', color: 'bg-white' },
+        { icon: BookOpen, value: '7', label: 'Departments', color: 'bg-white' },
+        { icon: Award, value: '69+', label: 'Years', color: 'bg-white' },
     ]
 
     return (
@@ -18,15 +18,15 @@ export default function Stats() {
                             data-aos='fade-up'
                             data-aos-delay={100 * index}
                             key={index}
-                            className="bg-card-bg p-6 rounded-2xl border border-border-color hover:border-brand-mid transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-brand-start/20 text-center group shadow-sm"
+                            className="bg-white dark:bg-[#1E293B] p-6 rounded-2xl border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10 text-center group shadow-sm"
                         >
-                            <div className={`inline-flex items-center justify-center w-16 h-16 bg-linear-to-br ${stat.color} rounded-2xl mb-4 group-hover:scale-110 transition-transform`}>
-                                <stat.icon className="w-8 h-8 text-white" />
+                            <div className={`inline-flex items-center justify-center w-16 h-16 bg-[#FFFBF2] dark:bg-[#0B1120] border border-gray-100 dark:border-gray-800 shadow-sm rounded-full mb-4 group-hover:scale-110 transition-transform`}>
+                                <stat.icon className="w-8 h-8 text-[#FF5C35]" />
                             </div>
-                            <div className="text-4xl font-bold bg-linear-to-r from-brand-start to-brand-mid bg-clip-text text-transparent mb-2">
+                            <div className="text-4xl font-bold text-black dark:text-white mb-2">
                                 {stat.value}
                             </div>
-                            <div className="text-text-secondary text-sm font-medium">{stat.label}</div>
+                            <div className="text-text-secondary dark:text-gray-400 text-sm font-medium">{stat.label}</div>
                         </div>
                     ))}
                 </div>

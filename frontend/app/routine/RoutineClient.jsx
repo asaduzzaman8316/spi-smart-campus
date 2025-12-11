@@ -9,7 +9,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
 const SHIFTS = ["1st", "2nd"];
-const GROUPS = ["A1", "A2", "B1", "B2"];
+const GROUPS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
 export default function RoutineDisplay() {
   const [departments, setDepartments] = useState([]);
@@ -137,7 +137,7 @@ export default function RoutineDisplay() {
     const doc = new jsPDF('l', 'mm', 'a4');
 
     // Header Background
-    doc.setFillColor(88, 28, 135); // Purple-900
+    doc.setFillColor(255, 92, 53); // Brand Orange
     doc.rect(0, 0, 297, 35, 'F'); // Reduced height slightly
 
     // Title
@@ -212,7 +212,7 @@ export default function RoutineDisplay() {
         lineColor: [200, 200, 200]
       },
       headStyles: {
-        fillColor: [109, 40, 217], // Purple-700
+        fillColor: [255, 92, 53], // Brand Orange
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         halign: 'center',
@@ -248,18 +248,20 @@ export default function RoutineDisplay() {
     <div className="min-h-screen relative   bg-background py-8 px-4">
       <div className="container mx-auto pt-18 max-w-7xl">
         {/* Header */}
+        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-brand-start via-brand-mid to-brand-end bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold font-serif text-[#2C1810] dark:text-white mb-2">
             Class Routine
           </h1>
-          <p className="text-text-secondary mb-4">View your personalized class schedule</p>
+          <p className="text-[#2C1810]/70 dark:text-gray-400 mb-4">View your personalized class schedule</p>
         </div>
 
         {/* Filters */}
-        <div className="bg-card-bg rounded-2xl p-6 mb-8 border border-border-color shadow-2xl">
+        {/* Filters */}
+        <div className="bg-white dark:bg-[#1E293B] rounded-4xl p-6 mb-8 border border-gray-100 dark:border-gray-800 shadow-xl">
           <div className="flex items-center gap-2 mb-4">
-            <Filter className="text-brand-mid" size={20} />
-            <h2 className="text-xl font-semibold text-foreground">Filter Your Routine</h2>
+            <Filter className="text-[#FF5C35]" size={20} />
+            <h2 className="text-xl font-semibold font-serif text-[#2C1810] dark:text-white">Filter Your Routine</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -344,19 +346,19 @@ export default function RoutineDisplay() {
             <p className="text-text-secondary">Please select all filters to view your routine</p>
           </div>
         ) : (
-          <div className="bg-card-bg rounded-2xl p-6 border border-border-color shadow-2xl overflow-x-auto">
+          <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-lg overflow-x-auto">
             <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
-                <h3 className="text-xl font-semibold text-foreground mb-1">
+                <h3 className="text-xl font-semibold font-serif text-[#2C1810] dark:text-white mb-1">
                   {filteredRoutine.department} - Semester {filteredRoutine.semester}
                 </h3>
-                <p className="text-text-secondary text-sm">
+                <p className="text-[#2C1810]/70 dark:text-gray-400 text-sm">
                   {filteredRoutine.shift} Shift • Group {filteredRoutine.group}
                 </p>
               </div>
               <button
                 onClick={downloadPDF}
-                className="inline-flex items-center gap-2 bg-brand-mid hover:bg-brand-mid/90 text-white px-4 py-2 rounded-lg transition-colors shadow-lg shadow-brand-mid/30"
+                className="inline-flex items-center gap-2 bg-[#FF5C35] hover:bg-[#e64722] text-white px-6 py-3 rounded-full transition-colors shadow-lg shadow-[#FF5C35]/20 hover:shadow-[#FF5C35]/30"
               >
                 <Download size={18} />
                 Download PDF
@@ -364,16 +366,16 @@ export default function RoutineDisplay() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[800px]">
+              <table className="w-full border-collapse min-w-[800px] border border-gray-200 dark:border-gray-700">
                 <thead>
-                  <tr className="bg-linear-to-r from-brand-start via-brand-mid to-brand-end">
-                    <th className="border border-brand-mid/50 px-4 py-3 text-white font-semibold text-left min-w-[120px]">
+                  <tr className="bg-[#FF5C35] text-white">
+                    <th className="border border-white/20 px-4 py-3 font-semibold text-left min-w-[120px]">
                       Day
                     </th>
                     {timeSlots.map((slot, index) => (
-                      <th key={index} className="border border-brand-mid/50 px-3 py-3 text-white font-semibold text-center min-w-[150px]">
+                      <th key={index} className="border border-white/20 px-3 py-3 font-semibold text-center min-w-[150px]">
                         <div className="flex items-center justify-center gap-1">
-                          <Clock size={14} />
+                          <Clock size={14} className="text-white" />
                           <span className="text-sm">{slot.label}</span>
                         </div>
                       </th>
@@ -382,8 +384,8 @@ export default function RoutineDisplay() {
                 </thead>
                 <tbody>
                   {DAYS.map((day, dayIndex) => (
-                    <tr key={day} className={dayIndex % 2 === 0 ? 'bg-background/50' : 'bg-card-bg/50'}>
-                      <td className="border border-border-color px-4 py-3 font-semibold text-foreground">
+                    <tr key={day} className={dayIndex % 2 === 0 ? 'bg-white dark:bg-[#1E293B]' : 'bg-[#FFFBF2] dark:bg-[#151e2e]'}>
+                      <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 font-semibold text-[#2C1810] dark:text-white">
                         {day}
                       </td>
                       {timeSlots.map((slot, slotIndex) => {
@@ -399,24 +401,24 @@ export default function RoutineDisplay() {
                           <td
                             key={slotIndex}
                             colSpan={colspan}
-                            className="border border-border-color px-3 py-3 text-center transition-all hover:bg-icon-bg hover:border-icon"
+                            className="border border-gray-200 dark:border-gray-700 px-3 py-3 text-center transition-all hover:bg-gray-50 dark:hover:bg-gray-800"
                           >
                             {classInfo ? (
                               <div className="space-y-1">
-                                <div className="font-bold text-brand-mid text-sm">
+                                <div className="font-bold text-[#FF5C35] text-sm">
                                   {classInfo.subjectCode}
                                 </div>
-                                <div className="text-foreground text-xs font-medium">
+                                <div className="text-[#2C1810] dark:text-white text-xs font-medium">
                                   {classInfo.subject}
                                 </div>
                                 {classInfo.teacher && (
-                                  <div className="flex items-center justify-center gap-1 text-text-secondary text-xs">
+                                  <div className="flex items-center justify-center gap-1 text-[#2C1810]/60 dark:text-gray-400 text-xs">
                                     <User size={10} />
                                     <span>{classInfo.teacher}</span>
                                   </div>
                                 )}
                                 {classInfo.room && (
-                                  <div className="flex items-center justify-center gap-1 text-text-secondary text-xs">
+                                  <div className="flex items-center justify-center gap-1 text-[#2C1810]/60 dark:text-gray-400 text-xs">
                                     <MapPin size={10} />
                                     <span>
                                       {classInfo.room}
@@ -429,7 +431,7 @@ export default function RoutineDisplay() {
                                 )}
                               </div>
                             ) : (
-                              <span className="text-text-secondary text-sm italic">----</span>
+                              <span className="text-gray-300 dark:text-gray-600 text-sm italic">----</span>
                             )}
                           </td>
                         );

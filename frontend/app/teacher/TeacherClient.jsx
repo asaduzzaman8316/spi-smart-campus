@@ -58,10 +58,10 @@ export default function TeacherList() {
 
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-brand-start via-brand-mid to-brand-end bg-clip-text text-transparent mb-4">
+                    <h1 className="text-4xl md:text-5xl font-bold font-serif text-[#2C1810] dark:text-white mb-4">
                         Our Teachers
                     </h1>
-                    <p className="text-text-secondary mb-6">
+                    <p className="text-[#2C1810]/70 dark:text-gray-400 mb-6">
                         Meet our dedicated faculty members
                     </p>
 
@@ -89,11 +89,11 @@ export default function TeacherList() {
                         {filteredTeachers.map((teacher) => (
                             <div
                                 key={teacher._id}
-                                className="bg-card-bg border border-border-color rounded-2xl p-6 hover:border-brand-mid hover:shadow-xl hover:shadow-brand-mid/20 transition-all duration-300 hover:scale-105"
+                                className="bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-800 rounded-4xl p-6 hover:border-[#FF5C35] dark:hover:border-[#FF5C35] hover:shadow-xl hover:shadow-[#FF5C35]/10 transition-all duration-300 hover:scale-[1.02]"
                             >
                                 <div className="flex items-center gap-4 mb-4">
                                     {teacher.image ? (
-                                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-brand-mid/30">
+                                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#FF5C35]/20">
                                             <Image
                                                 src={teacher.image}
                                                 alt={teacher.name}
@@ -104,42 +104,42 @@ export default function TeacherList() {
                                             />
                                         </div>
                                     ) : (
-                                        <div className="w-16 h-16 rounded-full bg-icon-bg flex items-center justify-center border-2 border-brand-mid/30">
-                                            <User size={32} className="text-icon" />
+                                        <div className="w-16 h-16 rounded-full bg-[#FFFBF2] dark:bg-[#0B1120] flex items-center justify-center border-2 border-gray-100 dark:border-gray-800">
+                                            <User size={32} className="text-[#FF5C35]" />
                                         </div>
                                     )}
 
                                     <div>
-                                        <h3 className="text-xl font-bold text-foreground">{teacher.name}</h3>
-                                        <p className="text-brand-mid text-sm font-medium">
+                                        <h3 className="text-xl font-bold text-[#2C1810] dark:text-white">{teacher.name}</h3>
+                                        <p className="text-[#FF5C35] text-sm font-medium">
                                             {teacher.role}
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="space-y-2 mb-4">
-                                    <div className="flex items-center gap-2 text-text-secondary text-sm">
-                                        <Briefcase size={14} />
+                                    <div className="flex items-center gap-2 text-[#2C1810]/70 dark:text-gray-400 text-sm">
+                                        <Briefcase size={14} className="text-[#FF5C35]" />
                                         <span>{teacher.department}</span>
                                     </div>
 
                                     {teacher.email && (
-                                        <div className="flex items-center gap-2 text-text-secondary text-sm">
-                                            <Mail size={14} />
+                                        <div className="flex items-center gap-2 text-[#2C1810]/70 dark:text-gray-400 text-sm">
+                                            <Mail size={14} className="text-[#FF5C35]" />
                                             <span className="truncate">{teacher.email}</span>
                                         </div>
                                     )}
 
                                     {teacher.phone && (
-                                        <div className="flex items-center gap-2 text-text-secondary text-sm">
-                                            <Phone size={14} />
+                                        <div className="flex items-center gap-2 text-[#2C1810]/70 dark:text-gray-400 text-sm">
+                                            <Phone size={14} className="text-[#FF5C35]" />
                                             <span>{teacher.phone}</span>
                                         </div>
                                     )}
                                 </div>
 
                                 {teacher.shift && (
-                                    <p className="text-xs text-text-secondary border-t border-border-color pt-3">
+                                    <p className="text-xs text-[#2C1810]/60 dark:text-gray-500 border-t border-gray-100 dark:border-gray-800 pt-3">
                                         Shift: <strong>{teacher.shift}</strong>
                                     </p>
                                 )}

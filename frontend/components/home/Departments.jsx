@@ -12,13 +12,13 @@ export default function Departments() {
     ]
 
     return (
-        <section className="py-20 px-4 bg-gray-50 dark:bg-gray-900/50">
+        <section className="py-20 px-4 bg-transparent">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-12">
-                    <h2 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-brand-start to-brand-mid bg-clip-text text-transparent mb-4">
+                    <h2 className="text-4xl md:text-5xl font-bold font-serif text-[#2C1810] dark:text-white mb-4">
                         Our Departments
                     </h2>
-                    <p className="text-text-secondary text-lg">
+                    <p className="text-[#2C1810]/80 dark:text-gray-400 text-lg">
                         Seven specialized engineering technologies preparing students for the future
                     </p>
                 </div>
@@ -28,14 +28,14 @@ export default function Departments() {
                     {departments.map((dept, index) => (
                         <div
                             key={index}
-                            className="group bg-card-bg p-6 rounded-2xl border border-border-color hover:border-icon transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-icon/20 shadow-sm"
+                            className="group bg-white dark:bg-[#1E293B] p-6 rounded-2xl border border-gray-100 dark:border-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-[#FF5C35]/10 shadow-sm"
                         >
                             <div className="flex items-start gap-4">
-                                <div className="p-3 bg-icon-bg rounded-xl group-hover:scale-110 transition-transform duration-300">
-                                    <dept.icon className="w-6 h-6 text-icon" />
+                                <div className="p-3 bg-[#FFFBF2] dark:bg-[#0B1120] border border-gray-100 dark:border-gray-800 shadow-sm rounded-full group-hover:scale-110 transition-transform duration-300">
+                                    <dept.icon className="w-6 h-6 text-[#FF5C35]" />
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-icon transition-colors">
+                                    <h3 className="text-lg font-semibold text-[#2C1810] dark:text-white group-hover:text-[#FF5C35] transition-colors">
                                         {dept.name}
                                     </h3>
                                 </div>

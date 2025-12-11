@@ -7,6 +7,10 @@
   --animate-fade-in: fadeInUp 0.8s ease-out;
   --animate-fade-in-up: fadeInUp 0.8s ease-out;
 
+  /* Fonts */
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+
   /* Map Tailwind colors to CSS variables for dynamic theming */
   --color-brand-start: var(--brand-start);
   --color-brand-mid: var(--brand-mid);
@@ -36,45 +40,48 @@
   };
 }
 
-/* Color System - Modern Gradient Theme */
+/* Color System - SPI Theme */
 :root {
   /* Brand Palette */
-  --brand-start: #06b6d4;  /* cyan-500 */
-  --brand-mid: #3b82f6;    /* blue-500 */
-  --brand-end: #14b8a6;    /* teal-500 */
+  --brand-primary: #FF5C35;  /* Vibrant Orange */
+  --brand-secondary: #2C1810; /* Dark Brown */
   
-  --brand-dark-start: #a855f7; /* purple-500 */
-  --brand-dark-mid: #ec4899;   /* pink-500 */
-  --brand-dark-end: #ef4444;   /* red-500 */
+  /* Legacy gradient mapping if used elsewhere */
+  --brand-start: #FF5C35;
+  --brand-mid: #FF7D5F;
+  --brand-end: #FF9E85;
+  
+  /* Semantic Mappings */
+  --icon-color: #FF5C35;
+  --icon-bg: rgba(255, 92, 53, 0.1); 
+  --text-secondary: #5D4A44; 
+  --border-color: #E6E0D4;
 
-  /* Base Colors */
-  --background: #ffffff;
-  --foreground: #000000;
-  
-  /* Semantic Mappings (Edit these to change specific elements globally) */
-  --icon-color: var(--brand-mid);
-  --icon-bg: rgba(59, 130, 246, 0.1); /* brand-mid with opacity */
-  --text-secondary: #4b5563; /* gray-600 */
-  --border-color: #e5e7eb;   /* gray-200 */
-  --card-bg: #ffffff;
+  /* Fonts */
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-serif: 'Playfair Display', serif;
 }
 
 .dark {
   /* Brand Palette */
-  --brand-start: #a855f7; 
-  --brand-mid: #ec4899;   
-  --brand-end: #ef4444;   
+  --brand-primary: #FF5C35; 
+  --brand-secondary: #FFFFFF;
+  
+  /* Legacy gradient mapping */
+  --brand-start: #FF5C35;
+  --brand-mid: #FF7D5F;
+  --brand-end: #FF9E85;
 
   /* Base Colors */
-  --background: #030712;   /* gray-950 */
-  --foreground: #ffffff;
+  --background: #0B1120;   /* Deep Midnight Blue */
+  --foreground: #FFFFFF;
 
   /* Semantic Mappings */
-  --icon-color: var(--brand-start);
-  --icon-bg: rgba(168, 85, 247, 0.2); /* brand-start with opacity */
-  --text-secondary: #9ca3af; /* gray-400 */
-  --border-color: #374151;   /* gray-700 */
-  --card-bg: #111827;        /* gray-900 */
+  --icon-color: #FF5C35;
+  --icon-bg: rgba(255, 92, 53, 0.2);
+  --text-secondary: #94A3B8; 
+  --border-color: #1F2937;   
+  --card-bg: #1E293B;        /* Dark Slate */
 }
 
 body {

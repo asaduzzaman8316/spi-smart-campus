@@ -187,240 +187,243 @@ export default function TodayRoutine() {
             <div className="container mx-auto max-w-7xl">
                 {/* Header */}
                 <div className="text-center  mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-brand-start to-brand-mid rounded-2xl mb-4 shadow-lg shadow-brand-start/50">
-                        <Sun className="w-8 h-8 text-white " />
-                    </div>
-                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-brand-start via-brand-mid to-brand-end bg-clip-text text-transparent mb-2">
-                        Today&apos;s Schedule
-                    </h1>
-                    <p className="text-text-secondary text-lg mb-4">
-                        {currentDay}, {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </p>
-                </div>
-
-                {/* Filters */}
-                <div className="bg-card-bg rounded-2xl p-6 mb-8 border border-border-color shadow-2xl">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Filter className="text-brand-mid" size={20} />
-                        <h2 className="text-xl font-semibold text-foreground">Select Your Class</h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* Department Filter */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Department</label>
-                            <select
-                                value={selectedDepartment}
-                                onChange={(e) => setSelectedDepartment(e.target.value)}
-                                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
-                            >
-                                <option value="" className="text-text-secondary">Select Department</option>
-                                {departments.slice(0, 7).map(dept => (
-                                    <option key={dept.id} value={dept.name} className="text-foreground">
-                                        {dept.name}
-                                    </option>
-                                ))}
-                            </select>
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FFFBF2] dark:bg-[#0B1120] border border-gray-100 dark:border-gray-800 rounded-full mb-4 shadow-sm">
+                            <Sun className="w-8 h-8 text-[#FF5C35]" />
                         </div>
-
-                        {/* Semester Filter */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Semester</label>
-                            <select
-                                value={selectedSemester}
-                                onChange={(e) => setSelectedSemester(e.target.value)}
-                                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
-                            >
-                                <option value="" className="text-text-secondary">Select Semester</option>
-                                {SEMESTERS.map(sem => (
-                                    <option key={sem} value={sem} className="text-foreground">
-                                        Semester {sem}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Shift Filter */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Shift</label>
-                            <select
-                                value={selectedShift}
-                                onChange={(e) => setSelectedShift(e.target.value)}
-                                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
-                            >
-                                <option value="" className="text-text-secondary">Select Shift</option>
-                                {SHIFTS.map(shift => (
-                                    <option key={shift} value={shift} className="text-foreground">
-                                        {shift} Shift
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Group Filter */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Group</label>
-                            <select
-                                value={selectedGroup}
-                                onChange={(e) => setSelectedGroup(e.target.value)}
-                                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
-                            >
-                                <option value="" className="text-text-secondary">Select Group</option>
-                                {GROUPS.filter(grp => {
-                                    if (selectedShift === "1st") return ["A1", "B1"].includes(grp);
-                                    if (selectedShift === "2nd") return ["A2", "B2"].includes(grp);
-                                    return true;
-                                }).map(grp => (
-                                    <option key={grp} value={grp} className="text-foreground">
-                                        Group {grp}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Today's Classes Display */}
-                {!selectedDepartment || !selectedSemester || !selectedShift || !selectedGroup ? (
-                    <div className="bg-card-bg rounded-2xl p-12 border border-border-color text-center">
-                        <Calendar className="mx-auto mb-4 text-brand-mid" size={64} />
-                        <h3 className="text-2xl font-semibold text-foreground mb-2">Select Your Filters</h3>
-                        <p className="text-text-secondary">Please select all filters to view today&apos;s schedule</p>
-                    </div>
-                ) : todayClasses.length === 0 ? (
-                    <div className="bg-card-bg rounded-2xl p-12 border border-border-color text-center">
-                        <AlertCircle className="mx-auto mb-4 text-yellow-500" size={64} />
-                        <h3 className="text-2xl font-semibold text-foreground mb-2">No Classes Today</h3>
-                        <p className="text-text-secondary">
-                            There are no scheduled classes for {currentDay}
+                        <h1 className="text-4xl md:text-5xl font-bold font-serif text-[#2C1810] dark:text-white mb-2">
+                            Today&apos;s Schedule
+                        </h1>
+                        <p className="text-[#2C1810]/70 dark:text-gray-400 text-lg mb-4">
+                            {currentDay}, {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                         </p>
                     </div>
-                ) : (
-                    <div className="space-y-4">
-                        {/* Class Info Header */}
-                        <div className="bg-card-bg rounded-2xl p-6 border border-border-color">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <div>
-                                    <h3 className="text-xl font-semibold text-foreground mb-1">
-                                        {selectedDepartment} - Semester {selectedSemester}
-                                    </h3>
-                                    <p className="text-text-secondary text-sm">
-                                        {selectedShift} Shift • Group {selectedGroup}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={downloadPDF}
-                                    className="inline-flex items-center gap-2 bg-brand-mid hover:bg-brand-mid/90 text-white px-4 py-2 rounded-lg transition-colors shadow-lg shadow-brand-mid/30"
-                                >
-                                    <Download size={18} />
-                                    Download PDF
-                                </button>
-                            </div>
+
+                    {/* Filters */}
+                    <div className="bg-white dark:bg-[#1E293B] rounded-4xl p-6 mb-8 border border-gray-100 dark:border-gray-800 shadow-xl">
+                        <div className="flex items-center gap-2 mb-4">
+                            <Filter className="text-[#FF5C35]" size={20} />
+                            <h2 className="text-xl font-semibold font-serif text-[#2C1810] dark:text-white">Select Your Class</h2>
                         </div>
 
-                        {/* Classes List */}
-                        <div className="grid gap-4">
-                            {todayClasses.map((classInfo, index) => (
-                                <div
-                                    key={index}
-                                    className="bg-card-bg rounded-2xl p-6 border border-border-color hover:border-brand-mid transition-all duration-300 hover:scale-102 hover:shadow-xl hover:shadow-brand-mid/20"
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Department Filter */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-text-secondary">Department</label>
+                                <select
+                                    value={selectedDepartment}
+                                    onChange={(e) => setSelectedDepartment(e.target.value)}
+                                    className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
                                 >
-                                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                        {/* Time */}
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex items-center justify-center w-12 h-12 bg-linear-to-br from-brand-start to-brand-mid rounded-xl">
-                                                <Clock className="w-6 h-6 text-white" />
-                                            </div>
-                                            <div>
-                                                <div className="text-2xl font-bold text-foreground">
-                                                    {classInfo.startTime}
-                                                </div>
-                                                <div className="text-sm text-text-secondary">
-                                                    to {classInfo.endTime}
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <option value="" className="text-text-secondary">Select Department</option>
+                                    {departments.slice(0, 7).map(dept => (
+                                        <option key={dept.id} value={dept.name} className="text-foreground">
+                                            {dept.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                        {/* Subject Info */}
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <BookOpen className="w-5 h-5 text-brand-mid" />
-                                                <h4 className="text-xl font-bold text-foreground">
-                                                    {classInfo.subject}
-                                                </h4>
-                                            </div>
-                                            <div className="text-brand-end font-semibold mb-2">
-                                                {classInfo.subjectCode}
-                                            </div>
-                                            <div className="flex flex-wrap gap-4 text-sm">
-                                                {classInfo.teacher && (
-                                                    <div className="flex items-center gap-2 text-text-secondary">
-                                                        {(() => {
-                                                            const teacher = teachers.find(t => t.name === classInfo.teacher);
-                                                            return teacher && teacher.image ? (
-                                                                <Image
-                                                                    src={teacher.image}
-                                                                    alt={classInfo.teacher}
-                                                                    width={24}
-                                                                    height={24}
-                                                                    className="w-6 h-6 rounded-full object-cover border border-brand-mid/30"
-                                                                />
-                                                            ) : (
-                                                                <User size={16} className="text-brand-mid" />
-                                                            );
-                                                        })()}
-                                                        <span>{classInfo.teacher}</span>
+                            {/* Semester Filter */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-text-secondary">Semester</label>
+                                <select
+                                    value={selectedSemester}
+                                    onChange={(e) => setSelectedSemester(e.target.value)}
+                                    className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                                >
+                                    <option value="" className="text-text-secondary">Select Semester</option>
+                                    {SEMESTERS.map(sem => (
+                                        <option key={sem} value={sem} className="text-foreground">
+                                            Semester {sem}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Shift Filter */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-text-secondary">Shift</label>
+                                <select
+                                    value={selectedShift}
+                                    onChange={(e) => setSelectedShift(e.target.value)}
+                                    className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                                >
+                                    <option value="" className="text-text-secondary">Select Shift</option>
+                                    {SHIFTS.map(shift => (
+                                        <option key={shift} value={shift} className="text-foreground">
+                                            {shift} Shift
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Group Filter */}
+                            <div className="space-y-2">
+                                <label className="block text-sm font-medium text-text-secondary">Group</label>
+                                <select
+                                    value={selectedGroup}
+                                    onChange={(e) => setSelectedGroup(e.target.value)}
+                                    className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                                >
+                                    <option value="" className="text-text-secondary">Select Group</option>
+                                    {GROUPS.filter(grp => {
+                                        if (selectedShift === "1st") return ["A1", "B1"].includes(grp);
+                                        if (selectedShift === "2nd") return ["A2", "B2"].includes(grp);
+                                        return true;
+                                    }).map(grp => (
+                                        <option key={grp} value={grp} className="text-foreground">
+                                            Group {grp}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Today's Classes Display */}
+                    {!selectedDepartment || !selectedSemester || !selectedShift || !selectedGroup ? (
+                        <div className="bg-card-bg rounded-2xl p-12 border border-border-color text-center">
+                            <Calendar className="mx-auto mb-4 text-brand-mid" size={64} />
+                            <h3 className="text-2xl font-semibold text-foreground mb-2">Select Your Filters</h3>
+                            <p className="text-text-secondary">Please select all filters to view today&apos;s schedule</p>
+                        </div>
+                    ) : todayClasses.length === 0 ? (
+                        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-12 border border-gray-100 dark:border-gray-800 text-center">
+                            <AlertCircle className="mx-auto mb-4 text-[#FF5C35]" size={64} />
+                            <h3 className="text-2xl font-semibold font-serif text-[#2C1810] dark:text-white mb-2">No Classes Today</h3>
+                            <p className="text-[#2C1810]/70 dark:text-gray-400">
+                                There are no scheduled classes for {currentDay}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {/* Class Info Header */}
+                            <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
+                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                    <div>
+                                        <h3 className="text-xl font-semibold font-serif text-[#2C1810] dark:text-white mb-1">
+                                            {selectedDepartment} - Semester {selectedSemester}
+                                        </h3>
+                                        <p className="text-[#2C1810]/70 dark:text-gray-400 text-sm">
+                                            {selectedShift} Shift • Group {selectedGroup}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={downloadPDF}
+                                        className="inline-flex items-center gap-2 bg-[#FF5C35] hover:bg-[#e64722] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-lg shadow-[#FF5C35]/20 hover:shadow-[#FF5C35]/30"
+                                    >
+                                        <Download size={18} />
+                                        Download PDF
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Classes List */}
+                            <div className="grid gap-4">
+                                {todayClasses.map((classInfo, index) => (
+                                    <div
+                                        key={index}
+                                        className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 hover:border-[#FF5C35] dark:hover:border-[#FF5C35] transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-[#FF5C35]/10"
+                                    >
+                                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                            {/* Time */}
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center justify-center w-12 h-12 bg-[#FFFBF2] dark:bg-[#0B1120] rounded-full border border-gray-100 dark:border-gray-800">
+                                                    <Clock className="w-6 h-6 text-[#FF5C35]" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-[#2C1810] dark:text-white">
+                                                        {classInfo.startTime}
                                                     </div>
-                                                )}
-                                                {classInfo.room && (
-                                                    <div className="flex items-center gap-2 text-text-secondary">
-                                                        <MapPin size={16} className="text-brand-end" />
-                                                        <span>
-                                                            Room {classInfo.room}
+                                                    <div className="text-sm text-[#2C1810]/60 dark:text-gray-400">
+                                                        to {classInfo.endTime}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Subject Info */}
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <BookOpen className="w-5 h-5 text-[#FF5C35]" />
+                                                    <h4 className="text-xl font-bold text-[#2C1810] dark:text-white">
+                                                        {classInfo.subject}
+                                                    </h4>
+                                                </div>
+                                                <div className="text-[#FF5C35] font-semibold mb-2">
+                                                    {classInfo.subjectCode}
+                                                </div>
+                                                <div className="flex flex-wrap gap-4 text-sm">
+                                                    {classInfo.teacher && (
+                                                        <div className="flex items-center gap-2 text-[#2C1810]/70 dark:text-gray-400">
                                                             {(() => {
-                                                                const room = rooms.find(r => r.number === classInfo.room || r.name === classInfo.room);
-                                                                return room && room.type ? ` (${room.type})` : '';
+                                                                const teacher = teachers.find(t => t.name === classInfo.teacher);
+                                                                return teacher && teacher.image ? (
+                                                                    <Image
+                                                                        src={teacher.image}
+                                                                        alt={classInfo.teacher}
+                                                                        width={24}
+                                                                        height={24}
+                                                                        className="w-6 h-6 rounded-full object-cover border border-gray-200 dark:border-gray-700"
+                                                                    />
+                                                                ) : (
+                                                                    <User size={16} className="text-[#FF5C35]" />
+                                                                );
                                                             })()}
-                                                        </span>
-                                                    </div>
-                                                )}
+                                                            <span>{classInfo.teacher}</span>
+                                                        </div>
+                                                    )}
+                                                    {classInfo.room && (
+                                                        <div className="flex items-center gap-2 text-[#2C1810]/70 dark:text-gray-400">
+                                                            <MapPin size={16} className="text-[#FF5C35]" />
+                                                            <span>
+                                                                Room {classInfo.room}
+                                                                {(() => {
+                                                                    const room = rooms.find(r => r.number === classInfo.room || r.name === classInfo.room);
+                                                                    return room && room.type ? ` (${room.type})` : '';
+                                                                })()}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {/* Duration Badge */}
-                                        <div className="bg-brand-mid/10 border border-brand-mid/20 rounded-lg px-4 py-2 text-center">
-                                            <div className="text-sm text-text-secondary">Duration</div>
-                                            <div className="text-lg font-bold text-brand-mid">
-                                                {(() => {
-                                                    const [startHour, startMin] = classInfo.startTime.split(':').map(Number)
-                                                    const [endHour, endMin] = classInfo.endTime.split(':').map(Number)
-                                                    const durationMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin)
-                                                    return `${durationMinutes} min`
-                                                })()}
+                                            {/* Duration Badge */}
+                                            <div className="bg-[#FFFBF2] dark:bg-[#0B1120] border border-gray-100 dark:border-gray-800 rounded-full px-6 py-2 text-center">
+                                                <div className="text-sm text-[#2C1810]/60 dark:text-gray-400">Duration</div>
+                                                <div className="text-lg font-bold text-[#FF5C35]">
+                                                    {(() => {
+                                                        const [startHour, startMin] = classInfo.startTime.split(':').map(Number)
+                                                        const [endHour, endMin] = classInfo.endTime.split(':').map(Number)
+                                                        const durationMinutes = (endHour * 60 + endMin) - (startHour * 60 + startMin)
+                                                        return `${durationMinutes} min`
+                                                    })()}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
 
-                        {/* Summary */}
-                        <div className="bg-linear-to-r from-brand-start/10 via-brand-mid/10 to-brand-end/10 rounded-2xl p-6 border border-border-color">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Calendar className="w-6 h-6 text-brand-mid" />
-                                    <span className="text-foreground font-semibold">
-                                        Total Classes Today: {todayClasses.length}
-                                    </span>
-                                </div>
-                                <div className="text-text-secondary text-sm">
-                                    {currentDay}
+                            {/* Summary */}
+                            <div className="bg-[#FFFBF2] dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Calendar className="w-6 h-6 text-[#FF5C35]" />
+                                        <span className="text-[#2C1810] dark:text-white font-semibold">
+                                            Total Classes Today: {todayClasses.length}
+                                        </span>
+                                    </div>
+                                    <div className="text-[#2C1810]/60 dark:text-gray-400 text-sm">
+                                        {currentDay}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
+            )
         </div>
     )
 }

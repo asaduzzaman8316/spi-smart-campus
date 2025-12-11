@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "@/context/AuthContext"
 import { useRouter } from "next/navigation"
-import { Lock, Mail, Shield, AlertCircle, CheckCircle } from 'lucide-react'
+import { Lock, Mail, Shield, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react'
+import Image from 'next/image'
 
 export default function AdminLogin() {
     const { login, user, loading: authLoading } = useAuth()
@@ -49,95 +50,89 @@ export default function AdminLogin() {
     // Rename submitting to loading for UI compatibility
     const loading = submitting || authLoading;
 
-
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12 relative overflow-hidden pt-18 transition-colors duration-300">
-            {/* Animated Background Elements */}
-            <div className="absolute inset-0 overflow-hidden ">
-                <div className="absolute -top-40 -right-40 w-80 h-80 bg-brand-start/20 rounded-full blur-3xl animate-pulse"></div>
-                <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-brand-mid/20 rounded-full blur-3xl animate-pulse delay-700"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-end/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="min-h-screen relative flex items-center justify-center overflow-hidden bg-[#FFFBF2] dark:bg-[#0B1120]">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 z-0 opacity-40">
+                <Image
+                    src="/image1.png"
+                    width={800}
+                    height={800}
+                    alt='Background Pattern'
+                    className='w-full h-full object-cover'
+                    priority
+                />
             </div>
 
-            <div className="w-full max-w-md relative z-10">
+            <div className="w-full max-w-md relative z-10 px-4">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-br from-brand-start to-brand-mid rounded-2xl mb-4 shadow-lg shadow-brand-start/50">
-                        <Shield className="w-8 h-8 text-white" />
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-white dark:bg-[#1E293B] border border-gray-100 dark:border-gray-800 rounded-full mb-6 shadow-sm">
+                        <Shield className="w-10 h-10 text-[#FF5C35]" />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-brand-start via-brand-mid to-brand-end bg-clip-text text-transparent mb-2">
-                        Admin Login
+                    <h1 className="text-4xl md:text-5xl font-bold font-serif text-[#2C1810] dark:text-white mb-3">
+                        Welcome Back
                     </h1>
-                    <p className="text-text-secondary">Access the SPI Dashboard</p>
+                    <p className="text-[#2C1810]/70 dark:text-gray-400 text-lg">
+                        Sign in to access your dashboard
+                    </p>
                 </div>
 
                 {/* Login Card */}
-                <div className="bg-card-bg/80 rounded-3xl p-8 border border-border-color shadow-xl dark:shadow-2xl backdrop-blur-sm transition-colors duration-300">
+                <div className="bg-white dark:bg-[#1E293B] rounded-[2.5rem] p-8 md:p-10 border border-gray-100 dark:border-gray-800 shadow-xl hover:shadow-2xl transition-all duration-300">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Success Message */}
+                        {/* Status Messages */}
                         {success && (
-                            <div className="rounded-xl bg-green-500/10 p-4 border border-green-500/50 animate-fade-in">
-                                <div className="flex items-center gap-3">
-                                    <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-                                    <p className="text-sm text-green-400 font-medium">{success}</p>
-                                </div>
+                            <div className="rounded-2xl bg-green-50 dark:bg-green-900/20 p-4 border border-green-200 dark:border-green-800 animate-fade-in flex items-center gap-3">
+                                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
+                                <p className="text-sm text-green-700 dark:text-green-300 font-medium">{success}</p>
                             </div>
                         )}
-
-                        {/* Error Message */}
                         {error && (
-                            <div className="rounded-xl bg-red-500/10 p-4 border border-red-500/50 animate-fade-in">
-                                <div className="flex items-center gap-3">
-                                    <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />
-                                    <p className="text-sm text-red-400 font-medium">{error}</p>
-                                </div>
+                            <div className="rounded-2xl bg-red-50 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-800 animate-fade-in flex items-center gap-3">
+                                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
+                                <p className="text-sm text-red-700 dark:text-red-300 font-medium">{error}</p>
                             </div>
                         )}
 
                         {/* Email Input */}
                         <div className="space-y-2">
-                            <label htmlFor="email" className="block text-sm font-medium text-text-secondary">
+                            <label className="block text-sm font-semibold text-[#2C1810]/80 dark:text-gray-300 ml-1">
                                 Email Address
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-brand-mid" />
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-[#FF5C35] transition-colors" />
                                 </div>
                                 <input
-                                    id="email"
-                                    name="email"
                                     type="email"
                                     required
-                                    autoComplete="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={loading}
                                     placeholder="admin@example.com"
-                                    className="block w-full pl-12 pr-4 py-3 bg-background border border-border-color rounded-xl text-foreground placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-mid transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="block w-full pl-12 pr-5 py-4 bg-[#FFFBF2] dark:bg-[#0B1120] border-2 border-transparent focus:border-[#FF5C35]/50 rounded-2xl text-[#2C1810] dark:text-white placeholder:text-gray-400 focus:outline-none transition-all font-medium disabled:opacity-70"
                                 />
                             </div>
                         </div>
 
                         {/* Password Input */}
                         <div className="space-y-2">
-                            <label htmlFor="password" className="block text-sm font-medium text-text-secondary">
+                            <label className="block text-sm font-semibold text-[#2C1810]/80 dark:text-gray-300 ml-1">
                                 Password
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-brand-end" />
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                    <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-[#FF5C35] transition-colors" />
                                 </div>
                                 <input
-                                    id="password"
-                                    name="password"
                                     type="password"
                                     required
-                                    autoComplete="current-password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={loading}
                                     placeholder="••••••••"
-                                    className="block w-full pl-12 pr-4 py-3 bg-background border border-border-color rounded-xl text-foreground placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-mid transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="block w-full pl-12 pr-5 py-4 bg-[#FFFBF2] dark:bg-[#0B1120] border-2 border-transparent focus:border-[#FF5C35]/50 rounded-2xl text-[#2C1810] dark:text-white placeholder:text-gray-400 focus:outline-none transition-all font-medium disabled:opacity-70"
                                 />
                             </div>
                         </div>
@@ -146,37 +141,27 @@ export default function AdminLogin() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-linear-to-r from-brand-start via-brand-mid to-brand-end hover:from-brand-mid hover:via-brand-mid hover:to-brand-end text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-brand-start/50 hover:shadow-xl hover:shadow-brand-start/60 hover:scale-105"
+                            className="w-full bg-[#FF5C35] hover:bg-[#e64722] text-white font-bold py-4 px-6 rounded-full transition-all duration-300 shadow-lg shadow-[#FF5C35]/20 hover:shadow-xl hover:shadow-[#FF5C35]/30 hover:-translate-y-1 disabled:opacity-70 disabled:hover:translate-y-0 flex items-center justify-center gap-2 group"
                         >
                             {loading ? (
                                 <>
-                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                                     <span>Signing in...</span>
                                 </>
                             ) : (
                                 <>
-                                    <Shield className="w-5 h-5" />
                                     <span>Sign In</span>
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
                         </button>
                     </form>
-
-                    {/* Footer */}
-                    <div className="mt-6 pt-6 border-t border-border-color">
-                        <p className="text-center text-sm text-text-secondary">
-                            Secure admin access for Sylhet Polytechnic Institute
-                        </p>
-                    </div>
                 </div>
 
-                {/* Additional Info */}
-                <div className="mt-6 text-center">
-                    <p className="text-xs text-text-secondary">
-                        Protected by Firebase Authentication
+                {/* Footer Info */}
+                <div className="mt-8 text-center">
+                    <p className="text-sm text-[#2C1810]/60 dark:text-gray-500 font-medium">
+                        Secure Authentication System
                     </p>
                 </div>
             </div>

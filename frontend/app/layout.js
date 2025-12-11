@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "./Provider";
 import CustomThemeProvider from "./CustomThemeProvider";
@@ -8,9 +8,16 @@ import { SidebarProvider } from "@/context/SidebarContext";
 import { AuthProvider } from "@/context/AuthContext";
 import Script from "next/script";
 
-const font = Inter({
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+const playfair = Playfair_Display({
   subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
 });
 
 export const metadata = {
@@ -88,7 +95,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <meta name="google-site-verification" content="qivNvac31xAS1b7IeN183t0fKFja4DILfO07pN-U-1A" />
-      <body className={`${font.className} antialiased`}>
+      <body className={`${jakarta.variable} ${playfair.variable} font-sans antialiased`}>
         <Script
           id="json-ld-schema"
           type="application/ld+json"

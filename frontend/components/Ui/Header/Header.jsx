@@ -43,7 +43,7 @@ export default function Header() {
 
 
     return (
-        <header className="bg-background/80 backdrop-blur-lg fixed w-full mx-auto top-0 z-50 border-b border-border-color transition-colors duration-300">
+        <header className="bg-[#FFFBF2]/80 dark:bg-[#0B1120]/80 backdrop-blur-lg fixed w-full mx-auto top-0 z-50 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
             <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
@@ -76,7 +76,7 @@ export default function Header() {
                             <Link
                                 key={link.name}
                                 href={link.href}
-                                className={`transition-colors duration-200 font-medium ${isActive(link.href) ? 'text-icon font-semibold' : 'text-text-secondary hover:text-icon'}`}
+                                className={`transition-colors duration-200 font-medium ${isActive(link.href) ? 'text-[#FF5C35] font-semibold' : 'text-[#2C1810] dark:text-gray-200 hover:text-[#FF5C35] dark:hover:text-[#FF5C35]'}`}
                             >
                                 {link.name}
                             </Link>
@@ -86,7 +86,7 @@ export default function Header() {
                             <>
                                 <Link
                                     href="/dashboard"
-                                    className={`flex items-center space-x-2 ${isActive('/dashboard') ? 'text-icon' : 'text-text-secondary'} hover:text-icon transition-colors duration-200 font-medium`}
+                                    className={`flex items-center space-x-2 ${isActive('/dashboard') ? 'text-[#FF5C35]' : 'text-[#2C1810] dark:text-gray-200'} hover:text-[#FF5C35] dark:hover:text-[#FF5C35] transition-colors duration-200 font-medium`}
                                 >
                                     <LayoutDashboard size={18} />
                                     <span>Dashboard</span>
@@ -95,7 +95,7 @@ export default function Header() {
                         ) : (
                             <Link
                                 href={'/login'}
-                                className=" border-2 border-text-secondary text-text-secondary hover:text-foreground hover:border-icon px-6 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+                                className="bg-[#FF5C35] hover:bg-[#ff451a] text-white px-6 py-2.5 rounded-full transition-all duration-300 shadow-md hover:shadow-lg shadow-[#FF5C35]/20 font-medium"
                             >
                                 Admin Login
                             </Link>
@@ -111,7 +111,7 @@ export default function Header() {
                             </div>
                             <button
                                 onClick={toggleMenu}
-                                className="text-foreground hover:text-icon focus:outline-none"
+                                className="text-[#2C1810] dark:text-gray-200 hover:text-[#FF5C35] dark:hover:text-[#FF5C35] focus:outline-none"
                             >
                                 {isOpen ? <X size={28} /> : <Menu size={28} />}
                             </button>
@@ -128,7 +128,7 @@ export default function Header() {
                                     key={link.name}
                                     href={link.href}
                                     onClick={() => setIsOpen(false)}
-                                    className={`px-3 py-2 rounded-lg transition-all duration-200 ${isActive(link.href) ? 'text-icon font-semibold' : 'text-text-secondary hover:text-icon'}`}
+                                    className={`px-3 py-2 rounded-lg transition-all duration-200 ${isActive(link.href) ? 'text-[#FF5C35] font-semibold' : 'text-[#2C1810] dark:text-gray-200 hover:text-[#FF5C35] dark:hover:text-[#FF5C35]'}`}
                                 >
                                     {link.name}
                                 </Link>
@@ -139,14 +139,14 @@ export default function Header() {
                                     <Link
                                         href="/dashboard"
                                         onClick={() => setIsOpen(false)}
-                                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${isActive('/dashboard') ? 'text-icon font-semibold' : 'text-text-secondary hover:text-foreground hover:bg-icon-bg'}`}
+                                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${isActive('/dashboard') ? 'text-[#FF5C35] font-semibold' : 'text-[#2C1810] dark:text-gray-200 hover:text-[#FF5C35] dark:hover:text-[#FF5C35] hover:bg-[#FFFBF2] dark:hover:bg-[#1E293B]'}`}
                                     >
                                         <LayoutDashboard size={18} />
                                         <span>Dashboard</span>
                                     </Link>
                                     <button
                                         onClick={handleLogout}
-                                        className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-icon font-medium hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left"
+                                        className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-[#FF5C35] font-medium hover:bg-red-50 w-full text-left"
                                     >
                                         <LogOut size={18} />
                                         <span>Logout</span>
@@ -156,7 +156,7 @@ export default function Header() {
                                 <Link
                                     href={'/login'}
                                     onClick={() => setIsOpen(false)}
-                                    className="bg-linear-to-r from-brand-start to-brand-mid hover:from-brand-mid hover:to-brand-end text-white px-4 py-2 rounded-lg transition-all duration-200 shadow-md"
+                                    className="bg-[#FF5C35] hover:bg-[#ff451a] text-white px-4 py-2 rounded-full transition-all duration-300 shadow-md font-medium text-center"
                                 >
                                     Admin Login
                                 </Link>
