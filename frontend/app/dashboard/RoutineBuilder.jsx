@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchTeachers, fetchRooms, fetchSubjects, fetchDepartments, fetchRoutines, createRoutine } from '../../Lib/api';
-import { Plus, Trash2, Save, ArrowLeft, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, GripVertical, Eye, Edit, Clock, BookOpen, User, MapPin } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
@@ -26,6 +26,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
     const [activeDay, setActiveDay] = useState("Sunday");
     const [saving, setSaving] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [isPreviewMode, setIsPreviewMode] = useState(false);
 
     const [departments, setDepartments] = useState([]);
     const [teachers, setTeachers] = useState([]);
@@ -362,356 +363,536 @@ export default function RoutineBuilder({ onBack, initialData }) {
                         </button>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{isEditMode ? 'Edit Routine' : 'Create Routine'}</h1>
                     </div>
-                    <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        className="min-w-[120px] bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-md flex items-center justify-center disabled:opacity-50 transition-colors"
-                    >
-                        {saving ? 'Saving...' : <><Save size={18} className="mr-2" /> Save Routine</>}
-                    </button>
-                </div>
-
-                {/* 1. Days Navigation (Horizontal) */}
-                <div className="flex overflow-x-auto pb-2 gap-2 mt-6 mb-6 no-scrollbar">
-                    {DAYS.map((day, index) => (
+                    <div className="flex gap-3">
                         <button
-                            key={index}
-                            onClick={() => setActiveDay(day)}
-                            className={`whitespace-nowrap px-6 py-3 rounded-xl transition-all font-medium flex items-center gap-2 border ${activeDay === day
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30'
-                                : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'
-                                }`}
+                            onClick={() => setIsPreviewMode(!isPreviewMode)}
+                            className="min-w-[120px] bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-gray-700 dark:text-white px-4 py-2 rounded-md flex items-center justify-center border border-gray-300 dark:border-slate-600 transition-colors"
                         >
-                            <span>{day}</span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${activeDay === day
-                                ? 'bg-white/20 text-white'
-                                : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400'
-                                }`}>
-                                {routine.days.find(d => d.name === day)?.classes.length || 0}
-                            </span>
+                            {isPreviewMode ? (
+                                <><Edit size={18} className="mr-2" /> Edit Mode</>
+                            ) : (
+                                <><Eye size={18} className="mr-2" /> Preview</>
+                            )}
                         </button>
-                    ))}
-                </div>
-
-                {/* 2. Configuration & Filters (Grid) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    {/* Configuration Panel */}
-                    <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
-                        <div className="bg-gray-50/50 dark:bg-slate-800/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-                            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                <GripVertical size={18} className="text-gray-400" />
-                                Routine Configuration
-                            </h3>
-                        </div>
-                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Department</label>
-                                <select
-                                    name="department"
-                                    value={routine.department}
-                                    onChange={handleMetaChange}
-                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                    disabled={isEditMode}
-                                >
-                                    <option value="">Select Department</option>
-                                    {departments.slice(0, 7).map((dept, index) => (
-                                        <option key={index} value={dept.name}>{dept.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Semester</label>
-                                <select
-                                    name="semester"
-                                    value={routine.semester}
-                                    onChange={handleMetaChange}
-                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                    disabled={isEditMode}
-                                >
-                                    <option value="">Select Semester</option>
-                                    {SEMESTERS.map((sem, index) => (
-                                        <option key={index} value={sem}>{sem}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Shift</label>
-                                <select
-                                    name="shift"
-                                    value={routine.shift}
-                                    onChange={handleMetaChange}
-                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                    disabled={isEditMode}
-                                >
-                                    <option value="">Select Shift</option>
-                                    {SHIFTS.map((shift, index) => (
-                                        <option key={index} value={shift}>{shift}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Group</label>
-                                <select
-                                    name="group"
-                                    value={routine.group}
-                                    onChange={handleMetaChange}
-                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                    disabled={isEditMode}
-                                >
-                                    <option value="">Select Group</option>
-                                    {GROUPS.filter((grp, index) => {
-                                        if (routine.shift === "1st") return ["A1", "B1"].includes(grp);
-                                        if (routine.shift === "2nd") return ["A2", "B2"].includes(grp);
-                                        return true;
-                                    }).map((grp, index) => (
-                                        <option key={index} value={grp}>{grp}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Resources Panel */}
-                    <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
-                        <div className="bg-gray-50/50 dark:bg-slate-800/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-                            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                <Plus size={18} className="text-gray-400" />
-                                Resource Filters
-                            </h3>
-                        </div>
-                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Teachers by Dept</label>
-                                <select
-                                    value={teacherFilterDept}
-                                    onChange={(e) => setTeacherFilterDept(e.target.value)}
-                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                >
-                                    <option value="">All Departments</option>
-                                    {departments.map((dept, index) => (
-                                        <option key={index} value={dept.name}>{dept.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Type</label>
-                                <select
-                                    value={roomFilterType}
-                                    onChange={(e) => setRoomFilterType(e.target.value)}
-                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                >
-                                    <option value="">All Types</option>
-                                    <option value="Theory">Theory</option>
-                                    <option value="Lab">Lab</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Location</label>
-                                <select
-                                    value={roomFilterLocation}
-                                    onChange={(e) => setRoomFilterLocation(e.target.value)}
-                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                >
-                                    <option value="">All Locations</option>
-                                    <option value="Computer Building">Computer Building</option>
-                                    <option value="Administration Building">Administration Building</option>
-                                    <option value="New Building">New Building</option>
-                                    <option value="Old Building">Old Building</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Dept</label>
-                                <select
-                                    value={roomFilterDept}
-                                    onChange={(e) => setRoomFilterDept(e.target.value)}
-                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                >
-                                    <option value="">All Departments</option>
-                                    {departments.map((dept, index) => (
-                                        <option key={index} value={dept.name}>{dept.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 3. Class Editor (Full Width) */}
-                <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 min-h-[500px] flex flex-col">
-                    <div className="bg-gray-50/50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10 rounded-t-xl">
-                        <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <span className="w-2 h-6 bg-blue-500 rounded-full inline-block"></span>
-                            {activeDay} Schedule
-                        </h2>
                         <button
-                            onClick={addClass}
-                            className="flex items-center text-sm font-medium bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-lg transition-colors border border-blue-100 dark:border-blue-500/20"
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="min-w-[120px] bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-md flex items-center justify-center disabled:opacity-50 transition-colors"
                         >
-                            <Plus size={16} className="mr-1.5" /> Add New Class
+                            {saving ? 'Saving...' : <><Save size={18} className="mr-2" /> Save Routine</>}
                         </button>
                     </div>
-                    <div className="p-6 space-y-4 flex-1">
-                        {routine.days.find(d => d.name === activeDay)?.classes.length === 0 ? (
-                            <div className="text-center py-20 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl h-full flex flex-col items-center justify-center bg-gray-50/50 dark:bg-slate-800/50">
-                                <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
-                                    <Plus className="text-gray-400" size={32} />
+                </div>
+
+                {/* Preview Mode */}
+                {isPreviewMode ? (
+                    <RoutinePreview routine={routine} />
+                ) : (
+                    <>
+                        {/* 1. Days Navigation (Horizontal) */}
+                        <div className="flex overflow-x-auto pb-2 gap-2 mt-6 mb-6 no-scrollbar">
+                            {DAYS.map((day, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setActiveDay(day)}
+                                    className={`whitespace-nowrap px-6 py-3 rounded-xl transition-all font-medium flex items-center gap-2 border ${activeDay === day
+                                        ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30'
+                                        : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'
+                                        }`}
+                                >
+                                    <span>{day}</span>
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${activeDay === day
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400'
+                                        }`}>
+                                        {routine.days.find(d => d.name === day)?.classes.length || 0}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* 2. Configuration & Filters (Grid) */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            {/* Configuration Panel */}
+                            <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+                                <div className="bg-gray-50/50 dark:bg-slate-800/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <GripVertical size={18} className="text-gray-400" />
+                                        Routine Configuration
+                                    </h3>
                                 </div>
-                                <p className="text-gray-600 dark:text-slate-300 font-medium mb-1">No classes added for {activeDay}</p>
-                                <p className="text-gray-400 text-sm mb-4">Get started by adding your first class</p>
-                                <button onClick={addClass} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Add First Class</button>
+                                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Department</label>
+                                        <select
+                                            name="department"
+                                            value={routine.department}
+                                            onChange={handleMetaChange}
+                                            className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                            disabled={isEditMode}
+                                        >
+                                            <option value="">Select Department</option>
+                                            {departments.slice(0, 7).map((dept, index) => (
+                                                <option key={index} value={dept.name}>{dept.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Semester</label>
+                                        <select
+                                            name="semester"
+                                            value={routine.semester}
+                                            onChange={handleMetaChange}
+                                            className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                            disabled={isEditMode}
+                                        >
+                                            <option value="">Select Semester</option>
+                                            {SEMESTERS.map((sem, index) => (
+                                                <option key={index} value={sem}>{sem}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Shift</label>
+                                        <select
+                                            name="shift"
+                                            value={routine.shift}
+                                            onChange={handleMetaChange}
+                                            className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                            disabled={isEditMode}
+                                        >
+                                            <option value="">Select Shift</option>
+                                            {SHIFTS.map((shift, index) => (
+                                                <option key={index} value={shift}>{shift}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Group</label>
+                                        <select
+                                            name="group"
+                                            value={routine.group}
+                                            onChange={handleMetaChange}
+                                            className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                            disabled={isEditMode}
+                                        >
+                                            <option value="">Select Group</option>
+                                            {GROUPS.filter((grp, index) => {
+                                                if (routine.shift === "1st") return ["A1", "B1", "C1"].includes(grp);
+                                                if (routine.shift === "2nd") return ["A2", "B2", "C2"].includes(grp);
+                                                return true;
+                                            }).map((grp, index) => (
+                                                <option key={index} value={grp}>{grp}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {routine.days.find(d => d.name === activeDay)?.classes.map((cls, index) => {
-                                    const { busy: busyTeachers, shared: sharedTeachers } = getTeacherStatus(activeDay, cls.startTime, cls.endTime, cls.id, cls.subject);
-                                    const { busy: busyRooms, shared: sharedRooms } = getRoomStatus(activeDay, cls.startTime, cls.endTime, cls.id, cls.subject);
-                                    return (
-                                        <div key={index} className="group flex flex-col xl:flex-row gap-4 items-start xl:items-center bg-white dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all shadow-sm hover:shadow-md dark:shadow-none">
-                                            {/* Adjusted Grid for Code input */}
-                                            <div className="grid grid-cols-2 md:grid-cols-12 gap-4 w-full">
-                                                <div className="col-span-1 md:col-span-2">
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Start Time</label>
-                                                    <input
-                                                        type="time"
-                                                        value={cls.startTime || ''}
-                                                        onChange={(e) => updateClass(cls.id, 'startTime', e.target.value)}
-                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="col-span-1 md:col-span-2">
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">End Time</label>
-                                                    <input
-                                                        type="time"
-                                                        value={cls.endTime || ''}
-                                                        onChange={(e) => updateClass(cls.id, 'endTime', e.target.value)}
-                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="col-span-2 md:col-span-2">
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Sub Code</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Code"
-                                                        value={cls.subjectCode || ''}
-                                                        onChange={(e) => updateClass(cls.id, 'subjectCode', e.target.value)}
-                                                        onKeyDown={(e) => handleCodeKeyDown(e, cls.id, cls.subjectCode)}
-                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-400"
-                                                    />
-                                                </div>
-                                                <div className="col-span-2 md:col-span-3">
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Subject</label>
-                                                    <select
-                                                        value={cls.subject || ''}
-                                                        onChange={(e) => updateClass(cls.id, 'subject', e.target.value)}
-                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                                                    >
-                                                        <option className='text-gray-500' value="">Select Subject</option>
-                                                        {filteredSubjects.map((sub, index) => (
-                                                            <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={sub.name}>{sub.name}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div className="col-span-2 md:col-span-2">
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Teacher</label>
-                                                    <select
-                                                        value={cls.teacher || ''}
-                                                        onChange={(e) => updateClass(cls.id, 'teacher', e.target.value)}
-                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                                                    >
-                                                        <option className='text-gray-500' value="">Select Teacher</option>
-                                                        {(() => {
-                                                            const selectedTeacherObj = teachers.find(t => t.name === cls.teacher);
-                                                            let teachersToShow = filteredTeachers;
 
-                                                            // If selected teacher exists but is filtered out, add them back for this specific dropdown
-                                                            if (selectedTeacherObj && !teachersToShow.find(t => t.id === selectedTeacherObj.id)) {
-                                                                teachersToShow = [...teachersToShow, selectedTeacherObj];
-                                                                // Optional: keep sorted
-                                                                teachersToShow.sort((a, b) => a.name.localeCompare(b.name));
-                                                            }
+                            {/* Resources Panel */}
+                            <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
+                                <div className="bg-gray-50/50 dark:bg-slate-800/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <Plus size={18} className="text-gray-400" />
+                                        Resource Filters
+                                    </h3>
+                                </div>
+                                <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Teachers by Dept</label>
+                                        <select
+                                            value={teacherFilterDept}
+                                            onChange={(e) => setTeacherFilterDept(e.target.value)}
+                                            className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                        >
+                                            <option value="">All Departments</option>
+                                            {departments.map((dept, index) => (
+                                                <option key={index} value={dept.name}>{dept.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
 
-                                                            return teachersToShow.map((t, index) => {
-                                                                const isBusy = busyTeachers.has(t.name);
-                                                                const isShared = sharedTeachers.has(t.name);
-                                                                let statusClass = "text-gray-900 dark:text-white bg-white dark:bg-slate-800";
-                                                                if (isBusy) statusClass = "text-red-500 font-medium";
-                                                                else if (isShared) statusClass = "text-green-600 font-bold";
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Type</label>
+                                        <select
+                                            value={roomFilterType}
+                                            onChange={(e) => setRoomFilterType(e.target.value)}
+                                            className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                        >
+                                            <option value="">All Types</option>
+                                            <option value="Theory">Theory</option>
+                                            <option value="Lab">Lab</option>
+                                        </select>
+                                    </div>
 
-                                                                return (
-                                                                    <option
-                                                                        className={statusClass}
-                                                                        key={index}
-                                                                        value={t.name}
-                                                                        disabled={isBusy && t.name !== cls.teacher}
-                                                                    >
-                                                                        {t.name} {isBusy ? '(Busy)' : ''} {isShared ? '(Shared)' : ''}
-                                                                    </option>
-                                                                );
-                                                            });
-                                                        })()}
-                                                    </select>
-                                                </div>
-                                                <div className="col-span-2 md:col-span-1">
-                                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Room</label>
-                                                    <select
-                                                        value={cls.room || ''}
-                                                        onChange={(e) => updateClass(cls.id, 'room', e.target.value)}
-                                                        className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
-                                                    >
-                                                        <option className='text-gray-500' value="">Room</option>
-                                                        {(() => {
-                                                            const selectedRoomObj = rooms.find(r => (r.number || r.name) === cls.room);
-                                                            let roomsToShow = filteredRooms;
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Location</label>
+                                        <select
+                                            value={roomFilterLocation}
+                                            onChange={(e) => setRoomFilterLocation(e.target.value)}
+                                            className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                        >
+                                            <option value="">All Locations</option>
+                                            <option value="Computer Building">Computer Building</option>
+                                            <option value="Administration Building">Administration Building</option>
+                                            <option value="New Building">New Building</option>
+                                            <option value="Old Building">Old Building</option>
+                                        </select>
+                                    </div>
 
-                                                            // If selected room exists but is filtered out, add it back for this specific dropdown
-                                                            if (selectedRoomObj && !roomsToShow.find(r => r.id === selectedRoomObj.id)) {
-                                                                roomsToShow = [...roomsToShow, selectedRoomObj];
-                                                                // Optional: keep sorted
-                                                                roomsToShow.sort((a, b) => (a.number || a.name).localeCompare(b.number || b.name));
-                                                            }
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Rooms by Dept</label>
+                                        <select
+                                            value={roomFilterDept}
+                                            onChange={(e) => setRoomFilterDept(e.target.value)}
+                                            className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                        >
+                                            <option value="">All Departments</option>
+                                            {departments.map((dept, index) => (
+                                                <option key={index} value={dept.name}>{dept.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                                                            return roomsToShow.map((r, index) => {
-                                                                const isBusy = busyRooms.has(r.number || r.name);
-                                                                const isShared = sharedRooms.has(r.number || r.name);
-
-                                                                let statusClass = "text-gray-900 dark:text-white bg-white dark:bg-slate-800";
-                                                                if (isBusy) statusClass = "text-red-500 font-medium";
-                                                                else if (isShared) statusClass = "text-green-600 font-bold";
-
-                                                                return (
-                                                                    <option
-                                                                        className={statusClass}
-                                                                        key={index}
-                                                                        value={r.number || r.name}
-                                                                        disabled={isBusy && (r.number || r.name) !== cls.room}
-                                                                    >
-                                                                        {r.number || r.name} {r.type ? `(${r.type})` : ''} {r.capacity ? `[Cap: ${r.capacity}]` : ''} {isBusy ? '(Busy)' : ''} {isShared ? '(Shared)' : ''}
-                                                                    </option>
-                                                                );
-                                                            });
-                                                        })()}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => removeClass(cls.id)}
-                                                className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-100 dark:hover:border-red-500/20 xl:self-center self-end"
-                                                title="Remove Class"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                        {/* 3. Class Editor (Full Width) */}
+                        <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 min-h-[500px] flex flex-col">
+                            <div className="bg-gray-50/50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10 rounded-t-xl">
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span className="w-2 h-6 bg-blue-500 rounded-full inline-block"></span>
+                                    {activeDay} Schedule
+                                </h2>
+                                <button
+                                    onClick={addClass}
+                                    className="flex items-center text-sm font-medium bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 px-4 py-2 rounded-lg transition-colors border border-blue-100 dark:border-blue-500/20"
+                                >
+                                    <Plus size={16} className="mr-1.5" /> Add New Class
+                                </button>
+                            </div>
+                            <div className="p-6 space-y-4 flex-1">
+                                {routine.days.find(d => d.name === activeDay)?.classes.length === 0 ? (
+                                    <div className="text-center py-20 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl h-full flex flex-col items-center justify-center bg-gray-50/50 dark:bg-slate-800/50">
+                                        <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mb-4">
+                                            <Plus className="text-gray-400" size={32} />
                                         </div>
-                                    );
-                                })}
+                                        <p className="text-gray-600 dark:text-slate-300 font-medium mb-1">No classes added for {activeDay}</p>
+                                        <p className="text-gray-400 text-sm mb-4">Get started by adding your first class</p>
+                                        <button onClick={addClass} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Add First Class</button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {routine.days.find(d => d.name === activeDay)?.classes.map((cls, index) => {
+                                            const { busy: busyTeachers, shared: sharedTeachers } = getTeacherStatus(activeDay, cls.startTime, cls.endTime, cls.id, cls.subject);
+                                            const { busy: busyRooms, shared: sharedRooms } = getRoomStatus(activeDay, cls.startTime, cls.endTime, cls.id, cls.subject);
+                                            return (
+                                                <div key={index} className="group flex flex-col xl:flex-row gap-4 items-start xl:items-center bg-white dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all shadow-sm hover:shadow-md dark:shadow-none">
+                                                    {/* Adjusted Grid for Code input */}
+                                                    <div className="grid grid-cols-2 md:grid-cols-12 gap-4 w-full">
+                                                        <div className="col-span-1 md:col-span-2">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Start Time</label>
+                                                            <input
+                                                                type="time"
+                                                                value={cls.startTime || ''}
+                                                                onChange={(e) => updateClass(cls.id, 'startTime', e.target.value)}
+                                                                className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-1 md:col-span-2">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">End Time</label>
+                                                            <input
+                                                                type="time"
+                                                                value={cls.endTime || ''}
+                                                                onChange={(e) => updateClass(cls.id, 'endTime', e.target.value)}
+                                                                className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-2 md:col-span-2">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Sub Code</label>
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Code"
+                                                                value={cls.subjectCode || ''}
+                                                                onChange={(e) => updateClass(cls.id, 'subjectCode', e.target.value)}
+                                                                onKeyDown={(e) => handleCodeKeyDown(e, cls.id, cls.subjectCode)}
+                                                                className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-400"
+                                                            />
+                                                        </div>
+                                                        <div className="col-span-2 md:col-span-3">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Subject</label>
+                                                            <select
+                                                                value={cls.subject || ''}
+                                                                onChange={(e) => updateClass(cls.id, 'subject', e.target.value)}
+                                                                className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                            >
+                                                                <option className='text-gray-500' value="">Select Subject</option>
+                                                                {filteredSubjects.map((sub, index) => (
+                                                                    <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={index} value={sub.name}>{sub.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div className="col-span-2 md:col-span-2">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Teacher</label>
+                                                            <select
+                                                                value={cls.teacher || ''}
+                                                                onChange={(e) => updateClass(cls.id, 'teacher', e.target.value)}
+                                                                className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                            >
+                                                                <option className='text-gray-500' value="">Select Teacher</option>
+                                                                {(() => {
+                                                                    const selectedTeacherObj = teachers.find(t => t.name === cls.teacher);
+                                                                    let teachersToShow = filteredTeachers;
+
+                                                                    // If selected teacher exists but is filtered out, add them back for this specific dropdown
+                                                                    if (selectedTeacherObj && !teachersToShow.find(t => t.id === selectedTeacherObj.id)) {
+                                                                        teachersToShow = [...teachersToShow, selectedTeacherObj];
+                                                                        // Optional: keep sorted
+                                                                        teachersToShow.sort((a, b) => a.name.localeCompare(b.name));
+                                                                    }
+
+                                                                    return teachersToShow.map((t, index) => {
+                                                                        const isBusy = busyTeachers.has(t.name);
+                                                                        const isShared = sharedTeachers.has(t.name);
+                                                                        let statusClass = "text-gray-900 dark:text-white bg-white dark:bg-slate-800";
+                                                                        if (isBusy) statusClass = "text-red-500 font-medium";
+                                                                        else if (isShared) statusClass = "text-green-600 font-bold";
+
+                                                                        return (
+                                                                            <option
+                                                                                className={statusClass}
+                                                                                key={index}
+                                                                                value={t.name}
+                                                                                disabled={isBusy && t.name !== cls.teacher}
+                                                                            >
+                                                                                {t.name} {isBusy ? '(Busy)' : ''} {isShared ? '(Shared)' : ''}
+                                                                            </option>
+                                                                        );
+                                                                    });
+                                                                })()}
+                                                            </select>
+                                                        </div>
+                                                        <div className="col-span-2 md:col-span-1">
+                                                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Room</label>
+                                                            <select
+                                                                value={cls.room || ''}
+                                                                onChange={(e) => updateClass(cls.id, 'room', e.target.value)}
+                                                                className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+                                                            >
+                                                                <option className='text-gray-500' value="">Room</option>
+                                                                {(() => {
+                                                                    const selectedRoomObj = rooms.find(r => (r.number || r.name) === cls.room);
+                                                                    let roomsToShow = filteredRooms;
+
+                                                                    // If selected room exists but is filtered out, add it back for this specific dropdown
+                                                                    if (selectedRoomObj && !roomsToShow.find(r => r.id === selectedRoomObj.id)) {
+                                                                        roomsToShow = [...roomsToShow, selectedRoomObj];
+                                                                        // Optional: keep sorted
+                                                                        roomsToShow.sort((a, b) => (a.number || a.name).localeCompare(b.number || b.name));
+                                                                    }
+
+                                                                    return roomsToShow.map((r, index) => {
+                                                                        const isBusy = busyRooms.has(r.number || r.name);
+                                                                        const isShared = sharedRooms.has(r.number || r.name);
+
+                                                                        let statusClass = "text-gray-900 dark:text-white bg-white dark:bg-slate-800";
+                                                                        if (isBusy) statusClass = "text-red-500 font-medium";
+                                                                        else if (isShared) statusClass = "text-green-600 font-bold";
+
+                                                                        return (
+                                                                            <option
+                                                                                className={statusClass}
+                                                                                key={index}
+                                                                                value={r.number || r.name}
+                                                                                disabled={isBusy && (r.number || r.name) !== cls.room}
+                                                                            >
+                                                                                {r.number || r.name} {r.type ? `(${r.type})` : ''} {r.capacity ? `[Cap: ${r.capacity}]` : ''} {isBusy ? '(Busy)' : ''} {isShared ? '(Shared)' : ''}
+                                                                            </option>
+                                                                        );
+                                                                    });
+                                                                })()}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => removeClass(cls.id)}
+                                                        className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-100 dark:hover:border-red-500/20 xl:self-center self-end"
+                                                        title="Remove Class"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
+                    </>
+                )}
+            </div>
+        </div >
+    );
+};
+
+// RoutinePreview Component - Using exact template from /routine page
+const RoutinePreview = ({ routine }) => {
+    const timeSlots = useMemo(() => {
+        if (routine.shift === "1st") {
+            return [
+                { label: "08:00 - 08:45", start: "08:00", end: "08:45" },
+                { label: "08:45 - 09:30", start: "08:45", end: "09:30" },
+                { label: "09:30 - 10:15", start: "09:30", end: "10:15" },
+                { label: "10:15 - 11:00", start: "10:15", end: "11:00" },
+                { label: "11:00 - 11:45", start: "11:00", end: "11:45" },
+                { label: "11:45 - 12:30", start: "11:45", end: "12:30" },
+                { label: "12:30 - 01:15", start: "12:30", end: "13:15" },
+            ];
+        } else if (routine.shift === "2nd") {
+            return [
+                { label: "01:30 - 02:15", start: "13:30", end: "14:15" },
+                { label: "02:15 - 03:00", start: "14:15", end: "15:00" },
+                { label: "03:00 - 03:45", start: "15:00", end: "15:45" },
+                { label: "03:45 - 04:30", start: "15:45", end: "16:30" },
+                { label: "04:30 - 05:15", start: "16:30", end: "17:15" },
+                { label: "05:15 - 06:00", start: "17:15", end: "18:00" },
+                { label: "06:00 - 06:45", start: "18:00", end: "18:45" }
+            ];
+        }
+        return [];
+    }, [routine.shift]);
+
+    const getClassForSlot = (dayName, slotIndex) => {
+        const day = routine.days.find(d => d.name === dayName);
+        if (!day) return null;
+
+        const slot = timeSlots[slotIndex];
+        if (!slot) return null;
+
+        return day.classes.find(cls => cls.startTime === slot.start);
+    };
+
+    const getClassSpanInfo = (classInfo, slots) => {
+        if (!classInfo || !slots) return { colspan: 1 };
+        const startIndex = slots.findIndex(s => s.start === classInfo.startTime);
+        if (startIndex === -1) return { colspan: 1 };
+
+        const endIndex = slots.findIndex(s => s.end === classInfo.endTime);
+        if (endIndex === -1) return { colspan: 1 };
+
+        return { colspan: endIndex - startIndex + 1 };
+    };
+
+    const shouldSkipSlot = (dayName, slotIndex) => {
+        const day = routine.days.find(d => d.name === dayName);
+        if (!day) return false;
+
+        for (let i = 0; i < slotIndex; i++) {
+            const classInfo = getClassForSlot(dayName, i);
+            if (classInfo) {
+                const spanInfo = getClassSpanInfo(classInfo, timeSlots);
+                if (spanInfo && (i + spanInfo.colspan) > slotIndex) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
+    return (
+        <div className="mt-6 space-y-6">
+            {/* Routine Info Header */}
+            <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-lg">
+                <h2 className="text-2xl font-serif font-bold text-[#2C1810] dark:text-white mb-4">Routine Preview</h2>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 className="text-xl font-semibold font-serif text-[#2C1810] dark:text-white mb-1">
+                            {routine.department || 'Not Set'} - Semester {routine.semester || 'N/A'}
+                        </h3>
+                        <p className="text-[#2C1810]/70 dark:text-gray-400 text-sm">
+                            {routine.shift || 'N/A'} Shift • Group {routine.group || 'N/A'}
+                        </p>
                     </div>
+                </div>
+            </div>
+
+            {/* Routine Table - Exact template from /routine page */}
+            <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-lg overflow-x-auto">
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse min-w-[800px] border border-gray-200 dark:border-gray-700">
+                        <thead>
+                            <tr className="bg-[#FF5C35] text-white">
+                                <th className="border border-white/20 px-4 py-3 font-semibold text-left min-w-[120px]">
+                                    Day
+                                </th>
+                                {timeSlots.map((slot, index) => (
+                                    <th key={index} className="border border-white/20 px-3 py-3 font-semibold text-center min-w-[150px]">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Clock size={14} className="text-white" />
+                                            <span className="text-sm">{slot.label}</span>
+                                        </div>
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {DAYS.map((day, dayIndex) => (
+                                <tr key={day} className={dayIndex % 2 === 0 ? 'bg-white dark:bg-[#1E293B]' : 'bg-[#FFFBF2] dark:bg-[#151e2e]'}>
+                                    <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 font-semibold text-[#2C1810] dark:text-white">
+                                        {day}
+                                    </td>
+                                    {timeSlots.map((slot, slotIndex) => {
+                                        if (shouldSkipSlot(day, slotIndex)) {
+                                            return null;
+                                        }
+
+                                        const classInfo = getClassForSlot(day, slotIndex);
+                                        const spanInfo = classInfo ? getClassSpanInfo(classInfo, timeSlots) : null;
+                                        const colspan = spanInfo ? spanInfo.colspan : 1;
+
+                                        return (
+                                            <td
+                                                key={slotIndex}
+                                                colSpan={colspan}
+                                                className="border border-gray-200 dark:border-gray-700 px-3 py-3 text-center"
+                                            >
+                                                {classInfo ? (
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            <BookOpen size={14} className="text-[#FF5C35]" />
+                                                            <p className="font-semibold text-sm text-[#2C1810] dark:text-white">
+                                                                {classInfo.subjectCode || 'N/A'}
+                                                            </p>
+                                                        </div>
+                                                        <p className="text-xs text-[#2C1810]/80 dark:text-gray-300 font-medium">
+                                                            {classInfo.subject || 'No Subject'}
+                                                        </p>
+                                                        <div className="flex items-center justify-center gap-1 mt-1">
+                                                            <User size={12} className="text-[#FF5C35]" />
+                                                            <p className="text-xs text-[#2C1810]/70 dark:text-gray-400">
+                                                                {classInfo.teacher || 'No Teacher'}
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex items-center justify-center gap-1">
+                                                            <MapPin size={12} className="text-[#FF5C35]" />
+                                                            <p className="text-xs text-[#FF5C35] font-medium">
+                                                                {classInfo.room || 'No Room'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-400 dark:text-gray-600 text-xs">----</span>
+                                                )}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

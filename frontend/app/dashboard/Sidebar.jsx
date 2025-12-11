@@ -124,9 +124,6 @@ export default function Sidebar({ isOpen, setIsOpen, activeView, setActiveView, 
                     `}
                     >
                         <LogOut size={22} className="shrink-0 transition-transform duration-300 group-hover:-translate-x-1" />
-                        <span className={`font-medium whitespace-nowrap transition-all duration-300 hidden md:block`}>
-                            Sign Out
-                        </span>
                     </button>
                 </div>
 

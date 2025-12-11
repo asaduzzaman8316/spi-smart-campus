@@ -242,11 +242,11 @@ export default function SubjectManager({ onBack }) {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 relative md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                             {subjects.map((subject, index) => (
                                 <div
                                     key={index}
-                                    className="bg-white dark:bg-card-bg group border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-8 hover:border-[#FF5C35]/30 hover:shadow-xl hover:shadow-[#FF5C35]/5 transition-all duration-300"
+                                    className="group relative bg-white dark:bg-card-bg border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-8 hover:border-[#FF5C35]/30 hover:shadow-xl hover:shadow-[#FF5C35]/5 transition-all duration-300"
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-4">
@@ -275,7 +275,7 @@ export default function SubjectManager({ onBack }) {
                                             <span>Semester {subject.semester}</span>
                                         </div>
                                     </div>
-                                    <div className="gap-2 absolute top-2 right-2 lg:hidden group-hover:flex">
+                                    <div className="flex opacity-0 group-hover:opacity-100 gap-2 absolute top-2 right-2 transition-opacity duration-200">
                                         <button
                                             onClick={() => handleEditSubject(subject)}
                                             className="p-2 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg transition-colors border border-blue-100 dark:border-transparent"

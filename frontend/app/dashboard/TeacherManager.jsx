@@ -248,11 +248,11 @@ export default function TeacherManager({ onBack }) {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1  relative md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                             {teachers.map(teacher => (
                                 <div
                                     key={teacher.docId || teacher.id}
-                                    className="bg-white dark:bg-card-bg group border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-8 hover:border-[#FF5C35]/30 hover:shadow-xl hover:shadow-[#FF5C35]/5 transition-all duration-300"
+                                    className="group relative bg-white dark:bg-card-bg border border-gray-100 dark:border-gray-800 rounded-[2.5rem] p-8 hover:border-[#FF5C35]/30 hover:shadow-xl hover:shadow-[#FF5C35]/5 transition-all duration-300"
                                 >
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-4">
@@ -320,7 +320,7 @@ export default function TeacherManager({ onBack }) {
                                             </div>
                                         )}
                                     </div>
-                                    <div className=" gap-2 absolute top-4 right-4 lg:hidden group-hover:flex">
+                                    <div className="flex opacity-0 group-hover:opacity-100 gap-2 absolute top-4 right-4 transition-opacity duration-200">
                                         <button
                                             onClick={() => handleEditTeacher(teacher)}
                                             className="p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 text-[#FF5C35] rounded-full transition-colors border border-gray-100 dark:border-gray-700 shadow-sm"
