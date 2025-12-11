@@ -116,70 +116,96 @@ export default function RoutineBuilder({ onBack, initialData }) {
         return Math.max(s1, s2) < Math.min(e1, e2);
     };
 
-    const getUnavailableTeachers = (dayName, startTime, endTime, currentClassId) => {
-        if (!startTime || !endTime) return new Set();
+    const getTeacherStatus = (dayName, startTime, endTime, currentClassId, currentSubject) => {
+        if (!startTime || !endTime) return { busy: new Set(), shared: new Set() };
 
         const busyTeachers = new Set();
+        const sharedTeachers = new Set();
+        const teacherUsageCounts = {};
+
+        const processClass = (c) => {
+            if (c.teacher && isTimeOverlap(startTime, endTime, c.startTime, c.endTime)) {
+                teacherUsageCounts[c.teacher] = (teacherUsageCounts[c.teacher] || 0) + 1;
+
+                // Base Status Logic
+                if (currentSubject && c.subject === currentSubject) {
+                    sharedTeachers.add(c.teacher);
+                } else {
+                    busyTeachers.add(c.teacher);
+                }
+            }
+        };
 
         allRoutines.forEach(r => {
             if (r.id === routine.id && isEditMode) return;
-
             const dayData = r.days.find(d => d.name === dayName);
-            if (dayData) {
-                dayData.classes.forEach(c => {
-                    if (c.teacher && isTimeOverlap(startTime, endTime, c.startTime, c.endTime)) {
-                        busyTeachers.add(c.teacher);
-                    }
-                });
-            }
+            if (dayData) dayData.classes.forEach(processClass);
         });
 
         const currentDay = routine.days.find(d => d.name === dayName);
         if (currentDay) {
             currentDay.classes.forEach(c => {
-                if (c.id !== currentClassId && c.teacher && isTimeOverlap(startTime, endTime, c.startTime, c.endTime)) {
-                    busyTeachers.add(c.teacher);
-                }
+                if (c.id !== currentClassId) processClass(c);
             });
         }
 
-        return busyTeachers;
+        // Apply Max-2 Limit (Main + Second = 2)
+        // If usage >= 2, force it to be BUSY (remove from shared, add to busy)
+        Object.entries(teacherUsageCounts).forEach(([teacher, count]) => {
+            if (count >= 2) {
+                sharedTeachers.delete(teacher);
+                busyTeachers.add(teacher);
+            }
+        });
+
+        return { busy: busyTeachers, shared: sharedTeachers };
     };
 
     // Get unavailable rooms for a specific time slot
-    const getUnavailableRooms = (dayName, startTime, endTime, currentClassId) => {
-        if (!startTime || !endTime) return new Set();
+    // Get resource status for a specific time slot
+    const getRoomStatus = (dayName, startTime, endTime, currentClassId, currentSubject) => {
+        if (!startTime || !endTime) return { busy: new Set(), shared: new Set() };
 
         const busyRooms = new Set();
+        const sharedRooms = new Set();
+        const roomUsageCounts = {};
+
+        const processClass = (c) => {
+            if (c.room && isTimeOverlap(startTime, endTime, c.startTime, c.endTime)) {
+                roomUsageCounts[c.room] = (roomUsageCounts[c.room] || 0) + 1;
+
+                if (currentSubject && c.subject === currentSubject) {
+                    sharedRooms.add(c.room);
+                } else {
+                    busyRooms.add(c.room);
+                }
+            }
+        };
 
         // Check against all other routines
         allRoutines.forEach(r => {
             if (r.id === routine.id && isEditMode) return;
-
             const dayData = r.days.find(d => d.name === dayName);
-            if (dayData) {
-                dayData.classes.forEach(c => {
-                    if (c.room && isTimeOverlap(startTime, endTime, c.startTime, c.endTime)) {
-                        busyRooms.add(c.room);
-                    }
-                });
-            }
+            if (dayData) dayData.classes.forEach(processClass);
         });
 
         // Also check against other classes in the CURRENT routine (local state)
-        // to prevent assigning the same room to two overlapping classes in the same routine
-        const currentDay = routine.days.find(d => d.name === activeDay);
-
         const currentDayLocal = routine.days.find(d => d.name === dayName);
         if (currentDayLocal) {
             currentDayLocal.classes.forEach(c => {
-                if (c.id !== currentClassId && c.room && isTimeOverlap(startTime, endTime, c.startTime, c.endTime)) {
-                    busyRooms.add(c.room);
-                }
+                if (c.id !== currentClassId) processClass(c);
             });
         }
 
-        return busyRooms;
+        // Apply Max-2 Limit
+        Object.entries(roomUsageCounts).forEach(([room, count]) => {
+            if (count >= 2) {
+                sharedRooms.delete(room);
+                busyRooms.add(room);
+            }
+        });
+
+        return { busy: busyRooms, shared: sharedRooms };
     };
 
     const addClass = () => {
@@ -347,22 +373,20 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
                 {/* 1. Days Navigation (Horizontal) */}
                 <div className="flex overflow-x-auto pb-2 gap-2 mt-6 mb-6 no-scrollbar">
-                     {DAYS.map((day, index) => (
+                    {DAYS.map((day, index) => (
                         <button
                             key={index}
                             onClick={() => setActiveDay(day)}
-                            className={`whitespace-nowrap px-6 py-3 rounded-xl transition-all font-medium flex items-center gap-2 border ${
-                                activeDay === day
+                            className={`whitespace-nowrap px-6 py-3 rounded-xl transition-all font-medium flex items-center gap-2 border ${activeDay === day
                                 ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-500/30'
                                 : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-slate-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'
-                            }`}
+                                }`}
                         >
                             <span>{day}</span>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                activeDay === day 
-                                ? 'bg-white/20 text-white' 
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${activeDay === day
+                                ? 'bg-white/20 text-white'
                                 : 'bg-gray-100 dark:bg-slate-700 text-gray-500 dark:text-slate-400'
-                            }`}>
+                                }`}>
                                 {routine.days.find(d => d.name === day)?.classes.length || 0}
                             </span>
                         </button>
@@ -371,95 +395,95 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
                 {/* 2. Configuration & Filters (Grid) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                     {/* Configuration Panel */}
+                    {/* Configuration Panel */}
                     <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
                         <div className="bg-gray-50/50 dark:bg-slate-800/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-                             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                                 <GripVertical size={18} className="text-gray-400" />
                                 Routine Configuration
-                             </h3>
+                            </h3>
                         </div>
                         <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Department</label>
-                                    <select
-                                        name="department"
-                                        value={routine.department}
-                                        onChange={handleMetaChange}
-                                        className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                        disabled={isEditMode}
-                                    >
-                                        <option value="">Select Department</option>
-                                        {departments.slice(0, 7).map((dept, index) => (
-                                            <option key={index} value={dept.name}>{dept.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Department</label>
+                                <select
+                                    name="department"
+                                    value={routine.department}
+                                    onChange={handleMetaChange}
+                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                    disabled={isEditMode}
+                                >
+                                    <option value="">Select Department</option>
+                                    {departments.slice(0, 7).map((dept, index) => (
+                                        <option key={index} value={dept.name}>{dept.name}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Semester</label>
-                                    <select
-                                        name="semester"
-                                        value={routine.semester}
-                                        onChange={handleMetaChange}
-                                        className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                        disabled={isEditMode}
-                                    >
-                                        <option value="">Select Semester</option>
-                                        {SEMESTERS.map((sem, index) => (
-                                            <option key={index} value={sem}>{sem}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Semester</label>
+                                <select
+                                    name="semester"
+                                    value={routine.semester}
+                                    onChange={handleMetaChange}
+                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                    disabled={isEditMode}
+                                >
+                                    <option value="">Select Semester</option>
+                                    {SEMESTERS.map((sem, index) => (
+                                        <option key={index} value={sem}>{sem}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Shift</label>
-                                    <select
-                                        name="shift"
-                                        value={routine.shift}
-                                        onChange={handleMetaChange}
-                                        className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                        disabled={isEditMode}
-                                    >
-                                        <option value="">Select Shift</option>
-                                        {SHIFTS.map((shift, index) => (
-                                            <option key={index} value={shift}>{shift}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Shift</label>
+                                <select
+                                    name="shift"
+                                    value={routine.shift}
+                                    onChange={handleMetaChange}
+                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                    disabled={isEditMode}
+                                >
+                                    <option value="">Select Shift</option>
+                                    {SHIFTS.map((shift, index) => (
+                                        <option key={index} value={shift}>{shift}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                <div>
-                                    <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Group</label>
-                                    <select
-                                        name="group"
-                                        value={routine.group}
-                                        onChange={handleMetaChange}
-                                        className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                                        disabled={isEditMode}
-                                    >
-                                        <option value="">Select Group</option>
-                                        {GROUPS.filter((grp, index) => {
-                                            if (routine.shift === "1st") return ["A1", "B1"].includes(grp);
-                                            if (routine.shift === "2nd") return ["A2", "B2"].includes(grp);
-                                            return true;
-                                        }).map((grp, index) => (
-                                            <option key={index} value={grp}>{grp}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Group</label>
+                                <select
+                                    name="group"
+                                    value={routine.group}
+                                    onChange={handleMetaChange}
+                                    className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                    disabled={isEditMode}
+                                >
+                                    <option value="">Select Group</option>
+                                    {GROUPS.filter((grp, index) => {
+                                        if (routine.shift === "1st") return ["A1", "B1"].includes(grp);
+                                        if (routine.shift === "2nd") return ["A2", "B2"].includes(grp);
+                                        return true;
+                                    }).map((grp, index) => (
+                                        <option key={index} value={grp}>{grp}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     {/* Resources Panel */}
                     <div className="bg-white dark:bg-slate-800 shadow-sm rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden">
                         <div className="bg-gray-50/50 dark:bg-slate-800/50 px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-                             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                                 <Plus size={18} className="text-gray-400" />
                                 Resource Filters
-                             </h3>
+                            </h3>
                         </div>
                         <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                             <div>
+                            <div>
                                 <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1.5 ml-1">Teachers by Dept</label>
                                 <select
                                     value={teacherFilterDept}
@@ -545,8 +569,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                         ) : (
                             <div className="space-y-4">
                                 {routine.days.find(d => d.name === activeDay)?.classes.map((cls, index) => {
-                                    const unavailableTeachers = getUnavailableTeachers(activeDay, cls.startTime, cls.endTime, cls.id);
-                                    const unavailableRooms = getUnavailableRooms(activeDay, cls.startTime, cls.endTime, cls.id);
+                                    const { busy: busyTeachers, shared: sharedTeachers } = getTeacherStatus(activeDay, cls.startTime, cls.endTime, cls.id, cls.subject);
+                                    const { busy: busyRooms, shared: sharedRooms } = getRoomStatus(activeDay, cls.startTime, cls.endTime, cls.id, cls.subject);
                                     return (
                                         <div key={index} className="group flex flex-col xl:flex-row gap-4 items-start xl:items-center bg-white dark:bg-slate-900 p-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all shadow-sm hover:shadow-md dark:shadow-none">
                                             {/* Adjusted Grid for Code input */}
@@ -613,15 +637,20 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             }
 
                                                             return teachersToShow.map((t, index) => {
-                                                                const isBusy = unavailableTeachers.has(t.name);
+                                                                const isBusy = busyTeachers.has(t.name);
+                                                                const isShared = sharedTeachers.has(t.name);
+                                                                let statusClass = "text-gray-900 dark:text-white bg-white dark:bg-slate-800";
+                                                                if (isBusy) statusClass = "text-red-500 font-medium";
+                                                                else if (isShared) statusClass = "text-green-600 font-bold";
+
                                                                 return (
                                                                     <option
-                                                                        className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500' : ''}`}
+                                                                        className={statusClass}
                                                                         key={index}
                                                                         value={t.name}
-                                                                        disabled={isBusy && t.name !== cls.teacher} // Allow keeping current teacher if already selected, or just disable
+                                                                        disabled={isBusy && t.name !== cls.teacher}
                                                                     >
-                                                                        {t.name} {isBusy ? '(Busy)' : ''}
+                                                                        {t.name} {isBusy ? '(Busy)' : ''} {isShared ? '(Shared)' : ''}
                                                                     </option>
                                                                 );
                                                             });
@@ -648,15 +677,21 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             }
 
                                                             return roomsToShow.map((r, index) => {
-                                                                const isBusy = unavailableRooms.has(r.number || r.name);
+                                                                const isBusy = busyRooms.has(r.number || r.name);
+                                                                const isShared = sharedRooms.has(r.number || r.name);
+
+                                                                let statusClass = "text-gray-900 dark:text-white bg-white dark:bg-slate-800";
+                                                                if (isBusy) statusClass = "text-red-500 font-medium";
+                                                                else if (isShared) statusClass = "text-green-600 font-bold";
+
                                                                 return (
                                                                     <option
-                                                                        className={`text-gray-900 dark:text-white bg-white dark:bg-slate-800 ${isBusy ? 'text-red-500' : ''}`}
+                                                                        className={statusClass}
                                                                         key={index}
                                                                         value={r.number || r.name}
                                                                         disabled={isBusy && (r.number || r.name) !== cls.room}
                                                                     >
-                                                                        {r.number || r.name} {r.type ? `(${r.type})` : ''} {r.capacity ? `[Cap: ${r.capacity}]` : ''} {isBusy ? '(Busy)' : ''}
+                                                                        {r.number || r.name} {r.type ? `(${r.type})` : ''} {r.capacity ? `[Cap: ${r.capacity}]` : ''} {isBusy ? '(Busy)' : ''} {isShared ? '(Shared)' : ''}
                                                                     </option>
                                                                 );
                                                             });
