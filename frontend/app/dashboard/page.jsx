@@ -13,6 +13,7 @@ import TeacherToday from "./TeacherToday";
 import TeacherProfile from "./TeacherProfile";
 import AdminProfile from "./AdminProfile";
 import AdminManager from "./AdminManager";
+import LoadAnalysis from "./LoadAnalysis";
 import Sidebar from './Sidebar';
 import { useRouter } from 'next/navigation';
 import {
@@ -255,6 +256,8 @@ export default function DashboardPage() {
                 return <TeacherProfile onBack={() => setActiveView('overview')} />;
             case 'admins':
                 return <AdminManager onBack={() => setActiveView('overview')} />;
+            case 'load-analysis':
+                return <LoadAnalysis />;
             default:
                 return <div>Select a view</div>;
         }

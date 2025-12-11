@@ -81,6 +81,17 @@ export const deleteRoutine = async (id) => {
     return data;
 };
 
+export const analyzeLoad = async (department, semester, shift) => {
+    const params = new URLSearchParams();
+    if (department) params.append('department', department);
+    if (semester) params.append('semester', semester);
+    if (shift) params.append('shift', shift);
+
+    const { data } = await api.get(`/routines/analyze-load${params.toString() ? '?' + params.toString() : ''}`);
+    return data;
+};
+
+
 // Rooms
 export const fetchRooms = async (search = '', type = '', location = '', department = '', sort = '') => {
     const params = new URLSearchParams();

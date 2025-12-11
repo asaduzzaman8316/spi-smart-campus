@@ -81,7 +81,129 @@ const deleteRoutine = async (req, res) => {
         }
         res.status(200).json({ message: 'Routine deleted' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Analyze teacher loads from routines
+// @route   GET /api/routines/analyze-load
+// @access  Public
+const analyzeLoad = async (req, res) => {
+    try {
+        const { department, semester, shift } = req.query;
+
+        const query = {};
+        if (department) query.department = department;
+        if (semester) query.semester = parseInt(semester);
+        if (shift) query.shift = shift;
+
+        const routines = await Routine.find(query).lean();
+
+        if (!routines || routines.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'No routines found for the specified criteria'
+            });
+        }
+
+        // Calculate duration in minutes
+        const calculateDuration = (startTime, endTime) => {
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const [endHour, endMin] = endTime.split(':').map(Number);
+
+            let startMinutes = startHour * 60 + startMin;
+            let endMinutes = endHour * 60 + endMin;
+
+            if (endMinutes < startMinutes) {
+                endMinutes += 24 * 60;
+            }
+
+            return endMinutes - startMinutes;
+        };
+
+        // Map to store teacher assignments
+        const teacherMap = new Map();
+
+        routines.forEach(routine => {
+            routine.days.forEach(day => {
+                day.classes.forEach(cls => {
+                    if (!cls.teacher || !cls.subject) return;
+
+                    const duration = calculateDuration(cls.startTime, cls.endTime);
+                    const periods = Math.round(duration / 45);
+                    const isPractical = duration >= 90;
+
+                    const key = `${cls.teacher}-${cls.subject}-${cls.subjectCode || ''}`;
+
+                    if (!teacherMap.has(key)) {
+                        teacherMap.set(key, {
+                            teacherName: cls.teacher,
+                            subject: cls.subject,
+                            subjectCode: cls.subjectCode || '',
+                            classGroups: new Set(),
+                            theoryPeriods: 0,
+                            practicalPeriods: 0,
+                            rooms: new Set()
+                        });
+                    }
+
+                    const entry = teacherMap.get(key);
+                    entry.classGroups.add(routine.group);
+
+                    if (isPractical) {
+                        entry.practicalPeriods += periods;
+                    } else {
+                        entry.theoryPeriods += periods;
+                    }
+
+                    if (cls.room) entry.rooms.add(cls.room);
+                });
+            });
+        });
+
+        // Convert to array and format
+        const assignments = Array.from(teacherMap.values()).map(entry => ({
+            teacherName: entry.teacherName,
+            subject: entry.subject,
+            subjectCode: entry.subjectCode,
+            classGroups: Array.from(entry.classGroups).sort(),
+            technology: Array.from(entry.classGroups).join(', '),
+            theoryPeriods: entry.theoryPeriods,
+            practicalPeriods: entry.practicalPeriods,
+            totalLoad: entry.theoryPeriods + entry.practicalPeriods,
+            rooms: Array.from(entry.rooms).join(', ')
+        }));
+
+        assignments.sort((a, b) => a.teacherName.localeCompare(b.teacherName));
+
+        const uniqueTeachers = new Set(assignments.map(a => a.teacherName));
+        const totalPeriods = assignments.reduce((sum, a) => sum + a.totalLoad, 0);
+        const totalTheory = assignments.reduce((sum, a) => sum + a.theoryPeriods, 0);
+        const totalPractical = assignments.reduce((sum, a) => sum + a.practicalPeriods, 0);
+
+        res.json({
+            success: true,
+            data: {
+                assignments,
+                summary: {
+                    totalTeachers: uniqueTeachers.size,
+                    totalAssignments: assignments.length,
+                    totalPeriods,
+                    totalTheory,
+                    totalPractical,
+                    averageLoad: uniqueTeachers.size > 0 ? (totalPeriods / uniqueTeachers.size).toFixed(1) : 0
+                },
+                filters: {
+                    department: department || 'All',
+                    semester: semester || 'All',
+                    shift: shift || 'All'
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
 };
 
@@ -89,5 +211,6 @@ module.exports = {
     getRoutines,
     findRoutine,
     createOrUpdateRoutine,
-    deleteRoutine
+    deleteRoutine,
+    analyzeLoad
 };

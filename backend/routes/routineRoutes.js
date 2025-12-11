@@ -4,12 +4,14 @@ const {
     getRoutines,
     findRoutine,
     createOrUpdateRoutine,
-    deleteRoutine
+    deleteRoutine,
+    analyzeLoad
 } = require('../controllers/routineController');
 const { idValidation } = require('../validators/validators');
 
 router.route('/').get(getRoutines);
 router.route('/find').get(findRoutine);
+router.route('/analyze-load').get(analyzeLoad);
 
 router.route('/').post(createOrUpdateRoutine);
 router.route('/:id').delete(idValidation, deleteRoutine);
