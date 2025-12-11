@@ -10,7 +10,7 @@ import { useState } from 'react';
 
 
 export default function Header() {
-    const { user, logout } = useAuth()
+    const { user } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
     const [isOpen, setIsOpen] = useState(false)
@@ -30,16 +30,6 @@ export default function Header() {
     ];
 
     const isActive = (path) => pathname === path;
-
-    const handleLogout = async () => {
-        try {
-            setIsOpen(false)
-            logout() // Use context logout
-        } catch (error) {
-            console.error('Logout error:', error)
-        }
-    }
-
 
 
     return (
@@ -144,13 +134,6 @@ export default function Header() {
                                         <LayoutDashboard size={18} />
                                         <span>Dashboard</span>
                                     </Link>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 text-[#FF5C35] font-medium hover:bg-red-50 w-full text-left"
-                                    >
-                                        <LogOut size={18} />
-                                        <span>Logout</span>
-                                    </button>
                                 </>
                             ) : (
                                 <Link

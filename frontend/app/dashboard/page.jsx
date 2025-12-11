@@ -23,7 +23,8 @@ import {
     BookOpen,
     Building,
     List,
-    User
+    User,
+    Menu
 } from 'lucide-react';
 
 const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
@@ -279,6 +280,15 @@ export default function DashboardPage() {
                     <div className="p-4 md:p-8 pt-20 md:pt-8 max-w-[1600px] mx-auto">
                         {renderContent()}
                     </div>
+
+                    {/* Floating Mobile Menu Button */}
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="fixed bottom-6 right-6 z-40 md:hidden p-4 bg-linear-to-br from-brand-start to-brand-mid text-white rounded-full shadow-2xl hover:scale-110 transition-transform active:scale-95 border-2 border-white/20"
+                        aria-label="Toggle Menu"
+                    >
+                        <Menu size={24} />
+                    </button>
                 </main>
             </div>
         </ProtectedRoute>

@@ -2,20 +2,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation'; // Added import
-import { User, Mail, Phone, Briefcase, Hash, Clock, Shield, Edit2, Key, Save, X, Camera, Menu } from 'lucide-react';
-import { useSidebar } from '@/context/SidebarContext';
+import { User, Mail, Phone, Briefcase, Hash, Clock, Shield, Edit2, Key, Save, X, Camera } from 'lucide-react';
+
 import { toast } from 'react-toastify';
 import Image from 'next/image';
 import { InfoCard } from './InfoCard';
 import { updateTeacher } from '../../Lib/api';
 
 export default function TeacherProfile() {
-    const { user, checkUser, logout } = useAuth(); // login to update user state if needed
-    const { toggleMobileSidebar } = useSidebar();
-    const router = useRouter(); // Import useRouter
+    const { user, checkUser, logout } = useAuth();
+    const router = useRouter();
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
-    const [showHint, setShowHint] = useState(true);
 
     // Edit Form State
     const [formData, setFormData] = useState({
@@ -86,6 +84,7 @@ export default function TeacherProfile() {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 pb-12">
+
             {/* Header / Banner */}
             <div className="relative h-48 rounded-3xl overflow-hidden bg-linear-to-r from-purple-600 to-indigo-600 shadow-lg">
                 <div className="absolute inset-0 bg-black/20"></div>
@@ -252,35 +251,8 @@ export default function TeacherProfile() {
                     )}
                 </div>
             </div>
-            {/* Mobile Sidebar Toggle & Hint */}
-            <div className="fixed bottom-6 right-6 z-50 md:hidden flex flex-col items-end gap-2">
-                {/* Hint Bubble */}
-                {showHint && (
-                    <div className="bg-blue-600 text-white p-3 rounded-lg shadow-lg relative max-w-[200px] animate-bounce">
-                        <p className="text-xs font-medium">Click here to access usage options & menu</p>
-                        <div className="absolute -bottom-1 right-4 w-3 h-3 bg-blue-600 transform rotate-45"></div>
-                        <button
-                            onClick={() => setShowHint(false)}
-                            className="absolute -top-2 -left-2 bg-white text-blue-600 rounded-full p-0.5 shadow-sm"
-                        >
-                            <X size={12} />
-                        </button>
-                    </div>
-                )}
-
-                {/* Toggle Button */}
-                <button
-                    onClick={() => {
-                        setShowHint(false);
-                        toggleMobileSidebar();
-                    }}
-                    className="p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-transform active:scale-95"
-                >
-                    <Menu size={24} />
-                </button>
-            </div>
-        </div>
+            );
+       </div>
     );
 }
-
 

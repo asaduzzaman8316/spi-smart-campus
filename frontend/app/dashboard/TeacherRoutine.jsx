@@ -210,15 +210,6 @@ export default function TeacherRoutine({ onBack }) {
                 <AlertCircle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">No Classes Found</h3>
                 <p className="text-gray-500 dark:text-gray-400">You don&apos;t have any classes assigned in the routines.</p>
-                {/* Mobile Sidebar Toggle */}
-                <div className="fixed bottom-6 right-6 z-50 md:hidden">
-                    <button
-                        onClick={() => toggleMobileSidebar()}
-                        className="p-4 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-transform active:scale-95"
-                    >
-                        <Menu size={24} />
-                    </button>
-                </div>
             </div>
         );
     }
@@ -321,16 +312,6 @@ export default function TeacherRoutine({ onBack }) {
                     </div>
                 );
             })}
-
-            {/* Mobile Sidebar Toggle */}
-            <div className="fixed bottom-6 right-6 z-50 md:hidden">
-                <button
-                    onClick={() => toggleMobileSidebar()}
-                    className="p-4 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-transform active:scale-95"
-                >
-                    <Menu size={24} />
-                </button>
-            </div>
         </div>
     );
 }

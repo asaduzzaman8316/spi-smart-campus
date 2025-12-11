@@ -136,15 +136,6 @@ export default function TeacherToday({ onBack }) {
                     ))}
                 </div>
             )}
-            {/* Mobile Sidebar Toggle */}
-            <div className="fixed bottom-6 right-6 z-50 md:hidden">
-                <button
-                    onClick={() => toggleMobileSidebar()}
-                    className="p-4 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-transform active:scale-95"
-                >
-                    <Menu size={24} />
-                </button>
-            </div>
         </div>
     );
 }
