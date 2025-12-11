@@ -15,7 +15,7 @@ const INITIAL_TEACHER = {
     shift: '',
     role: '',
     image: '',
-    userType: 'teacher',
+    userType: '',
     id: 0
 };
 
@@ -139,8 +139,8 @@ export default function TeacherManager({ onBack }) {
                 department: currentTeacher.department,
                 shift: currentTeacher.shift,
                 image: currentTeacher.image,
-                role: currentTeacher.role || '',
-                userType: currentTeacher.userType || 'teacher'
+                role: currentTeacher.role,
+                userType: currentTeacher.userType
             };
             if (modalMode === 'add') {
                 await createTeacher(teacherData);
@@ -275,15 +275,16 @@ export default function TeacherManager({ onBack }) {
                                                     {teacher.name}
                                                 </h3>
                                                 <div className="flex items-center gap-2">
-                                                    {/* Show Admin badges, but for Teacher type show Role instead */}
-                                                    {teacher.userType !== 'teacher' && (
-                                                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${teacher.userType === 'super_admin'
-                                                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                                                            : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                                                            }`}>
-                                                            {teacher.userType === 'super_admin' ? 'Super Admin' : 'Dept Admin'}
-                                                        </span>
-                                                    )}
+                                                    {
+                                                        teacher.userType && (
+                                                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${teacher.userType === 'super_admin'
+                                                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                                                                : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                                                                }`}>
+                                                                {teacher.userType}
+                                                            </span>
+                                                        )
+                                                    }
 
                                                     {/* Show Role (Job Title) - effectively replaces "Teacher" tag */}
                                                     {teacher.role ? (

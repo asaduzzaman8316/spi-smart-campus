@@ -264,7 +264,228 @@ const sendAccountDeletionEmail = async (teacherEmail, teacherName) => {
     }
 };
 
+/**
+ * Send account unregister notification email to teacher
+ * @param {string} teacherEmail - Teacher's email address
+ * @param {string} teacherName - Teacher's name
+ */
+const sendAccountUnregisterEmail = async (teacherEmail, teacherName) => {
+    try {
+        const mailOptions = {
+            from: `"${process.env.EMAIL_FROM || 'SPI Smart Campus'}" <${process.env.EMAIL_USER}>`,
+            to: teacherEmail,
+            subject: 'SPI Smart Campus - Account Access Revoked',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .header {
+                            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                            color: white;
+                            padding: 30px;
+                            text-align: center;
+                            border-radius: 10px 10px 0 0;
+                        }
+                        .content {
+                            background: #f9f9f9;
+                            padding: 30px;
+                            border-radius: 0 0 10px 10px;
+                        }
+                        .info-box {
+                            background: white;
+                            border-left: 4px solid #f59e0b;
+                            padding: 20px;
+                            margin: 20px 0;
+                            border-radius: 5px;
+                        }
+                        .footer {
+                            text-align: center;
+                            margin-top: 30px;
+                            padding-top: 20px;
+                            border-top: 1px solid #ddd;
+                            color: #666;
+                            font-size: 12px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Account Access Revoked</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear ${teacherName},</p>
+                        
+                        <p>We are writing to inform you that your login access to SPI Smart Campus has been revoked by the administrator.</p>
+                        
+                        <div class="info-box">
+                            <h3 style="margin-top: 0; color: #d97706;">Account Status Update</h3>
+                            <p><strong>Email:</strong> ${teacherEmail}</p>
+                            <p><strong>Action Date:</strong> ${new Date().toLocaleDateString()}</p>
+                            <p><strong>Status:</strong> Unregistered / Inactive</p>
+                        </div>
+                        
+                        <p>Please note:</p>
+                        <ul>
+                            <li>Your profile information (Name, Department, etc.) remains in our system.</li>
+                            <li>You can no longer log in to the dashboard.</li>
+                            <li>If you need access again, please contact the administrator to reactivate your account.</li>
+                        </ul>
+                        
+                        <p>Best regards,<br>
+                        <strong>SPI Smart Campus Team</strong></p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>This is an automated message. Please do not reply to this email.</p>
+                        <p>&copy; ${new Date().getFullYear()} SPI Smart Campus. All rights reserved.</p>
+                    </div>
+                </body>
+                </html>
+            `
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Account unregister email sent successfully:', info.messageId);
+        return { success: true, messageId: info.messageId };
+    } catch (error) {
+        console.error('Error sending unregister email:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Send password reset email to teacher
+ * @param {string} teacherEmail - Teacher's email address
+ * @param {string} teacherName - Teacher's name
+ * @param {string} newPassword - The new password
+ */
+const sendPasswordResetEmail = async (teacherEmail, teacherName, newPassword) => {
+    try {
+        const mailOptions = {
+            from: `"${process.env.EMAIL_FROM || 'SPI Smart Campus'}" <${process.env.EMAIL_USER}>`,
+            to: teacherEmail,
+            subject: 'Security Update - Password Changed',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            line-height: 1.6;
+                            color: #333;
+                            max-width: 600px;
+                            margin: 0 auto;
+                            padding: 20px;
+                        }
+                        .header {
+                            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                            color: white;
+                            padding: 30px;
+                            text-align: center;
+                            border-radius: 10px 10px 0 0;
+                        }
+                        .content {
+                            background: #f9f9f9;
+                            padding: 30px;
+                            border-radius: 0 0 10px 10px;
+                        }
+                        .credentials-box {
+                            background: white;
+                            border-left: 4px solid #3b82f6;
+                            padding: 20px;
+                            margin: 20px 0;
+                            border-radius: 5px;
+                        }
+                        .credential-item {
+                            margin: 10px 0;
+                        }
+                        .credential-label {
+                            font-weight: bold;
+                            color: #3b82f6;
+                        }
+                        .credential-value {
+                            font-family: 'Courier New', monospace;
+                            background: #f0f0f0;
+                            padding: 8px 12px;
+                            border-radius: 4px;
+                            display: inline-block;
+                            margin-top: 5px;
+                            font-weight: bold;
+                        }
+                        .footer {
+                            text-align: center;
+                            margin-top: 30px;
+                            padding-top: 20px;
+                            border-top: 1px solid #ddd;
+                            color: #666;
+                            font-size: 12px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Password Changed</h1>
+                    </div>
+                    <div class="content">
+                        <p>Dear ${teacherName},</p>
+                        
+                        <p>Your password for SPI Smart Campus has been successfully reset by the administrator.</p>
+                        
+                        <div class="credentials-box">
+                            <h3 style="margin-top: 0; color: #3b82f6;">New Login Credentials</h3>
+                            
+                            <div class="credential-item">
+                                <div class="credential-label">Email Address:</div>
+                                <div class="credential-value">${teacherEmail}</div>
+                            </div>
+                            
+                            <div class="credential-item">
+                                <div class="credential-label">New Password:</div>
+                                <div class="credential-value">${newPassword}</div>
+                            </div>
+                        </div>
+                        
+                        <p>Please use this new password to log in. We recommend changing it after your first login.</p>
+                        
+                        <div style="text-align: center; margin-top: 20px;">
+                            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" style="background: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Login Now</a>
+                        </div>
+                        
+                        <p>Best regards,<br>
+                        <strong>SPI Smart Campus Team</strong></p>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>This is an automated message. Please do not reply to this email.</p>
+                        <p>&copy; ${new Date().getFullYear()} SPI Smart Campus. All rights reserved.</p>
+                    </div>
+                </body>
+                </html>
+            `
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Password reset email sent successfully:', info.messageId);
+        return { success: true, messageId: info.messageId };
+    } catch (error) {
+        console.error('Error sending password reset email:', error);
+        return { success: false, error: error.message };
+    }
+};
+
 module.exports = {
     sendAccountCreationEmail,
-    sendAccountDeletionEmail
+    sendAccountDeletionEmail,
+    sendAccountUnregisterEmail,
+    sendPasswordResetEmail
 };

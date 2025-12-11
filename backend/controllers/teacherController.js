@@ -78,7 +78,7 @@ const createTeacher = async (req, res) => {
             phone,
             image,
             shift,
-            userType: userType || 'teacher',
+            userType: userType || '',
             role: role || '',
             password: 'NO_ACCOUNT_YET' // Placeholder - will be set when account is created
         });
@@ -103,30 +103,51 @@ const updateTeacher = async (req, res) => {
     try {
         const { password, ...otherUpdates } = req.body;
         let plainPassword = null;
+        let isNewAccount = false;
 
-        // If updating password (creating account from Manage Teacher Account)
+        // Fetch original teacher to check current account status
+        const originalTeacher = await Teacher.findById(req.params.id);
+        if (!originalTeacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        // If updating password
         if (password) {
             const salt = await bcrypt.genSalt(10);
             otherUpdates.password = await bcrypt.hash(password, salt);
-            // Use provided userType or default to 'teacher' if not specified
-            // This allows creating Admins/Super Admins via this flow
-            otherUpdates.userType = req.body.userType || 'teacher';
-            plainPassword = password; // Store plain password for email
+            otherUpdates.userType = req.body.userType || '';
+            plainPassword = password;
+
+            // Check if this is a new account creation
+            console.log('Original teacher password:', originalTeacher.password);
+            console.log('Is NO_ACCOUNT_YET?', originalTeacher.password === 'NO_ACCOUNT_YET');
+            console.log('Is empty/null?', !originalTeacher.password);
+
+            if (!originalTeacher.password || originalTeacher.password === 'NO_ACCOUNT_YET') {
+                isNewAccount = true;
+                console.log('Detected as NEW ACCOUNT');
+            } else {
+                console.log('Detected as PASSWORD RESET');
+            }
         }
 
         const teacher = await Teacher.findByIdAndUpdate(req.params.id, otherUpdates, { new: true });
 
-        if (!teacher) {
-            return res.status(404).json({ message: 'Teacher not found' });
-        }
-
-        // Send email if password was updated (account created)
+        // Send appropriate email
         if (plainPassword) {
-            const { sendAccountCreationEmail } = require('../config/emailService');
-            const emailResult = await sendAccountCreationEmail(teacher.email, teacher.name, plainPassword);
+            const { sendAccountCreationEmail, sendPasswordResetEmail } = require('../config/emailService');
+            let emailResult;
+
+            if (isNewAccount) {
+                // New Account -> Welcome Email
+                emailResult = await sendAccountCreationEmail(teacher.email, teacher.name, plainPassword);
+            } else {
+                // Existing Account -> Password Reset Email
+                emailResult = await sendPasswordResetEmail(teacher.email, teacher.name, plainPassword);
+            }
 
             if (!emailResult.success) {
-                console.error('Failed to send password update email:', emailResult.error);
+                console.error('Failed to send email:', emailResult.error);
             }
 
             return res.status(200).json({
@@ -179,12 +200,36 @@ const deleteTeacher = async (req, res) => {
 // We will just return not implemented or remove functionality if not needed.
 // For now, let's just do nothing or maybe delete the password?)
 const unregisterTeacher = async (req, res) => {
-    // In JWT world, maybe "deactivate"? 
-    // For now, I'll basically leave it as a placeholder or remove it. 
-    // Let's implement it as "RESET to default password and disable login" if we had an "isActive" flag.
-    // For now, let's just delete the record? No, "unregister" implies keeping the record but removing access.
-    // I'll implementation it as clearing the password or setting it to a random un-knowable string.
-    res.status(501).json({ message: 'Unregister functionality deprecated in JWT version. Use Delete or Update.' });
+    try {
+        const teacher = await Teacher.findById(req.params.id);
+        if (!teacher) {
+            return res.status(404).json({ message: 'Teacher not found' });
+        }
+
+        // Reset password to indicate no account
+        teacher.password = 'NO_ACCOUNT_YET';
+        // Reset userType to default teacher just in case, or keep it? 
+        // Let's reset it to 'teacher' to be safe, or keep it as placeholder. 
+        // The user request said "delete his account login details", implies removing access.
+        // Keeping the role/department data intact.
+
+        await teacher.save();
+
+        // Send notification email
+        const { sendAccountUnregisterEmail } = require('../config/emailService');
+        const emailResult = await sendAccountUnregisterEmail(teacher.email, teacher.name);
+
+        if (!emailResult.success) {
+            console.error('Failed to send unregister email:', emailResult.error);
+        }
+
+        res.status(200).json({
+            message: 'Teacher account unregistered successfully',
+            emailSent: emailResult.success
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
 // @desc    Register a teacher (Link Firebase UID) -> Deprecated

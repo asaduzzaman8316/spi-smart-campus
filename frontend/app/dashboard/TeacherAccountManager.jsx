@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { fetchTeachers, deleteTeacher, updateTeacher } from '../../Lib/api';
+import { fetchTeachers, deleteTeacher, updateTeacher, unregisterTeacher } from '../../Lib/api';
 import { UserPlus, Check, X, Loader2, Search, User, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -63,17 +63,20 @@ export default function TeacherAccountManager() {
 
     const handleDeleteTeacher = async (teacher) => {
         try {
-            const response = await deleteTeacher(teacher.docId || teacher._id);
-            if (response?.emailSent) {
-                toast.success("Teacher deleted and notification email sent");
+            if (teacher.hasAccount) {
+                // Unregister only (remove access)
+                await unregisterTeacher(teacher.docId || teacher._id);
+                toast.success("Teacher access removed (Unregistered)");
             } else {
-                toast.success("Teacher and Account deleted successfully");
+                // Permanently delete
+                await deleteTeacher(teacher.docId || teacher._id);
+                toast.success("Teacher deleted successfully");
             }
             setDeleteConfirm(null);
             loadTeachers();
         } catch (error) {
             console.error("Error deleting teacher:", error);
-            toast.error("Failed to delete teacher");
+            toast.error("Failed to delete/unregister teacher");
         }
     };
 
@@ -339,7 +342,19 @@ export default function TeacherAccountManager() {
                                 </h2>
                             </div>
                             <p className="text-gray-600 dark:text-slate-300 mb-6">
-                                Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.name}</span>? This action cannot be undone and will remove their account and profile.
+                                {deleteConfirm.hasAccount ? (
+                                    <>
+                                        Are you sure you want to unregister <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.name}</span>?
+                                        <br /><span className="text-sm text-red-500">This will remove their login access but keep their profile data.</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">{deleteConfirm.name}</span>?
+                                        <br /><span className="text-sm text-red-500">This action cannot be undone and will remove their account and profile.</span>
+                                    </>
+
+                                )}
+
                             </p>
 
                             <div className="flex gap-3">
@@ -353,7 +368,7 @@ export default function TeacherAccountManager() {
                                     onClick={() => handleDeleteTeacher(deleteConfirm)}
                                     className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium"
                                 >
-                                    Delete
+                                    {deleteConfirm.hasAccount ? 'Unregister' : 'Delete'}
                                 </button>
                             </div>
                         </div>

@@ -157,3 +157,8 @@ export const fetchDepartments = async () => {
     return data && data.data ? data.data : data;
 };
 
+// Unregister
+export const unregisterTeacher = async (id) => {
+    const { data } = await api.put(`/teachers/unregister/${id}`);
+    return data;
+};
