@@ -97,7 +97,7 @@ export default function NoticeBoardSection() {
                                 </h3>
 
                                 <p className="text-gray-600 dark:text-gray-300 mb-6 line-clamp-3 leading-relaxed text-sm">
-                                    {notice.content}
+                                    {notice.content.replace(/<[^>]*>?/gm, '')}
                                 </p>
 
                                 <div className="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-800">

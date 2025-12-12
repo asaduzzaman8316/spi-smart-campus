@@ -93,7 +93,7 @@ export default function AllNoticesPage() {
     );
 
     return (
-        <div className="min-h-screen bg-[#FFFBF2] dark:bg-[#0B1120] flex flex-col">
+        <div className="min-h-screen pt-18 bg-[#FFFBF2] dark:bg-[#0B1120] flex flex-col">
             <main className="flex-1 container mx-auto px-4 max-w-7xl py-12">
                 {/* Header Section */}
                 <div className="text-center mb-12">
@@ -180,7 +180,7 @@ export default function AllNoticesPage() {
                             </h3>
 
                             <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm leading-relaxed flex-1 whitespace-pre-wrap">
-                                {notice.content}
+                                {notice.content.replace(/<[^>]*>?/gm, '')}
                             </p>
 
                             <div className="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-800 mt-auto">

@@ -2,11 +2,27 @@
 import Link from 'next/link'
 import { Calendar, Play, Sparkles } from 'lucide-react'
 import Image from 'next/image'
-import { useState } from 'react'
+import { fetchNotices } from '../../Lib/api'
+import { useState, useEffect } from 'react'
 import VideoModal from './VideoModal'
 
 export default function Hero() {
     const [isVideoOpen, setIsVideoOpen] = useState(false)
+    const [recentNotice, setRecentNotice] = useState(null)
+
+    useEffect(() => {
+        const getNotice = async () => {
+            try {
+                const data = await fetchNotices();
+                if (data && data.length > 0) {
+                    setRecentNotice(data[0]); // Get the most recent one
+                }
+            } catch (error) {
+                console.error("Failed to fetch ticker notice");
+            }
+        };
+        getNotice();
+    }, []);
 
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#FFFBF2] dark:bg-[#0B1120]">
@@ -26,6 +42,7 @@ export default function Hero() {
 
                 {/* Floating Technology Badges */}
                 <div className="hidden lg:block absolute inset-0 pointer-events-none select-none">
+                    {/* ... (existing badges) ... */}
                     {/* Top Left - Computer */}
                     <div className="absolute top-[10%] left-[5%] -rotate-2">
                         <span className="bg-white/80 dark:bg-[#1E293B]/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-full text-xs font-semibold text-gray-700 dark:text-gray-200 shadow-sm uppercase tracking-wide">
@@ -96,6 +113,27 @@ export default function Hero() {
                         </span>
                     </div>
                 </div>
+
+                {/* Mobile Ticker - Infinite Ribbon Style */}
+                {recentNotice && (
+                    <div className="md:hidden w-full max-w-sm mx-auto mb-6 bg-white/50 dark:bg-[#1E293B]/50 backdrop-blur-md rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden relative">
+                        {/* Gradient Masks for fading edges */}
+                        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 bg-linear-to-r from-[#FFFBF2]/80 to-transparent dark:from-[#0B1120]/80"></div>
+                        <div className="absolute right-0 top-0 bottom-0 w-8 z-10 bg-linear-to-l from-[#FFFBF2]/80 to-transparent dark:from-[#0B1120]/80"></div>
+
+                        <div className="py-2 animate-infinite-scroll flex gap-8 whitespace-nowrap">
+                            {/* Duplicate content enough times to ensure seamless loop */}
+                            {[...Array(4)].map((_, i) => (
+                                <Link key={i} href={`/notices/${recentNotice._id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                                    <span className="text-sm font-bold text-[#FF5C35]">New:</span>
+                                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                        {recentNotice.title.replace(/<[^>]*>?/gm, '')} <span className="text-gray-400 mx-2">•</span> {recentNotice.category}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
 
                 {/* Animated Top Badge */}
