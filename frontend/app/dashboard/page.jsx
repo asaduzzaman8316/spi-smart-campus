@@ -29,6 +29,8 @@ import {
     Bell
 } from 'lucide-react';
 import NoticeManager from "./NoticeManager";
+import DashboardNotice from "./DashboardNotice";
+import { useSearchParams } from 'next/navigation';
 
 const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
     <button
@@ -63,12 +65,21 @@ export default function DashboardPage() {
 
     const userRole = authUser?.userType;
     const [editingRoutine, setEditingRoutine] = useState(null);
+    const searchParams = useSearchParams();
 
     useEffect(() => {
         if (!authLoading && !authUser) {
             router.push('/login');
         }
     }, [authUser, authLoading, router]);
+
+    // Handle Deep Linking
+    useEffect(() => {
+        const view = searchParams.get('view');
+        if (view) {
+            setActiveView(view);
+        }
+    }, [searchParams]);
 
     const renderContent = () => {
         switch (activeView) {
@@ -162,6 +173,15 @@ export default function DashboardPage() {
                                         colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
                                     />
                                 </>
+                            )}
+                            {(userRole === 'teacher') && (
+                                <DashboardCard
+                                    icon={Bell}
+                                    label="Notice Board"
+                                    description="View academic notices and updates."
+                                    onClick={() => setActiveView('notices')}
+                                    colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
+                                />
                             )}
                             {(userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') && (
                                 <>
@@ -268,6 +288,7 @@ export default function DashboardPage() {
             case 'load-analysis':
                 return <LoadAnalysis />;
             case 'notices':
+                if (userRole === 'teacher') return <DashboardNotice />;
                 return <NoticeManager />;
             default:
                 return <div>Select a view</div>;

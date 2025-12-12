@@ -20,7 +20,9 @@ export default function AllNoticesPage() {
         const loadNotices = async () => {
             try {
                 const data = await fetchNotices();
-                setNotices(data);
+                // Filter for students only
+                const studentNotices = data.filter(n => n.targetAudience === 'Students' || n.targetAudience === 'All');
+                setNotices(studentNotices);
             } catch (error) {
                 console.error("Failed to fetch notices");
             } finally {
@@ -211,8 +213,8 @@ export default function AllNoticesPage() {
 
             {/* Hidden Official PDF Template */}
             {printingNotice && (
-                <div 
-                    className="fixed top-0 left-[-9999px] p-12 w-[800px]" 
+                <div
+                    className="fixed top-0 left-[-9999px] p-12 w-[800px]"
                     ref={printRef}
                     style={{ backgroundColor: '#ffffff', color: '#000000' }}
                 >

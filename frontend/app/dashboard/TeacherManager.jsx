@@ -15,7 +15,7 @@ const INITIAL_TEACHER = {
     shift: '',
     role: '',
     image: '',
-    userType: '',
+    userType: 'teacher'||'',
     id: 0
 };
 

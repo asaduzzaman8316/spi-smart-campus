@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchNotices } from '../../Lib/api';
 import { Bell, Calendar, Pin, AlertCircle, Book, Trophy } from 'lucide-react';
+import Link from 'next/link';
 
 export default function NoticeBoardSection() {
     const [notices, setNotices] = useState([]);
@@ -12,7 +13,9 @@ export default function NoticeBoardSection() {
         const getNotices = async () => {
             try {
                 const data = await fetchNotices('', '', 5); // Fetch top 5 notices
-                setNotices(data);
+                // Filter for students only
+                const studentNotices = data.filter(n => n.targetAudience === 'Students' || n.targetAudience === 'All');
+                setNotices(studentNotices);
             } catch (error) {
                 console.error("Failed to fetch notices");
             } finally {
@@ -119,10 +122,10 @@ export default function NoticeBoardSection() {
                 </div>
 
                 <div className="mt-12 text-center">
-                    <a href="/notices" className="inline-flex items-center gap-2 text-[#FF5C35] font-semibold hover:gap-3 transition-all group">
+                    <Link href="/notices" className="inline-flex items-center gap-2 text-[#FF5C35] font-semibold hover:gap-3 transition-all group">
                         View All Notices
                         <span className="text-xl group-hover:translate-x-1 transition-transform">→</span>
-                    </a>
+                    </Link>
                 </div>
             </div>
         </section>

@@ -26,7 +26,7 @@ export default function CTA() {
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </Link>
                         <Link
-                            href="/teachers"
+                            href="/teacher"
                             className="bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-[#FF5C35] dark:hover:border-[#FF5C35] text-[#2C1810] dark:text-white font-semibold px-8 py-4 rounded-full leading-loose tracking-[1px] transition-all duration-300 flex items-center gap-2"
                         >
                             <span>Browse Teachers</span>

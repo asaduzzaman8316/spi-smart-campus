@@ -50,13 +50,13 @@ const protect = async (req, res, next) => {
 const authorize = (...roles) => {
     return (req, res, next) => {
         // Super admin has access to everything admin has
-        if (req.user.role === 'super_admin' && roles.includes('admin')) {
+        if (req.user.userType === 'super_admin' && roles.includes('admin')) {
             return next();
         }
 
-        if (!roles.includes(req.user.role)) {
+        if (!roles.includes(req.user.userType)) {
             return res.status(403).json({
-                message: `User role ${req.user.role} is not authorized to access this route`
+                message: `User role ${req.user.userType} is not authorized to access this route`
             });
         }
         next();
@@ -65,7 +65,7 @@ const authorize = (...roles) => {
 
 // Allow access to owner of the resource or admin
 const authorizeOwnerOrAdmin = (req, res, next) => {
-    if (req.user.role === 'admin' || req.user.role === 'super_admin') {
+    if (req.user.userType === 'admin' || req.user.userType === 'super_admin') {
         return next();
     }
 

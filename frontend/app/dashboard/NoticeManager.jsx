@@ -11,7 +11,7 @@ import 'react-quill-new/dist/quill.snow.css';
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 export default function NoticeManager() {
-    const { authUser } = useAuth();
+    const { user: authUser } = useAuth();
     const [notices, setNotices] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -21,6 +21,7 @@ export default function NoticeManager() {
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingNotice, setEditingNotice] = useState(null);
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [formData, setFormData] = useState({
         title: '',
         content: '',
@@ -32,10 +33,12 @@ export default function NoticeManager() {
 
     useEffect(() => {
         loadData();
+        const interval = setInterval(() => loadData(true), 10000); // Poll every 10s silently
+        return () => clearInterval(interval);
     }, []);
 
-    const loadData = async () => {
-        setLoading(true);
+    const loadData = async (isBackground = false) => {
+        if (!isBackground) setLoading(true);
         try {
             const [noticesData, deptsData] = await Promise.all([
                 fetchNotices(),
@@ -44,9 +47,9 @@ export default function NoticeManager() {
             setNotices(noticesData);
             setDepartments(deptsData);
         } catch (error) {
-            toast.error('Failed to load data');
+            if (!isBackground) toast.error('Failed to load data');
         } finally {
-            setLoading(false);
+            if (!isBackground) setLoading(false);
         }
     };
 
@@ -68,12 +71,13 @@ export default function NoticeManager() {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this notice?')) return;
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
         try {
-            await deleteNotice(id);
+            await deleteNotice(deleteConfirm._id);
             toast.success('Notice deleted');
             loadData();
+            setDeleteConfirm(null);
         } catch (error) {
             toast.error('Failed to delete notice');
         }
@@ -88,11 +92,7 @@ export default function NoticeManager() {
             targetAudience: notice.targetAudience,
             department: notice.department,
             isPinned: notice.isPinned,
-            postedByName: notice.postedByName,
-            memoNo: notice.memoNo,
-            signatoryName: notice.signatoryName,
-            signatoryDesignation: notice.signatoryDesignation,
-            ccList: notice.ccList || []
+            postedByName: notice.postedByName
         });
         setIsModalOpen(true);
     };
@@ -107,10 +107,6 @@ export default function NoticeManager() {
             department: 'All',
             isPinned: false,
             postedByName: authUser?.name || 'Admin', // Default to current user
-            memoNo: '',
-            signatoryName: 'Engr. Md. Rihan Uddin',
-            signatoryDesignation: 'Principal (Acting)',
-            ccList: []
         });
     };
 
@@ -153,12 +149,6 @@ export default function NoticeManager() {
                     // But modules handler is separate. 
                     // Let's use a workaround or useRef.
                 };
-                // React-Quill specific: context 'this' in handler points to quill instance if not arrow function?
-                // Actually in functional component it's tricky.
-
-                // Let's just read it and update generic formData.content? No, we need to insert into editor.
-
-                // Better approach with useRef for ReactQuill
             }
         };
     }
@@ -258,17 +248,16 @@ export default function NoticeManager() {
                         <option value="Urgent">Urgent</option>
                     </select>
                 </div>
-
-                {/* Only Show Create Button for Admins */}
-                {(authUser?.userType === 'super_admin' || authUser?.userType === 'department_admin' || authUser?.userType === 'dept_admin') && (
-                    <button
-                        onClick={() => { resetForm(); setIsModalOpen(true); }}
-                        className="w-full md:w-auto bg-[#FF5C35] hover:bg-[#e64722] text-white px-6 py-3 rounded-2xl transition-all shadow-lg shadow-[#FF5C35]/20 hover:shadow-[#FF5C35]/30 flex items-center justify-center gap-2 font-medium"
-                    >
-                        <Plus size={20} />
-                        New Notice
-                    </button>
-                )}
+                <button
+                    onClick={() => {
+                        resetForm();
+                        setIsModalOpen(true);
+                    }}
+                    className="w-full md:w-auto bg-[#FF5C35] hover:bg-[#e64722] text-white px-6 py-3 rounded-2xl transition-all shadow-lg shadow-[#FF5C35]/20 hover:shadow-[#FF5C35]/30 flex items-center justify-center gap-2 font-medium"
+                >
+                    <Plus size={20} />
+                    New Notice
+                </button>
             </div>
 
             {/* List */}
@@ -299,22 +288,20 @@ export default function NoticeManager() {
                             </div>
 
                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                {(authUser?.userType === 'super_admin' || authUser?.userType === 'department_admin' || authUser?.userType === 'dept_admin') && (
-                                    <>
-                                        <button
-                                            onClick={() => openEditModal(notice)}
-                                            className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                                        >
-                                            <Edit2 size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(notice._id)}
-                                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </>
-                                )}
+                                <>
+                                    <button
+                                        onClick={() => openEditModal(notice)}
+                                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                    >
+                                        <Edit2 size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => setDeleteConfirm(notice)}
+                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </>
                             </div>
                         </div>
 
@@ -499,6 +486,39 @@ export default function NoticeManager() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-[#1E293B] rounded-2xl max-w-md w-full border border-gray-200 dark:border-gray-800 shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="p-6">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="bg-red-50 dark:bg-red-500/10 p-3 rounded-full border border-red-100 dark:border-transparent">
+                                    <Trash2 className="text-red-500" size={24} />
+                                </div>
+                                <h2 className="text-xl font-bold text-[#2C1810] dark:text-white">Delete Notice</h2>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                                Are you sure you want to delete <span className="font-semibold text-[#2C1810] dark:text-white">"{deleteConfirm.title}"</span>? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    className="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl transition-colors font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-colors font-medium shadow-lg shadow-red-500/20"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

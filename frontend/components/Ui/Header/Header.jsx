@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { LayoutDashboard, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
+import NotificationBell from '../NotificationBell';
 
 export default function Header() {
     const { user } = useAuth()
@@ -22,7 +23,7 @@ export default function Header() {
     const toggleMenu = () => setIsOpen(!isOpen);
 
     const navLinks = [
-        { name: 'Home', href: '/' },    
+        { name: 'Home', href: '/' },
         { name: 'Notice Board', href: '/notices' },
         { name: 'About', href: '/about' },
         { name: 'Today', href: '/today' },
@@ -91,13 +92,15 @@ export default function Header() {
                                 Admin Login
                             </Link>
                         )}
+                        <NotificationBell />
                         <ThemeSwitcher />
                     </div>
 
                     {/* Mobile menu button */}
                     <div className="md:hidden ">
                         <div className='flex items-center justify-center gap-3'>
-                            <div className="flex justify-start">
+                            <div className="flex justify-start gap-3">
+                                <NotificationBell />
                                 <ThemeSwitcher />
                             </div>
                             <button

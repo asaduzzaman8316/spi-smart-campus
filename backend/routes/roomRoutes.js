@@ -17,5 +17,4 @@ router.route('/')
 router.route('/:id')
     .put(protect, authorize('admin'), updateRoom)
     .delete(protect, authorize('admin'), idValidation, deleteRoom);
-
 module.exports = router;

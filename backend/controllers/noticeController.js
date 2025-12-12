@@ -60,6 +60,31 @@ const createNotice = async (req, res) => {
             postedByName: req.user.name || 'Admin', // Assuming req.user has name from auth middleware
         });
 
+        // Create Notification for Admins
+        const Notification = require('../models/Notification');
+
+        // Notify Admins
+        await Notification.create({
+            recipientType: 'all_admins',
+            senderId: req.user._id,
+            title: 'New Notice Posted',
+            message: `${req.user.name || 'Admin'} posted a new notice: "${title}"`,
+            type: 'info',
+            link: '/dashboard?view=notices',
+        });
+
+        // Notify Teachers if applicable
+        if (targetAudience === 'Teachers' || targetAudience === 'All') {
+            await Notification.create({
+                recipientType: 'all_teachers',
+                senderId: req.user._id,
+                title: 'New Notice: ' + title,
+                message: `New notice posted for teachers: "${title}"`,
+                type: 'info',
+                link: '/dashboard?view=notices',
+            });
+        }
+
         res.status(201).json(notice);
     } catch (error) {
         res.status(400).json({ message: error.message });

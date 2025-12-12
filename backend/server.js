@@ -64,6 +64,7 @@ app.use('/api/admins', require('./routes/adminRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/setup', require('./routes/setupRoutes'));
 app.use('/api/notices', require('./routes/noticeRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 app.use(notFound);
 app.use(errorHandler);
