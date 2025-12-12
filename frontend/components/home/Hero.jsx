@@ -2,8 +2,12 @@
 import Link from 'next/link'
 import { Calendar, Play, Sparkles } from 'lucide-react'
 import Image from 'next/image'
+import { useState } from 'react'
+import VideoModal from './VideoModal'
 
 export default function Hero() {
+    const [isVideoOpen, setIsVideoOpen] = useState(false)
+
     return (
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#FFFBF2] dark:bg-[#0B1120]">
             {/* Background Image */}
@@ -131,6 +135,7 @@ export default function Hero() {
                     </Link>
 
                     <button
+                        onClick={() => setIsVideoOpen(true)}
                         className="group flex items-center gap-3 text-gray-800 dark:text-gray-200 hover:text-black dark:hover:text-white font-medium transition-colors"
                     >
                         <div className="w-12 h-12 rounded-full border border-gray-300 dark:border-gray-600 flex items-center justify-center group-hover:border-black dark:group-hover:border-white transition-colors bg-transparent">
@@ -140,6 +145,12 @@ export default function Hero() {
                     </button>
                 </div>
             </div>
+
+            <VideoModal
+                isOpen={isVideoOpen}
+                onClose={() => setIsVideoOpen(false)}
+                videoId="LXb3EKWsInQ"
+            />
         </section>
     )
 }

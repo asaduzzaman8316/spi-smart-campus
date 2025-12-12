@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { analyzeLoad, fetchDepartments } from '../../Lib/api';
-import { BarChart3, Download, Filter, Users, BookOpen, Clock } from 'lucide-react';
+import { BarChart3, Download, Filter, Users, BookOpen, Clock, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
 const SHIFTS = ["1st", "2nd"];
@@ -30,13 +32,14 @@ export default function LoadAnalysis() {
     };
 
     const handleAnalyze = async () => {
-        if (!selectedDepartment || !selectedSemester || !selectedShift) {
-            toast.warning('Please select Department, Semester, and Shift');
+        if (!selectedDepartment) {
+            toast.warning('Please select at least a Department');
             return;
         }
 
         setLoading(true);
         try {
+            // Pass empty strings if not selected to fetch all
             const result = await analyzeLoad(selectedDepartment, selectedSemester, selectedShift);
             if (result.success) {
                 setLoadData(result.data);
@@ -55,6 +58,170 @@ export default function LoadAnalysis() {
 
     const handlePrint = () => {
         window.print();
+    };
+
+    const generatePDF = () => {
+        if (!loadData) return;
+
+        const doc = new jsPDF();
+        const date = new Date().toLocaleDateString('en-GB');
+
+        // Header
+        doc.setFont("times", "bold");
+        doc.setFontSize(18);
+        doc.text('Sylhet Polytechnic Institute', 105, 15, { align: 'center' });
+        
+        doc.setFontSize(14);
+        doc.text(`Dept: ${selectedDepartment}`, 105, 25, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.text('Load Distribution', 105, 32, { align: 'center' });
+        
+        let shiftText = selectedShift ? `${selectedShift} Shift` : 'All Shifts';
+        if (selectedSemester) shiftText += ` - Semester ${selectedSemester}`;
+        doc.text(shiftText, 105, 38, { align: 'center' });
+
+        // Group data by teacher
+        const groupedData = {};
+        loadData.assignments.forEach(item => {
+            if (!groupedData[item.teacherName]) {
+                groupedData[item.teacherName] = [];
+            }
+            groupedData[item.teacherName].push(item);
+        });
+
+        const tableBody = [];
+        let serialNo = 1;
+
+        Object.keys(groupedData).forEach(teacherName => {
+            const assignments = groupedData[teacherName];
+            const totalTeacherLoad = assignments.reduce((sum, curr) => sum + curr.totalLoad, 0);
+
+            assignments.forEach((assignment, index) => {
+                const row = [];
+                
+                // Col 1: SL (RowSpan)
+                if (index === 0) {
+                    row.push({ content: serialNo++, rowSpan: assignments.length, styles: { valign: 'middle', halign: 'center' } });
+                }
+
+                // Col 2: Teacher Name (RowSpan)
+                if (index === 0) {
+                    row.push({ content: teacherName, rowSpan: assignments.length, styles: { valign: 'middle' } });
+                }
+
+                // Col 3: Subject Name
+                row.push(assignment.subject);
+
+                // Col 4: Sub Code
+                row.push(assignment.subjectCode);
+
+                // Col 5: Technology
+                row.push(assignment.technology);
+
+                // Col 6: T
+                row.push({ content: assignment.theoryPeriods, styles: { halign: 'center' } });
+
+                // Col 7: P
+                row.push({ content: assignment.practicalPeriods, styles: { halign: 'center' } });
+
+                // Col 8: Load (Subject Total)
+                row.push({ content: assignment.totalLoad, styles: { halign: 'center' } });
+
+                // Col 9: Total Load (Teacher Total - RowSpan)
+                if (index === 0) {
+                    row.push({ content: totalTeacherLoad, rowSpan: assignments.length, styles: { valign: 'middle', halign: 'center', fontStyle: 'bold' } });
+                }
+
+                // Col 10: Room
+                row.push(assignment.rooms);
+
+                // Col 11: Remarks
+                row.push('');
+
+                tableBody.push(row);
+            });
+        });
+
+        // Add summary/total row at the end
+        tableBody.push([
+            { content: '', colSpan: 5, styles: { fillColor: [255, 255, 255] } }, // Spacer
+            { content: loadData.summary.totalTheory, styles: { halign: 'center', fontStyle: 'bold' } },
+            { content: loadData.summary.totalPractical, styles: { halign: 'center', fontStyle: 'bold' } },
+            { content: loadData.summary.totalPeriods, styles: { halign: 'center', fontStyle: 'bold' } },
+            { content: '', colSpan: 3, styles: { fillColor: [255, 255, 255] } }
+        ]);
+
+        autoTable(doc, {
+            head: [[
+                { content: 'SL.N', styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Name of the teacher', styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Subject Name', styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Sub Code', styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Technology', styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Load', colSpan: 3, styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Total Load', styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Lab/ Shop/ Room', styles: { halign: 'center', valign: 'middle' } },
+                { content: 'Rema rks', styles: { halign: 'center', valign: 'middle' } }
+            ], [
+                { content: '', colSpan: 5 }, // Skip first 5
+                { content: 'T', styles: { halign: 'center' } },
+                { content: 'P', styles: { halign: 'center' } },
+                { content: 'Load', styles: { halign: 'center' } },
+                { content: '', colSpan: 3 } // Skip last 3
+            ]],
+            body: tableBody,
+            startY: 45,
+            theme: 'grid',
+            styles: {
+                fontSize: 9,
+                cellPadding: 2,
+                lineColor: [0, 0, 0],
+                lineWidth: 0.1,
+                textColor: [0, 0, 0], // Black text
+                font: "times" // Serif font matches document
+            },
+            headStyles: {
+                fillColor: [255, 255, 255], // White background for header
+                textColor: [0, 0, 0],
+                fontStyle: 'bold',
+                lineWidth: 0.1,
+                lineColor: [0, 0, 0]
+            },
+            columnStyles: {
+                0: { cellWidth: 8 },  // SL
+                1: { cellWidth: 35 }, // Teacher Name
+                2: { cellWidth: 35 }, // Subject
+                3: { cellWidth: 15 }, // Code
+                4: { cellWidth: 35 }, // Technology
+                5: { cellWidth: 8 },  // T
+                6: { cellWidth: 8 },  // P
+                7: { cellWidth: 10 }, // Load
+                8: { cellWidth: 10 }, // Total Load
+                9: { cellWidth: 15 }, // Room
+                10: { cellWidth: 12 } // Remarks
+            },
+            didParseCell: function(data) {
+                // Ensure hidden cells (due to rowspan) aren't drawn incorrectly
+                // autoTable handles this automatically if configured right
+            }
+        });
+
+        // Summary Statistics at the bottom
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(10);
+        doc.text(`Total Teachers: ${loadData.summary.totalTeachers}`, 14, finalY);
+        doc.text(`Total Assignments: ${loadData.summary.totalAssignments}`, 14, finalY + 5);
+        doc.text(`Average Load: ${loadData.summary.averageLoad}`, 14, finalY + 10);
+        
+        // Footer signature areas
+        doc.text("________________", 40, finalY + 40, { align: 'center' });
+        doc.text("Department Head", 40, finalY + 45, { align: 'center' });
+
+        doc.text("________________", 170, finalY + 40, { align: 'center' });
+        doc.text("Principal", 170, finalY + 45, { align: 'center' });
+
+        doc.save(`load_distribution_${selectedDepartment}_${date.replace(/\//g, '-')}.pdf`);
     };
 
     return (
@@ -88,42 +255,42 @@ export default function LoadAnalysis() {
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Department</label>
+                            <label className="block text-sm font-medium text-text-secondary">Department <span className="text-red-500">*</span></label>
                             <select
                                 value={selectedDepartment}
                                 onChange={(e) => setSelectedDepartment(e.target.value)}
                                 className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
                             >
                                 <option value="">Select Department</option>
-                                {departments.slice(0, 7).map((dept,index) => (
+                                {departments.slice(0, 7).map((dept, index) => (
                                     <option key={index} value={dept.name}>{dept.name}</option>
                                 ))}
                             </select>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Semester</label>
+                            <label className="block text-sm font-medium text-text-secondary">Semester (Optional)</label>
                             <select
                                 value={selectedSemester}
                                 onChange={(e) => setSelectedSemester(e.target.value)}
                                 className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
                             >
-                                <option value="">Select Semester</option>
-                                {SEMESTERS.map((sem,index) => (
+                                <option value="">All Semesters</option>
+                                {SEMESTERS.map((sem, index) => (
                                     <option key={index} value={sem}>Semester {sem}</option>
                                 ))}
                             </select>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Shift</label>
+                            <label className="block text-sm font-medium text-text-secondary">Shift (Optional)</label>
                             <select
                                 value={selectedShift}
                                 onChange={(e) => setSelectedShift(e.target.value)}
                                 className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
                             >
-                                <option value="">Select Shift</option>
-                                {SHIFTS.map((shift,index) => (
+                                <option value="">All Shifts</option>
+                                {SHIFTS.map((shift, index) => (
                                     <option key={index} value={shift}>{shift} Shift</option>
                                 ))}
                             </select>
@@ -193,13 +360,15 @@ export default function LoadAnalysis() {
                             <h2 className="text-xl font-semibold font-serif text-[#2C1810] dark:text-white">
                                 Teacher Load Distribution
                             </h2>
-                            <button
-                                onClick={handlePrint}
-                                className="inline-flex items-center gap-2 bg-[#FF5C35] hover:bg-[#e64722] text-white px-4 py-2 rounded-lg transition-colors shadow-lg"
-                            >
-                                <Download size={18} />
-                                Print
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={generatePDF}
+                                    className="inline-flex items-center gap-2 bg-[#FF5C35] hover:bg-[#e64722] text-white px-4 py-2 rounded-lg transition-colors shadow-lg"
+                                >
+                                    <FileText size={18} />
+                                    Download PDF
+                                </button>
+                            </div>
                         </div>
 
                         <div className="overflow-x-auto">

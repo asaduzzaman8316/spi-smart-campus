@@ -120,6 +120,42 @@ const analyzeLoad = async (req, res) => {
             return endMinutes - startMinutes;
         };
 
+        // Department Short Name Mapping
+        const DEPT_SHORT_NAMES = {
+            'Computer': 'CST',
+            'Computer Science': 'CST',
+            'Computer Technology': 'CST',
+            'Computer Science & Technology': 'CST',
+            'Computer Science and Technology': 'CST',
+            'Civil': 'CT',
+            'Civil Technology': 'CT',
+            'Electrical': 'ET',
+            'Electrical Technology': 'ET',
+            'Electronics': 'ENT',
+            'Electronics Technology': 'ENT',
+            'Mechanical': 'MT',
+            'Mechanical Technology': 'MT',
+            'Power': 'PT',
+            'Power Technology': 'PT',
+            'Electromedical': 'EMT',
+            'Electromedical Technology': 'EMT',
+            'Environmental': 'EnvT',
+            'Environmental Technology': 'EnvT',
+            'Food': 'FT',
+            'Food Technology': 'FT',
+            'Architecture': 'AT',
+            'Architecture Technology': 'AT',
+            'Automobile': 'AuT',
+            'Automobile Technology': 'AuT',
+            'Refrigeration and Air Conditioning': 'RAC',
+            'Refrigeration and Air Conditioning Technology': 'RAC',
+            'Mechatronics': 'McT',
+            'Mechatronics Technology': 'McT',
+            'Data Telecommunication and Networking': 'DNT',
+            'Data Telecommunication and Networking Technology': 'DNT',
+            'Non Tech': 'Non-Tech'
+        };
+
         // Map to store teacher assignments
         const teacherMap = new Map();
 
@@ -139,7 +175,7 @@ const analyzeLoad = async (req, res) => {
                             teacherName: cls.teacher,
                             subject: cls.subject,
                             subjectCode: cls.subjectCode || '',
-                            classGroups: new Set(),
+                            groupsMap: new Map(), // Use Map for grouping by Sem/Dept
                             theoryPeriods: 0,
                             practicalPeriods: 0,
                             rooms: new Set()
@@ -147,7 +183,15 @@ const analyzeLoad = async (req, res) => {
                     }
 
                     const entry = teacherMap.get(key);
-                    entry.classGroups.add(routine.group);
+
+                    // Grouping Logic
+                    const shortDept = DEPT_SHORT_NAMES[routine.department] || routine.department.substring(0, 3).toUpperCase();
+                    const groupKey = `${routine.semester}/${shortDept}`; // e.g., "2/CST"
+
+                    if (!entry.groupsMap.has(groupKey)) {
+                        entry.groupsMap.set(groupKey, new Set());
+                    }
+                    entry.groupsMap.get(groupKey).add(routine.group);
 
                     if (isPractical) {
                         entry.practicalPeriods += periods;
@@ -161,17 +205,26 @@ const analyzeLoad = async (req, res) => {
         });
 
         // Convert to array and format
-        const assignments = Array.from(teacherMap.values()).map(entry => ({
-            teacherName: entry.teacherName,
-            subject: entry.subject,
-            subjectCode: entry.subjectCode,
-            classGroups: Array.from(entry.classGroups).sort(),
-            technology: Array.from(entry.classGroups).join(', '),
-            theoryPeriods: entry.theoryPeriods,
-            practicalPeriods: entry.practicalPeriods,
-            totalLoad: entry.theoryPeriods + entry.practicalPeriods,
-            rooms: Array.from(entry.rooms).join(', ')
-        }));
+        const assignments = Array.from(teacherMap.values()).map(entry => {
+            // Format Technology string: key-Group+Group (e.g., 2/CST-A1+B1)
+            const techParts = [];
+            entry.groupsMap.forEach((groupsSet, key) => {
+                const sortedGroups = Array.from(groupsSet).sort();
+                techParts.push(`${key}-${sortedGroups.join('+')}`);
+            });
+            const technology = techParts.sort().join(', ');
+
+            return {
+                teacherName: entry.teacherName,
+                subject: entry.subject,
+                subjectCode: entry.subjectCode,
+                technology: technology,
+                theoryPeriods: entry.theoryPeriods,
+                practicalPeriods: entry.practicalPeriods,
+                totalLoad: entry.theoryPeriods + entry.practicalPeriods,
+                rooms: Array.from(entry.rooms).join(', ')
+            };
+        });
 
         assignments.sort((a, b) => a.teacherName.localeCompare(b.teacherName));
 
