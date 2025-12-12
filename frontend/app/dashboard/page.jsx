@@ -10,10 +10,11 @@ import RoomManager from "./RoomManager";
 import TeacherAccountManager from "./TeacherAccountManager";
 import TeacherRoutine from "./TeacherRoutine";
 import TeacherToday from "./TeacherToday";
-import TeacherProfile from "./TeacherProfile";
+
 import AdminProfile from "./AdminProfile";
 import AdminManager from "./AdminManager";
 import LoadAnalysis from "./LoadAnalysis";
+import TeacherLoadViewer from "./TeacherLoadViewer";
 import Sidebar from './Sidebar';
 import { useRouter } from 'next/navigation';
 import NoticeManager from "./NoticeManager";
@@ -31,7 +32,8 @@ import {
     User,
     Menu,
     Bell,
-    Shield
+    Shield,
+    BarChart3
 } from 'lucide-react';
 
 const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
@@ -181,6 +183,13 @@ export default function DashboardPage() {
                                         onClick={() => setActiveView('complaints')}
                                         colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
                                     />
+                                    <DashboardCard
+                                        icon={BarChart3}
+                                        label="Teacher Load"
+                                        description="View teaching workload for any teacher."
+                                        onClick={() => setActiveView('teacher-load')}
+                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
+                                    />
                                 </>
                             )}
                             {(userRole === 'teacher') && (
@@ -290,8 +299,7 @@ export default function DashboardPage() {
             case 'today-routine':
                 return <TeacherToday onBack={() => setActiveView('overview')} />;
             case 'profile':
-                if (authUser?.userType === 'super_admin') return <AdminProfile onBack={() => setActiveView('overview')} />;
-                return <TeacherProfile onBack={() => setActiveView('overview')} />;
+                return <AdminProfile onBack={() => setActiveView('overview')} />;
             case 'admins':
                 return <AdminManager onBack={() => setActiveView('overview')} />;
             case 'load-analysis':
@@ -301,6 +309,8 @@ export default function DashboardPage() {
                 return <NoticeManager />;
             case 'complaints':
                 return <ComplaintManager />;
+            case 'teacher-load':
+                return <TeacherLoadViewer onBack={() => setActiveView('overview')} />;
             default:
                 return <div>Select a view</div>;
         }

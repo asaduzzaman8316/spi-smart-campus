@@ -9,6 +9,7 @@ export default function AdminManager() {
     const [admins, setAdmins] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, admin: null });
 
     useEffect(() => {
         loadAdmins();
@@ -26,25 +27,35 @@ export default function AdminManager() {
         }
     };
 
-    const handleUnregister = async (id, name) => {
-        if (!confirm(`Are you sure you want to unregister ${name}? This will remove their login access but keep their profile data.`)) {
-            return;
-        }
+    const openDeleteModal = (admin) => {
+        setDeleteModal({ isOpen: true, admin });
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteModal({ isOpen: false, admin: null });
+    };
+
+    const handleUnregister = async () => {
+        if (!deleteModal.admin) return;
 
         try {
-            await unregisterAdmin(id);
+            await unregisterAdmin(deleteModal.admin._id);
             toast.success('Admin access removed successfully');
+            closeDeleteModal();
             loadAdmins();
         } catch (error) {
             toast.error(error.message || 'Failed to unregister admin');
         }
     };
 
-    const filteredAdmins = admins.filter(admin =>
-        admin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        admin.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        admin.department?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredAdmins = admins
+        .filter(admin => admin.userType === 'super_admin' || admin.userType === 'admin')
+        .filter(admin =>
+            admin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            admin.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            admin.department?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
@@ -125,18 +136,18 @@ export default function AdminManager() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${admin.role === 'super_admin'
+                                                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${admin.userType === 'super_admin'
                                                     ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
                                                     : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                                                     }`}>
                                                     <Shield size={12} />
-                                                    {admin.role === 'super_admin' ? 'Super Admin' : 'Dept Admin'}
+                                                    {admin.userType === 'super_admin' ? 'Super Admin' : 'Department Admin'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                {admin.role !== 'super_admin' && (
+                                                {admin.userType !== 'super_admin' && (
                                                     <button
-                                                        onClick={() => handleUnregister(admin._id, admin.name)}
+                                                        onClick={() => openDeleteModal(admin)}
                                                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                                         title="Unregister"
                                                     >
@@ -152,6 +163,41 @@ export default function AdminManager() {
                     </div>
                 )}
             </div>
+
+            {/* Custom Delete Confirmation Modal */}
+            {deleteModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-card-bg rounded-3xl shadow-2xl max-w-md w-full p-8 transform transition-all">
+                        <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20">
+                            <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
+                        </div>
+
+                        <h3 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">
+                            Unregister Admin?
+                        </h3>
+
+                        <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+                            Are you sure you want to unregister <span className="font-semibold text-gray-900 dark:text-white">{deleteModal.admin?.name}</span>?
+                            This will remove their login access but keep their profile data.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={closeDeleteModal}
+                                className="flex-1 px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleUnregister}
+                                className="flex-1 px-6 py-3 text-white bg-red-600 rounded-xl font-medium hover:bg-red-700 transition-colors"
+                            >
+                                Unregister
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

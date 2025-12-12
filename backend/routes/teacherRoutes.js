@@ -7,12 +7,14 @@ const {
     deleteTeacher,
     registerTeacher,
     getTeacherByUid,
-    unregisterTeacher
+    unregisterTeacher,
+    getAdminTeachers
 } = require('../controllers/teacherController');
 
 const { idValidation } = require('../validators/validators');
 
 router.route('/profile/:uid').get(getTeacherByUid);
+router.route('/admins').get(getAdminTeachers);
 router.route('/').get(getTeachers);
 
 router.route('/').post(createTeacher);

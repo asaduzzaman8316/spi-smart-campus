@@ -13,7 +13,7 @@ export const updateAdminProfile = async (data) => {
 };
 
 export const fetchAdmins = async (page = 1, limit = 20) => {
-    const { data } = await api.get(`/admins?page=${page}&limit=${limit}`);
+    const { data } = await api.get(`/teachers/admins?page=${page}&limit=${limit}`);
     return data;
 };
 
@@ -36,6 +36,6 @@ export const deleteAdmin = async (id) => {
 };
 
 export const unregisterAdmin = async (id) => {
-    const { data } = await api.put(`/admins/unregister/${id}`);
+    const { data } = await api.put(`/teachers/unregister/${id}`);
     return data;
 };

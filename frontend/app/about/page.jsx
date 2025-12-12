@@ -5,6 +5,7 @@ import History from '@/components/about/History'
 import Facilities from '@/components/about/Facilities'
 import Mission from '@/components/about/Mission'
 import Contact from '@/components/about/Contact'
+import DeveloperTeam from '@/components/about/DeveloperTeam'
 
 export const metadata = {
   title: "About SPI - History, Mission & Facilities",
@@ -21,9 +22,8 @@ export default function AboutPage() {
 
       {/* History Section */}
       <History />
-
-      {/* Departments Section */}
-      <Departments />
+      {/* Developer Team Section */}
+      <DeveloperTeam />
 
       {/* Facilities Section */}
       <Facilities />
@@ -31,6 +31,7 @@ export default function AboutPage() {
       {/* Mission & Vision Section */}
       <Mission />
 
+      
       {/* Contact Section */}
       <Contact />
     </div>

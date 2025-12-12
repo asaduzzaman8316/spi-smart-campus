@@ -212,6 +212,27 @@ const getTeacherById = async (req, res) => {
     }
 };
 
+// @desc    Get all teachers with admin privileges
+// @route   GET /api/teachers/admins
+const getAdminTeachers = async (req, res) => {
+    try {
+        const teachers = await Teacher.find({
+            userType: { $in: ['admin', 'super_admin'] }
+        })
+            .select('-__v -password')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        res.json({
+            success: true,
+            data: teachers,
+            count: teachers.length
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     getTeachers,
     createTeacher,
@@ -219,6 +240,7 @@ module.exports = {
     deleteTeacher,
     registerTeacher,
     unregisterTeacher,
-    getTeacherByUid: getTeacherById // Map to new function for compatibility if routes use this name
+    getTeacherByUid: getTeacherById, // Map to new function for compatibility if routes use this name
+    getAdminTeachers
 };
 
