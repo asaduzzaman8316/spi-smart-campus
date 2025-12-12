@@ -16,6 +16,10 @@ import AdminManager from "./AdminManager";
 import LoadAnalysis from "./LoadAnalysis";
 import Sidebar from './Sidebar';
 import { useRouter } from 'next/navigation';
+import NoticeManager from "./NoticeManager";
+import DashboardNotice from "./DashboardNotice";
+import ComplaintManager from "./ComplaintManager";
+import { useSearchParams } from 'next/navigation';
 import {
     Calendar,
     Users,
@@ -26,11 +30,9 @@ import {
     List,
     User,
     Menu,
-    Bell
+    Bell,
+    Shield
 } from 'lucide-react';
-import NoticeManager from "./NoticeManager";
-import DashboardNotice from "./DashboardNotice";
-import { useSearchParams } from 'next/navigation';
 
 const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
     <button
@@ -172,6 +174,13 @@ export default function DashboardPage() {
                                         onClick={() => setActiveView('notices')}
                                         colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
                                     />
+                                    <DashboardCard
+                                        icon={Shield}
+                                        label="Complaints"
+                                        description="Review and resolve student complaints."
+                                        onClick={() => setActiveView('complaints')}
+                                        colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
+                                    />
                                 </>
                             )}
                             {(userRole === 'teacher') && (
@@ -290,6 +299,8 @@ export default function DashboardPage() {
             case 'notices':
                 if (userRole === 'teacher') return <DashboardNotice />;
                 return <NoticeManager />;
+            case 'complaints':
+                return <ComplaintManager />;
             default:
                 return <div>Select a view</div>;
         }
