@@ -22,7 +22,8 @@ export default function Header() {
     const toggleMenu = () => setIsOpen(!isOpen);
 
     const navLinks = [
-        { name: 'Home', href: '/' },
+        { name: 'Home', href: '/' },    
+        { name: 'Notice Board', href: '/notices' },
         { name: 'About', href: '/about' },
         { name: 'Today', href: '/today' },
         { name: 'Routine', href: '/routine' },

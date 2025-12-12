@@ -5,6 +5,7 @@ import Stats from '@/components/home/Stats'
 import Features from '@/components/home/Features'
 import Departments from '@/components/home/Departments'
 import CTA from '@/components/home/CTA'
+import NoticeBoardSection from '@/components/home/NoticeBoardSection'
 
 export const metadata = {
   title: "Home",
@@ -17,6 +18,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#FFFBF2] dark:bg-[#0B1120] overflow-x-clip transition-colors duration-300">
       <ParticleBackground />
       <Hero />
+      <NoticeBoardSection />
       <Stats />
       <Features />
       <Departments />

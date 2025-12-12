@@ -25,8 +25,10 @@ import {
     Building,
     List,
     User,
-    Menu
+    Menu,
+    Bell
 } from 'lucide-react';
+import NoticeManager from "./NoticeManager";
 
 const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
     <button
@@ -152,6 +154,13 @@ export default function DashboardPage() {
                                         onClick={() => setActiveView('accounts')}
                                         colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
                                     />
+                                    <DashboardCard
+                                        icon={Bell}
+                                        label="Notice Board"
+                                        description="Publish and manage system-wide notices."
+                                        onClick={() => setActiveView('notices')}
+                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
+                                    />
                                 </>
                             )}
                             {(userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') && (
@@ -258,6 +267,8 @@ export default function DashboardPage() {
                 return <AdminManager onBack={() => setActiveView('overview')} />;
             case 'load-analysis':
                 return <LoadAnalysis />;
+            case 'notices':
+                return <NoticeManager />;
             default:
                 return <div>Select a view</div>;
         }

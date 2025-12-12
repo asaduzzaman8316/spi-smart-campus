@@ -1,4 +1,4 @@
-import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut, Shield, ChevronLeft, ChevronRight, Calendar, BarChart3 } from 'lucide-react';
+import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut, Shield, ChevronLeft, ChevronRight, Calendar, BarChart3, Bell } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -21,6 +21,7 @@ export default function Sidebar({ isOpen, setIsOpen, activeView, setActiveView, 
         { id: 'routine-builder', label: 'Routine Create', icon: Calendar, roles: ['admin', 'super_admin'] },
         { id: 'show', label: 'Show Routines', icon: List, roles: ['admin', 'super_admin'] },
         { id: 'load-analysis', label: 'Load Analysis', icon: BarChart3, roles: ['admin', 'super_admin'] },
+        { id: 'notices', label: 'Notice Board', icon: Bell, roles: ['admin', 'super_admin'] },
         { id: 'teachers', label: 'Teacher Management', icon: Users, roles: ['admin', 'super_admin'] },
         { id: 'subjects', label: 'Manage Subjects', icon: BookOpen, roles: ['admin', 'super_admin'] },
         { id: 'rooms', label: 'Manage Rooms', icon: Building, roles: ['admin', 'super_admin'] },

@@ -176,3 +176,29 @@ export const unregisterTeacher = async (id) => {
     const { data } = await api.put(`/teachers/unregister/${id}`);
     return data;
 };
+
+// Notices
+export const fetchNotices = async (category = '', department = '', limit = '') => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (department) params.append('department', department);
+    if (limit) params.append('limit', limit);
+    
+    const { data } = await api.get(`/notices?${params.toString()}`);
+    return data;
+};
+
+export const createNotice = async (noticeData) => {
+    const { data } = await api.post('/notices', noticeData);
+    return data;
+};
+
+export const updateNotice = async (id, noticeData) => {
+    const { data } = await api.put(`/notices/${id}`, noticeData);
+    return data;
+};
+
+export const deleteNotice = async (id) => {
+    const { data } = await api.delete(`/notices/${id}`);
+    return data;
+};
