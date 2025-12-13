@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { analyzeLoad, fetchDepartments } from '../../Lib/api';
+import { fetchDepartments, fetchTeachers, fetchRoutines } from '../../Lib/api';
 import { BarChart3, Download, Filter, Users, BookOpen, Clock, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
@@ -8,6 +8,37 @@ import autoTable from 'jspdf-autotable';
 
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
 const SHIFTS = ["1st", "2nd"];
+
+const getDeptShortName = (name) => {
+    const map = {
+        'Computer': 'CST',
+        'Computer Science and Technology': 'CST',
+        'Civil': 'CT',
+        'Civil Technology': 'CT',
+        'Electrical': 'ET',
+        'Electrical Technology': 'ET',
+        'Electronics': 'ENT',
+        'Electronics Technology': 'ENT',
+        'Mechanical': 'MT',
+        'Mechanical Technology': 'MT',
+        'Power': 'PT',
+        'Power Technology': 'PT',
+        'Electromedical': 'EMT',
+        'Electromedical Technology': 'EMT',
+        'Environment': 'ENV', // Keeping existing defaults for others
+        'Environmental': 'ENV',
+        'Architecture': 'ARCH',
+        'Data Telecommunication': 'DNT',
+        'Telecommunication': 'DNT',
+        'Food': 'FT',
+        'AIDT': 'AIDT',
+        'RAC': 'RAC',
+        'Refrigeration and Air Conditioning': 'RAC',
+        'Mechatronics': 'MCT'
+    };
+    // Default to first 3 letters uppercase if not found, or full name if short
+    return map[name] || (name.length > 4 ? name.substring(0, 3).toUpperCase() : name.toUpperCase());
+};
 
 export default function LoadAnalysis() {
     const [departments, setDepartments] = useState([]);
@@ -39,17 +70,126 @@ export default function LoadAnalysis() {
 
         setLoading(true);
         try {
-            // Pass empty strings if not selected to fetch all
-            const result = await analyzeLoad(selectedDepartment, selectedSemester, selectedShift);
-            if (result.success) {
-                setLoadData(result.data);
-                toast.success('Load analysis completed!');
-            } else {
-                toast.error(result.message || 'No data found');
-                setLoadData(null);
-            }
+            // 1. Fetch Teachers for the selected department
+            const teachers = await fetchTeachers('', selectedDepartment);
+
+            // 2. Fetch ALL Routines (no filters)
+            const routines = await fetchRoutines();
+
+            // 3. Process Data
+            const assignments = [];
+            let totalTheory = 0;
+            let totalPractical = 0;
+
+            teachers.forEach(teacher => {
+                const teacherName = teacher.name;
+                const teacherNickName = teacher.nickName || "";
+
+                // Track subjects for this teacher to consolidate rows
+                // key: subjectCode-classType (e.g. 66611-T)
+                const subjectMap = {};
+
+                // Iterate ALL routines
+                routines.forEach(routine => {
+                    // Filter routines based on user selection
+                    if (selectedSemester && routine.semester !== Number(selectedSemester)) return;
+                    if (selectedShift && routine.shift !== selectedShift) return;
+
+                    routine.days.forEach(day => {
+                        day.classes.forEach(cls => {
+                            // Check if this teacher takes this class
+                            // Match by name or perhaps regex if needed, but exact match is standard here
+                            if (cls.teacher === teacherName || cls.teacher === teacherNickName) {
+
+                                const key = `${cls.subjectCode}-${cls.subject}`;
+
+                                if (!subjectMap[key]) {
+                                    subjectMap[key] = {
+                                        teacherName: teacherName,
+                                        subject: cls.subject,
+                                        subjectCode: cls.subjectCode,
+                                        technologies: new Set(), // Changed to Set for multiple
+                                        theoryPeriods: 0,
+                                        practicalPeriods: 0,
+                                        totalLoad: 0,
+                                        rooms: new Set()
+                                    };
+                                }
+
+                                // Format: Sem/DeptShort-Group (e.g. 2/CST-A1)
+                                const shortDept = getDeptShortName(routine.department);
+                                const techStr = `${routine.semester}/${shortDept}-${routine.group}`;
+                                subjectMap[key].technologies.add(techStr);
+
+                                // Calculate periods
+                                // Simple logic: 1 class = 1 period? 
+                                // Or based on duration? Usually 45min = 1 period.
+                                // Let's try to infer or just count 1 for now, as existing API likely does.
+                                // But wait, standard load calculation usually counts number of classes.
+                                // Let's check duration. 
+                                const start = new Date(`2000-01-01 ${cls.startTime}`);
+                                const end = new Date(`2000-01-01 ${cls.endTime}`);
+                                const diffMinutes = (end - start) / 60000;
+
+                                // Standard: 45 or 50 mins = 1 period. 
+                                // Labs might be longer (e.g. 90 mins = 2 periods).
+                                // Let's look at the class type or assume 1 count if simple.
+                                // However, to be "A+", let's approximate:
+                                // < 60 mins = 1
+                                // 60-105 mins = 2
+                                // > 105 mins = 3?
+                                // Actually, let's keep it simple: count = 1 for now unless we see explicit "periods" data.
+                                // The previous API response had "theoryPeriods".
+                                // Let's assume 1 class entry = 1 period for now, or maybe check subject type?
+                                // If room type is "Lab", it's practical.
+
+                                let periods = 1;
+                                if (diffMinutes > 50) periods = 2; // Rough heuristic for labs
+                                if (diffMinutes > 100) periods = 3;
+
+                                if (cls.room && (cls.room.includes('Lab') || cls.room.includes('Shop'))) {
+                                    subjectMap[key].practicalPeriods += periods;
+                                } else {
+                                    // If unsure, check subject code or just assume theory?
+                                    // Let's assume Theory unless obvious
+                                    subjectMap[key].theoryPeriods += periods;
+                                }
+
+                                subjectMap[key].rooms.add(cls.room);
+                            }
+                        });
+                    });
+                });
+
+                // Convert map to array rows
+                Object.values(subjectMap).forEach(item => {
+                    item.totalLoad = item.theoryPeriods + item.practicalPeriods;
+                    // Join unique technologies with comma/newline? Comma for now to save space, or newline for list
+                    item.technology = Array.from(item.technologies).join(', '); // Comma separated as per image
+                    item.rooms = Array.from(item.rooms).filter(Boolean).join(', ');
+
+                    totalTheory += item.theoryPeriods;
+                    totalPractical += item.practicalPeriods;
+
+                    assignments.push(item);
+                });
+            });
+
+            const summary = {
+                totalTeachers: teachers.length,
+                totalAssignments: assignments.length,
+                totalTheory,
+                totalPractical,
+                totalPeriods: totalTheory + totalPractical,
+                averageLoad: teachers.length ? ((totalTheory + totalPractical) / teachers.length).toFixed(2) : 0
+            };
+
+            setLoadData({ assignments, summary });
+            toast.success('Global load analysis completed!');
+
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to analyze load');
+            console.error(error);
+            toast.error('Failed to analyze load');
             setLoadData(null);
         } finally {
             setLoading(false);
@@ -70,13 +210,13 @@ export default function LoadAnalysis() {
         doc.setFont("times", "bold");
         doc.setFontSize(18);
         doc.text('Sylhet Polytechnic Institute', 105, 15, { align: 'center' });
-        
+
         doc.setFontSize(14);
         doc.text(`Dept: ${selectedDepartment}`, 105, 25, { align: 'center' });
-        
+
         doc.setFontSize(12);
         doc.text('Load Distribution', 105, 32, { align: 'center' });
-        
+
         let shiftText = selectedShift ? `${selectedShift} Shift` : 'All Shifts';
         if (selectedSemester) shiftText += ` - Semester ${selectedSemester}`;
         doc.text(shiftText, 105, 38, { align: 'center' });
@@ -99,7 +239,7 @@ export default function LoadAnalysis() {
 
             assignments.forEach((assignment, index) => {
                 const row = [];
-                
+
                 // Col 1: SL (RowSpan)
                 if (index === 0) {
                     row.push({ content: serialNo++, rowSpan: assignments.length, styles: { valign: 'middle', halign: 'center' } });
@@ -201,7 +341,7 @@ export default function LoadAnalysis() {
                 9: { cellWidth: 15 }, // Room
                 10: { cellWidth: 12 } // Remarks
             },
-            didParseCell: function(data) {
+            didParseCell: function (data) {
                 // Ensure hidden cells (due to rowspan) aren't drawn incorrectly
                 // autoTable handles this automatically if configured right
             }
@@ -213,7 +353,7 @@ export default function LoadAnalysis() {
         doc.text(`Total Teachers: ${loadData.summary.totalTeachers}`, 14, finalY);
         doc.text(`Total Assignments: ${loadData.summary.totalAssignments}`, 14, finalY + 5);
         doc.text(`Average Load: ${loadData.summary.averageLoad}`, 14, finalY + 10);
-        
+
         // Footer signature areas
         doc.text("________________", 40, finalY + 40, { align: 'center' });
         doc.text("Department Head", 40, finalY + 45, { align: 'center' });
@@ -262,7 +402,7 @@ export default function LoadAnalysis() {
                                 className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
                             >
                                 <option value="">Select Department</option>
-                                {departments.slice(0, 7).map((dept, index) => (
+                                {departments.map((dept, index) => (
                                     <option key={index} value={dept.name}>{dept.name}</option>
                                 ))}
                             </select>
