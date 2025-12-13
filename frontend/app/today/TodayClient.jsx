@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react'
+import { usePreferences } from '@/context/PreferencesContext'
 import { fetchDepartments, fetchRoutines, fetchTeachers, fetchRooms } from '../../Lib/api'
 import { Filter, Calendar, Clock, MapPin, User, BookOpen, Sun, AlertCircle, Download } from 'lucide-react'
 import jsPDF from 'jspdf'
@@ -27,6 +28,32 @@ export default function TodayRoutine() {
     const [selectedGroup, setSelectedGroup] = useState('')
 
     const [todayClasses, setTodayClasses] = useState([])
+    const { preferences, updatePreferences, isLoaded, consent } = usePreferences()
+
+    // Load saved preferences
+    useEffect(() => {
+        if (isLoaded && consent === 'accepted' && preferences.todayFilters) {
+            const { department, semester, shift, group } = preferences.todayFilters
+            if (department) setSelectedDepartment(department)
+            if (semester) setSelectedSemester(semester)
+            if (shift) setSelectedShift(shift)
+            if (group) setSelectedGroup(group)
+        }
+    }, [isLoaded, consent, preferences])
+
+    // Save preferences when filters change
+    useEffect(() => {
+        if (consent === 'accepted' && selectedDepartment && selectedSemester && selectedShift && selectedGroup) {
+            updatePreferences({
+                todayFilters: {
+                    department: selectedDepartment,
+                    semester: selectedSemester,
+                    shift: selectedShift,
+                    group: selectedGroup
+                }
+            })
+        }
+    }, [selectedDepartment, selectedSemester, selectedShift, selectedGroup, consent])
 
     useEffect(() => {
         // Get current day

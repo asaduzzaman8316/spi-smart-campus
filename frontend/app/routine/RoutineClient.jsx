@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
+import { usePreferences } from '@/context/PreferencesContext';
 import { fetchDepartments, fetchRoutines, fetchRooms } from '../../Lib/api';
 import { Filter, Calendar, Clock, MapPin, User, BookOpen, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -24,6 +25,32 @@ export default function RoutineDisplay() {
   const [selectedGroup, setSelectedGroup] = useState('');
 
   const [filteredRoutine, setFilteredRoutine] = useState(null);
+  const { preferences, updatePreferences, isLoaded, consent } = usePreferences();
+
+  // Load saved preferences
+  useEffect(() => {
+    if (isLoaded && consent === 'accepted' && preferences.routineFilters) {
+      const { department, semester, shift, group } = preferences.routineFilters;
+      if (department) setSelectedDepartment(department);
+      if (semester) setSelectedSemester(semester);
+      if (shift) setSelectedShift(shift);
+      if (group) setSelectedGroup(group);
+    }
+  }, [isLoaded, consent, preferences]);
+
+  // Save preferences when filters change
+  useEffect(() => {
+    if (consent === 'accepted' && selectedDepartment && selectedSemester && selectedShift && selectedGroup) {
+      updatePreferences({
+        routineFilters: {
+          department: selectedDepartment,
+          semester: selectedSemester,
+          shift: selectedShift,
+          group: selectedGroup
+        }
+      });
+    }
+  }, [selectedDepartment, selectedSemester, selectedShift, selectedGroup, consent]);
 
   useEffect(() => {
     const fetchData = async () => {

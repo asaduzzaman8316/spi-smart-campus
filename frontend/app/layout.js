@@ -6,6 +6,8 @@ import Header from "@/components/Ui/Header/Header";
 import { ToastContainer } from "react-toastify";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { PreferencesProvider } from "@/context/PreferencesContext";
+import WelcomeModal from "@/components/Ui/WelcomeModal";
 import Script from "next/script";
 
 const playfair = Playfair_Display({
@@ -106,9 +108,12 @@ export default function RootLayout({ children }) {
           <CustomThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             <AuthProvider>
               <SidebarProvider>
-                <Header />
-                {children}
-                <ToastContainer />
+                <PreferencesProvider>
+                  <Header />
+                  {children}
+                  <WelcomeModal />
+                  <ToastContainer />
+                </PreferencesProvider>
               </SidebarProvider>
             </AuthProvider>
           </CustomThemeProvider>
