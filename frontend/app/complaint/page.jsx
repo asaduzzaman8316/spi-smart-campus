@@ -128,7 +128,7 @@ export default function ComplaintPage() {
                             <button
                                 key={cat}
                                 onClick={() => setCategoryFilter(cat)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors border
+                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors border cursor-pointer
                                     ${categoryFilter === cat
                                         ? 'bg-[#FF5C35] text-white border-[#FF5C35]'
                                         : 'bg-white dark:bg-[#1E293B] text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'}
@@ -187,7 +187,7 @@ export default function ComplaintPage() {
             {/* Floating Action Button */}
             <button
                 onClick={() => setIsModalOpen(true)}
-                className="fixed bottom-8 right-8 w-16 h-16 bg-[#FF5C35] hover:bg-[#e64722] text-white rounded-full shadow-2xl hover:scale-110 transition-all flex items-center justify-center z-40 group"
+                className="fixed bottom-8 right-8 w-16 h-16 bg-[#FF5C35] hover:bg-[#e64722] text-white rounded-full shadow-2xl hover:scale-110 transition-all flex items-center justify-center z-40 group cursor-pointer"
             >
                 <Plus size={32} className="group-hover:rotate-90 transition-transform duration-300" />
             </button>
@@ -198,7 +198,7 @@ export default function ComplaintPage() {
                     <div className="bg-white dark:bg-[#1E293B] rounded-4xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in relative [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         <button
                             onClick={() => setIsModalOpen(false)}
-                            className="absolute top-6 right-6 p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"
+                            className="absolute top-6 right-6 p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors cursor-pointer"
                         >
                             <X size={20} />
                         </button>
@@ -220,7 +220,7 @@ export default function ComplaintPage() {
                                     </p>
                                     <button
                                         onClick={() => setSuccess(false)} // Reset for new entry
-                                        className="bg-[#FF5C35] text-white font-medium py-3 px-8 rounded-full"
+                                        className="bg-[#FF5C35] text-white font-medium py-3 px-8 rounded-full cursor-pointer"
                                     >
                                         Submit Another
                                     </button>
@@ -342,7 +342,7 @@ export default function ComplaintPage() {
                                     <button
                                         type="submit"
                                         disabled={submitting}
-                                        className="w-full bg-[#FF5C35] hover:bg-[#e64722] text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-[#FF5C35]/20 flex items-center justify-center gap-2"
+                                        className="w-full bg-[#FF5C35] hover:bg-[#e64722] text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-[#FF5C35]/20 flex items-center justify-center gap-2 cursor-pointer"
                                     >
                                         {submitting ? 'Submitting...' : 'Submit Complaint'}
                                     </button>

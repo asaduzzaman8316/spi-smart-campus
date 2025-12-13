@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import api, { fetchNotices, fetchTeachers, analyzeLoad } from '../../Lib/api';
 import { useRouter } from 'next/navigation';
+import Loader1 from '@/components/Ui/Loader1';
 
 export default function DepartmentOverview({ user, setActiveView }) {
     const [stats, setStats] = useState({
@@ -94,14 +95,12 @@ export default function DepartmentOverview({ user, setActiveView }) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin"></div>
-            </div>
+            <Loader1 />
         );
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 bg-[#FFFBF2] dark:bg-[#0B1120] min-h-screen pt-18 p-6 rounded-3xl">
+        <div className="space-y-8 animate-in fade-in duration-500 bg-[#FFFBF2] dark:bg-[#0B1120] min-h-screen pt-18 p-4 rounded-3xl">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                 <div>
@@ -115,13 +114,13 @@ export default function DepartmentOverview({ user, setActiveView }) {
                 <div className="flex gap-3">
                     <button
                         onClick={() => setActiveView('notices')}
-                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm cursor-pointer"
                     >
                         <Bell size={18} /> Notices
                     </button>
                     <button
                         onClick={() => setActiveView('complaints')}
-                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition shadow-sm cursor-pointer"
                     >
                         <AlertCircle size={18} /> Complaints
                     </button>
@@ -164,7 +163,7 @@ export default function DepartmentOverview({ user, setActiveView }) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 {/* Main Graph: Load Distribution */}
-                <div className="lg:col-span-2 bg-white dark:bg-[#1E293B] p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-800">
+                <div className="lg:col-span-2 bg-white dark:bg-[#1E293B] p-4 lg:p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-800">
                     <div className="flex justify-between items-center mb-8">
                         <div>
                             <h3 className="text-2xl font-serif font-bold text-[#2C1810] dark:text-white flex items-center gap-2">
@@ -238,7 +237,7 @@ export default function DepartmentOverview({ user, setActiveView }) {
                     <div className="bg-white dark:bg-[#1E293B] p-6 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-800">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-bold text-slate-800 dark:text-white">Recent Notices</h3>
-                            <button onClick={() => setActiveView('notices')} className="text-xs text-orange-600 font-bold hover:underline">View All</button>
+                            <button onClick={() => setActiveView('notices')} className="text-xs text-orange-600 font-bold hover:underline cursor-pointer">View All</button>
                         </div>
                         <div className="space-y-4">
                             {recentnotices.length > 0 ? recentnotices.map((notice, i) => (

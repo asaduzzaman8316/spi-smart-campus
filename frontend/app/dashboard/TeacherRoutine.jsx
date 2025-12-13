@@ -216,14 +216,14 @@ export default function TeacherRoutine({ onBack }) {
 
     return (
         <div className="space-y-8 pb-20">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-14">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <Calendar className="text-purple-500" />
                     My Weekly Routine
                 </h2>
                 <button
                     onClick={downloadPDF}
-                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition shadow-lg shadow-purple-500/30"
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition shadow-lg shadow-purple-500/30 cursor-pointer"
                 >
                     <Download size={18} /> Download All (PDF)
                 </button>

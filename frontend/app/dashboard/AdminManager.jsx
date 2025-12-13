@@ -77,7 +77,7 @@ export default function AdminManager() {
                             placeholder="Search by name, email, or department..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-6 py-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-card-bg text-gray-900 dark:text-white shadow-sm focus:outline-none focus:border-[#FF5C35]"
+                            className="w-full pl-12 pr-6 py-4 border border-gray-100 dark:border-gray-800 rounded-2xl cursor-pointer bg-white dark:bg-card-bg text-gray-900 dark:text-white shadow-sm focus:outline-none focus:border-[#FF5C35]"
                         />
                     </div>
                 </div>
@@ -169,7 +169,7 @@ export default function AdminManager() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-white dark:bg-card-bg rounded-3xl shadow-2xl max-w-md w-full p-8 transform transition-all">
                         <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 dark:bg-red-900/20">
-                            <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
+                            <Trash2 className="w-8 h-8 cursor-pointer text-red-600 dark:text-red-400" />
                         </div>
 
                         <h3 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-2">
@@ -184,13 +184,13 @@ export default function AdminManager() {
                         <div className="flex gap-3">
                             <button
                                 onClick={closeDeleteModal}
-                                className="flex-1 px-6 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                className="flex-1 px-6 py-3 text-gray-700 cursor-pointer dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleUnregister}
-                                className="flex-1 px-6 py-3 text-white bg-red-600 rounded-xl font-medium hover:bg-red-700 transition-colors"
+                                className="flex-1 cursor-pointer px-6 py-3 text-white bg-red-600 rounded-xl font-medium hover:bg-red-700 transition-colors"
                             >
                                 Unregister
                             </button>

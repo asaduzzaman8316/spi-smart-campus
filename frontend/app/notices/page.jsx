@@ -5,6 +5,7 @@ import { fetchNotices } from '@/Lib/api';
 import { Search, Filter, Calendar, AlertCircle, Book, Trophy, Bell, Download, Pin } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import Loader1 from '@/components/Ui/Loader1';
 
 export default function AllNoticesPage() {
     const [notices, setNotices] = useState([]);
@@ -87,9 +88,7 @@ export default function AllNoticesPage() {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-[#FFFBF2] dark:bg-[#0B1120] flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5C35]"></div>
-        </div>
+        <Loader1 />
     );
 
     return (
@@ -130,6 +129,7 @@ export default function AllNoticesPage() {
                                     ${categoryFilter === cat
                                         ? 'bg-[#FF5C35] text-white shadow-lg shadow-[#FF5C35]/20'
                                         : 'bg-white dark:bg-[#1E293B] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700'}
+                                    cursor-pointer
                                 `}
                             >
                                 {cat}
@@ -190,7 +190,7 @@ export default function AllNoticesPage() {
                                 </div>
                                 <button
                                     onClick={() => generatePDF(notice)}
-                                    className="flex items-center gap-2 text-sm font-medium text-[#FF5C35] hover:bg-[#FF5C35]/10 px-3 py-2 rounded-lg transition-colors"
+                                    className="flex items-center gap-2 text-sm font-medium text-[#FF5C35] hover:bg-[#FF5C35]/10 px-3 py-2 rounded-lg transition-colors cursor-pointer"
                                 >
                                     <Download size={16} />
                                     Download PDF

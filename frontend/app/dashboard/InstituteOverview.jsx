@@ -4,15 +4,13 @@ import {
     Users,
     Bell,
     AlertCircle,
-    BookOpen,
     BarChart3,
-    ArrowUp,
     Building,
-    CheckCircle,
     FileText
 } from 'lucide-react';
 import api, { fetchNotices, fetchTeachers, fetchRoutines, fetchDepartments } from '../../Lib/api';
 import { useRouter } from 'next/navigation';
+import Loader1 from '@/components/Ui/Loader1';
 
 export default function InstituteOverview({ setActiveView }) {
     const [stats, setStats] = useState({
@@ -128,16 +126,14 @@ export default function InstituteOverview({ setActiveView }) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-            </div>
+            <Loader1/>
         );
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 font-sans bg-[#FFFBF2] dark:bg-[#0B1120] min-h-screen p-6 rounded-3xl">
+        <div className="space-y-8 animate-in fade-in duration-500 font-sans bg-[#FFFBF2] dark:bg-[#0B1120] min-h-screen p-2 lg:p-6 rounded-3xl">
             {/* Header */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-[#2C1810] dark:bg-black p-8 shadow-2xl">
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-[#2C1810] dark:bg-black p-2 lg:p-8 shadow-2xl">
                 <div className="absolute inset-0 opacity-90"></div>
                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
                 <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -165,7 +161,7 @@ export default function InstituteOverview({ setActiveView }) {
                     value={stats.teachers}
                     icon={Users}
                     color="blue"
-                    trend={`${stats.tempTeachers} Guest`}
+                    // trend={`${stats.tempTeachers} Guest`}
                 />
                 <StatCard
                     label="System Load"
@@ -223,7 +219,7 @@ export default function InstituteOverview({ setActiveView }) {
                     <div className="bg-white dark:bg-slate-900 p-8 rounded-4xl shadow-xl border border-slate-100 dark:border-slate-800">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-800 dark:text-white">Recent Notices</h3>
-                            <button onClick={() => setActiveView('notices')} className="text-sm font-bold text-indigo-600 hover:text-indigo-700">View All</button>
+                            <button onClick={() => setActiveView('notices')} className="text-sm font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer">View All</button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {recentnotices.map((notice, i) => (

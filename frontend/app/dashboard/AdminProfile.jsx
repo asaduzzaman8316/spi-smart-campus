@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
 import { updateTeacherProfile } from '@/Lib/teacherApi';
 import { analyzeLoad } from '@/Lib/api';
+import Loader1 from '@/components/Ui/Loader1';
 
 export default function AdminProfile() {
     const { user, logout, checkUser } = useAuth();
@@ -197,9 +198,7 @@ export default function AdminProfile() {
 
     if (!user) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5C35]"></div>
-            </div>
+            <Loader1 />
         );
     }
 
@@ -216,13 +215,13 @@ export default function AdminProfile() {
     const roleBadge = getRoleBadge();
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 ">
             <div className="max-w-5xl mx-auto space-y-8 pb-16">
                 {/* HEADER */}
-                <div className="relative h-52 rounded-3xl bg-linear-to-r from-[#FF5C35] to-[#ff8a5c] shadow-lg">
+                <div className="relative h-36 cursor-pointer rounded-3xl bg-linear-to-r from-[#FF5C35] to-[#ff8a5c] shadow-lg">
                     <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
                         <div className="relative group">
-                            <div className="w-32 h-32 rounded-full bg-white p-1 shadow-xl">
+                            <div className="w-32 h-32 cursor-pointer rounded-full bg-white p-1 shadow-xl">
                                 {formData.image ? (
                                     <Image src={formData.image} alt="profile" width={128} height={128} className="w-full h-full rounded-full object-cover" />
                                 ) : (
@@ -237,7 +236,7 @@ export default function AdminProfile() {
                                     <input ref={fileRef} hidden type="file" accept="image/*" onChange={handleImageUpload} />
                                     <button
                                         onClick={() => fileRef.current?.click()}
-                                        className="absolute bottom-1 right-1 bg-[#FF5C35] p-2 rounded-full hover:scale-110 transition shadow-lg">
+                                        className="absolute bottom-1 right-1 bg-[#FF5C35] p-2 rounded-full hover:scale-110 transition shadow-lg cursor-pointer">
                                         <Camera size={16} className="text-white" />
                                     </button>
                                 </>
@@ -247,7 +246,7 @@ export default function AdminProfile() {
                 </div>
 
                 {/* BASIC INFO */}
-                <div className="pt-20 px-4">
+                <div className="pt-20 px-2">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{user.name}</h1>
@@ -269,20 +268,20 @@ export default function AdminProfile() {
                                                 image: user.image || ''
                                             });
                                         }}
-                                        className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                        className="flex items-center gap-2 px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer">
                                         <X size={16} /> Cancel
                                     </button>
                                     <button
                                         disabled={loading}
                                         onClick={handleSave}
-                                        className="flex items-center gap-2 px-6 py-3 bg-[#FF5C35] text-white rounded-full shadow hover:scale-105 transition disabled:opacity-50">
+                                        className="flex items-center gap-2 px-2 py-2 bg-[#FF5C35] text-white rounded-full shadow hover:scale-105 transition disabled:opacity-50 cursor-pointer">
                                         {loading ? 'Saving...' : <><Save size={16} /> Save</>}
                                     </button>
                                 </>
                             ) : (
                                 <button
                                     onClick={() => setIsEditing(true)}
-                                    className="flex items-center gap-2 px-6 py-3 bg-[#FF5C35] text-white rounded-full shadow hover:scale-105 transition">
+                                    className="flex items-center gap-2 px-6 py-3 bg-[#FF5C35] text-white rounded-full shadow hover:scale-105 transition cursor-pointer">
                                     <Edit2 size={16} /> Edit Profile
                                 </button>
                             )}
@@ -340,7 +339,7 @@ export default function AdminProfile() {
                             {!isChangingPassword && (
                                 <button
                                     onClick={() => setIsChangingPassword(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition cursor-pointer">
                                     <Key size={16} /> Change Password
                                 </button>
                             )}
@@ -380,13 +379,13 @@ export default function AdminProfile() {
                                             setIsChangingPassword(false);
                                             setPasswords({ current: '', new: '', confirm: '' });
                                         }}
-                                        className="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition">
+                                        className="px-6 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition cursor-pointer">
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="px-6 py-3 bg-[#FF5C35] text-white rounded-full hover:bg-[#e04f2c] transition disabled:opacity-50 shadow-lg shadow-[#FF5C35]/20">
+                                        className="px-6 py-3 bg-[#FF5C35] text-white rounded-full hover:bg-[#e04f2c] transition disabled:opacity-50 shadow-lg shadow-[#FF5C35]/20 cursor-pointer">
                                         {loading ? 'Changing...' : 'Change Password'}
                                     </button>
                                 </div>

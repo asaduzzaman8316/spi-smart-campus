@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import Loader1 from '@/components/Ui/Loader1';
 
 export default function DashboardNotice() {
     const { user } = useAuth();
@@ -73,15 +74,13 @@ export default function DashboardNotice() {
     });
 
     if (loading) return (
-        <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5C35]"></div>
-        </div>
+        <Loader1/>
     );
 
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="bg-white dark:bg-[#1E293B] rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-lg">
+            <div className="bg-white dark:bg-[#1E293B] rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 pt-16 shadow-lg">
                 <div className="flex items-center gap-3 mb-2">
                     <div className="w-12 h-12 rounded-full bg-[#FF5C35]/10 flex items-center justify-center">
                         <Bell className="text-[#FF5C35]" size={24} />

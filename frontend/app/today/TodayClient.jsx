@@ -7,6 +7,7 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import Image from 'next/image'
 import { DotLottieReact } from '@lottiefiles/dotlottie-react'
+import Loader1 from '@/components/Ui/Loader1'
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7]
@@ -196,16 +197,7 @@ export default function TodayRoutine() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
-                <div className='size-36'>
-                    <DotLottieReact
-                        src="/loader1.lottie"
-                        loop
-                        autoplay
-
-                    />
-                </div>
-            </div>
+            <Loader1/>
         )
     }
 

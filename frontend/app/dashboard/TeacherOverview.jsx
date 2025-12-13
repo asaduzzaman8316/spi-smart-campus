@@ -6,12 +6,11 @@ import {
     Clock,
     Calendar,
     MapPin,
-    ArrowRight,
     GraduationCap,
     CheckCircle
 } from 'lucide-react';
 import { fetchNotices, fetchRoutines } from '../../Lib/api';
-import { useRouter } from 'next/navigation';
+import Loader1 from '@/components/Ui/Loader1';
 
 export default function TeacherOverview({ user, setActiveView }) {
     const [stats, setStats] = useState({
@@ -42,7 +41,6 @@ export default function TeacherOverview({ user, setActiveView }) {
 
                 let myWeeklyLoad = 0;
                 let todaysClasses = [];
-                let everything = [];
 
                 routinesData.forEach(routine => {
                     routine.days.forEach(day => {
@@ -100,14 +98,12 @@ export default function TeacherOverview({ user, setActiveView }) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="w-12 h-12 border-4 border-[#FF5C35] border-t-transparent rounded-full animate-spin"></div>
-            </div>
+            <Loader1 />
         );
     }
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 bg-[#FFFBF2] dark:bg-[#0B1120] min-h-screen pt-18 p-6 rounded-3xl font-sans">
+        <div className="space-y-8 animate-in fade-in duration-500 bg-[#FFFBF2] dark:bg-[#0B1120] min-h-screen pt-16 lg:px-6 px-2 rounded-3xl font-sans">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
                 <div>
@@ -213,7 +209,7 @@ export default function TeacherOverview({ user, setActiveView }) {
                 <div className="bg-white dark:bg-[#1E293B] p-8 rounded-4xl shadow-sm border border-gray-100 dark:border-gray-800 h-fit">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-xl font-serif font-bold text-[#2C1810] dark:text-white">Recent Notices</h3>
-                        <button onClick={() => setActiveView('notices')} className="text-sm font-bold text-[#FF5C35] hover:underline">View All</button>
+                        <button onClick={() => setActiveView('notices')} className="text-sm font-bold text-[#FF5C35] hover:underline cursor-pointer">View All</button>
                     </div>
                     <div className="space-y-4">
                         {notices.length > 0 ? notices.map((notice, i) => (

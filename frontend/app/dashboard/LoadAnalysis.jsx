@@ -451,7 +451,7 @@ export default function LoadAnalysis() {
                             <button
                                 onClick={handleAnalyze}
                                 disabled={loading}
-                                className="w-full bg-linear-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-95 flex justify-center items-center gap-2"
+                                className="w-full bg-linear-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-95 flex justify-center items-center gap-2 cursor-pointer"
                             >
                                 {loading ? (
                                     <>
@@ -509,7 +509,7 @@ export default function LoadAnalysis() {
                             </div>
                             <button
                                 onClick={generatePDF}
-                                className="group flex items-center gap-2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:shadow-xl hover:scale-105 transition-all"
+                                className="group flex items-center gap-2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
                             >
                                 <Download size={18} className="group-hover:-translate-y-1 transition-transform" />
                                 <span>Export PDF</span>
