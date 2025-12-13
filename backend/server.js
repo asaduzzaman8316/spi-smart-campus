@@ -9,13 +9,24 @@ const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 dotenv.config();
-connectDB();
+// connectDB(); // Removed immediate call for serverless compatibility
 
 const app = express();
 
 app.use(helmet());
 app.use(compression());
 app.use(morgan('combined'));
+
+// Database Connection Middleware
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        console.error('Database connection failed:', err);
+        res.status(500).json({ success: false, message: 'Database connection failed' });
+    }
+});
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
 
@@ -39,10 +50,12 @@ app.use(cors({
         if (isAllowed) {
             callback(null, true);
         } else {
+            console.warn(`CORS Blocked: ${origin}`); // Warning for Vercel logs
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] // Explicit methods
 }));
 
 app.get('/', (req, res) => {

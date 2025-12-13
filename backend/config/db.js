@@ -1,28 +1,47 @@
 
 const mongoose = require('mongoose');
 
-const connectDB = async () => {
-    try {
+let cached = global.mongoose;
+
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectDB() {
+    if (cached.conn) {
+        console.log('Using cached MongoDB connection');
+        return cached.conn;
+    }
+
+    if (!cached.promise) {
+        const opts = {
+            bufferCommands: false, // Disable Mongoose buffering
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 45000,
+            maxPoolSize: 10,
+        };
+
         const uri = process.env.MONGO_URI || 'mongodb://localhost:27017';
 
-        // Mongoose connection optimization for serverless
-        if (mongoose.connections[0].readyState) {
-            console.log('MongoDB already connected');
-            return;
-        }
-
-        const conn = await mongoose.connect(uri, {
-            bufferCommands: true, // Enable buffering so queries wait for connection
-            serverSelectionTimeoutMS: 30000, // Increase to 30s for cold starts
-            socketTimeoutMS: 45000,
-            maxPoolSize: 10, // Limit connections in serverless
+        console.log('Connecting to MongoDB...');
+        cached.promise = mongoose.connect(uri, opts).then((mongoose) => {
+            console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+            return mongoose;
+        }).catch(err => {
+            console.error('MongoDB connection error:', err);
+            cached.promise = null; // Reset promise on failure
+            throw err;
         });
-
-        console.log(`MongoDB Connected: ${conn.connection.host}`);
-    } catch (error) {
-        console.error(`Error: ${error.message}`);
-        // process.exit(1); // Do not exit in serverless
     }
-};
+
+    try {
+        cached.conn = await cached.promise;
+    } catch (e) {
+        cached.promise = null;
+        throw e;
+    }
+
+    return cached.conn;
+}
 
 module.exports = connectDB;
