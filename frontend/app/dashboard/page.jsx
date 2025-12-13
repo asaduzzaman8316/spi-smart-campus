@@ -21,6 +21,9 @@ import NoticeManager from "./NoticeManager";
 import DashboardNotice from "./DashboardNotice";
 import ComplaintManager from "./ComplaintManager";
 import { useSearchParams } from 'next/navigation';
+import DepartmentOverview from './DepartmentOverview';
+import InstituteOverview from './InstituteOverview';
+import TeacherOverview from './TeacherOverview';
 import {
     Calendar,
     Users,
@@ -88,189 +91,13 @@ export default function DashboardPage() {
     const renderContent = () => {
         switch (activeView) {
             case 'overview':
-                return (
-                    <div className="space-y-8 animate-fade-in">
-                        {/* Welcome Header */}
-                        <div className="relative rounded-[2.5rem] overflow-hidden p-8 md:p-12">
-                            <div className="absolute inset-0 bg-linear-to-r from-brand-start via-brand-mid to-brand-end opacity-90"></div>
-                            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                            {/* Abstract Shapes */}
-                            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-white opacity-10 rounded-full blur-3xl"></div>
-                            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-black opacity-10 rounded-full blur-3xl"></div>
-
-                            <div className="relative z-10 text-white">
-                                <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-                                    Welcome Back, {userRole === 'admin' ? 'Admin' : 'Teacher'}
-                                </h1>
-                                <p className="text-lg text-white/90 max-w-2xl font-light leading-relaxed">
-                                    Here&apos;s your command center for managing the academic schedule. Overview your metrics and manage resources efficiently.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Quick Access Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {(userRole === 'admin' || userRole === 'super_admin') && (
-                                <>
-                                    <DashboardCard
-                                        icon={Calendar}
-                                        label="Routine Create"
-                                        description="Create, edit, and manage class schedules with the intelligent builder."
-                                        onClick={() => setActiveView('routine-builder')}
-                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                                    />
-                                    <DashboardCard
-                                        icon={List}
-                                        label="Show Routines"
-                                        description="View and manage existing class schedules."
-                                        onClick={() => setActiveView('show')}
-                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                                    />
-                                </>
-                            )}
-                            {(userRole === 'admin' || userRole === 'super_admin') && (
-                                <DashboardCard
-                                    icon={Users}
-                                    label="Teacher Management"
-                                    description="Manage faculty members, view profiles, and assign responsibilities."
-                                    onClick={() => setActiveView('teachers')}
-                                    colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
-                                />
-                            )}
-                            {(userRole === 'admin' || userRole === 'super_admin') && (
-                                <DashboardCard
-                                    icon={FileText}
-                                    label="Department Reports"
-                                    description="Generate comprehensive reports and view academic insights."
-                                    onClick={() => setActiveView('overview')} // Placeholder for now
-                                    colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
-                                />
-                            )}
-                            {(userRole === 'admin' || userRole === 'super_admin') && (
-                                <>
-                                    <DashboardCard
-                                        icon={BookOpen}
-                                        label="Manage Subjects"
-                                        description="Add and edit subjects for your department."
-                                        onClick={() => setActiveView('subjects')}
-                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                                    />
-                                    <DashboardCard
-                                        icon={Building}
-                                        label="Manage Rooms"
-                                        description="Configure classrooms and labs."
-                                        onClick={() => setActiveView('rooms')}
-                                        colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
-                                    />
-                                    <DashboardCard
-                                        icon={Users}
-                                        label="Teacher Accounts"
-                                        description="Create and manage teacher login accounts."
-                                        onClick={() => setActiveView('accounts')}
-                                        colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
-                                    />
-                                    <DashboardCard
-                                        icon={Bell}
-                                        label="Notice Board"
-                                        description="Publish and manage system-wide notices."
-                                        onClick={() => setActiveView('notices')}
-                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                                    />
-                                    <DashboardCard
-                                        icon={Shield}
-                                        label="Complaints"
-                                        description="Review and resolve student complaints."
-                                        onClick={() => setActiveView('complaints')}
-                                        colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
-                                    />
-                                    <DashboardCard
-                                        icon={BarChart3}
-                                        label="Teacher Load"
-                                        description="View teaching workload for any teacher."
-                                        onClick={() => setActiveView('teacher-load')}
-                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                                    />
-                                </>
-                            )}
-                            {(userRole === 'teacher') && (
-                                <DashboardCard
-                                    icon={Bell}
-                                    label="Notice Board"
-                                    description="View academic notices and updates."
-                                    onClick={() => setActiveView('notices')}
-                                    colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                                />
-                            )}
-                            {(userRole === 'teacher' || userRole === 'admin' || userRole === 'super_admin') && (
-                                <>
-                                    <DashboardCard
-                                        icon={List}
-                                        label="My Routine"
-                                        description="View your personal teaching schedule."
-                                        onClick={() => setActiveView('my-routine')}
-                                        colorClass="bg-linear-to-br from-brand-start to-brand-mid shadow-brand-start/40"
-                                    />
-                                    <DashboardCard
-                                        icon={Clock}
-                                        label="Today's Schedule"
-                                        description="Quick view of today's classes."
-                                        onClick={() => setActiveView('today-routine')}
-                                        colorClass="bg-linear-to-br from-brand-mid to-brand-end shadow-brand-mid/40"
-                                    />
-                                    <DashboardCard
-                                        icon={User}
-                                        label="Profile"
-                                        description="View and edit your profile information."
-                                        onClick={() => setActiveView('profile')}
-                                        colorClass="bg-linear-to-br from-brand-end to-brand-start shadow-brand-end/40"
-                                    />
-
-                                </>
-                            )}
-                        </div>
-
-                        {/* Recent Activity / Stats Placeholder */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div className="bg-card-bg p-6 rounded-[2.5rem] border border-border-color shadow-sm">
-                                <h3 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-                                    <Clock size={20} className="text-brand-mid" />
-                                    System Status
-                                </h3>
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-4 bg-background rounded-xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                            <span className="text-text-secondary">Server Status</span>
-                                        </div>
-                                        <span className="text-green-500 font-medium bg-green-500/10 px-3 py-1 rounded-full text-sm">Operational</span>
-                                    </div>
-                                    <div className="flex items-center justify-between p-4 bg-background rounded-xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full bg-brand-mid"></div>
-                                            <span className="text-text-secondary">Last Sync</span>
-                                        </div>
-                                        <span className="text-foreground font-medium">Just now</span>
-                                    </div>
-                                </div>
-                            </div>
-
-
-
-                            <div className="bg-linear-to-br from-brand-start/5 to-brand-mid/5 p-6 rounded-[2.5rem] border border-brand-mid/20 flex flex-col justify-center items-center text-center">
-                                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-lg">
-                                    <BookOpen size={32} className="text-brand-mid" />
-                                </div>
-                                <h3 className="text-xl font-bold text-foreground mb-2">Need Help?</h3>
-                                <p className="text-text-secondary mb-4 max-w-xs">
-                                    Check the documentation for guides on how to use the routine builder.
-                                </p>
-                                <button className="text-brand-mid font-medium hover:underline">
-                                    View Documentation
-                                </button>
-                            </div>
-                        </div>
-                    </div >
-                );
+                if (userRole === 'super_admin') {
+                    return <InstituteOverview setActiveView={setActiveView} />;
+                }
+                if (userRole === 'teacher') {
+                    return <TeacherOverview user={authUser} setActiveView={setActiveView} />;
+                }
+                return <DepartmentOverview user={authUser} setActiveView={setActiveView} />;
 
 
             case 'routine-builder':

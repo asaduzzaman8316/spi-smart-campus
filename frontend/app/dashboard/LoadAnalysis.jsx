@@ -365,215 +365,234 @@ export default function LoadAnalysis() {
     };
 
     return (
-        <div className="min-h-screen bg-background p-6">
-            <div className="max-w-7xl mx-auto space-y-6">
-                {/* Header */}
-                <div className="bg-white dark:bg-[#1E293B] rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-lg">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 rounded-full bg-[#FF5C35]/10 flex items-center justify-center">
-                            <BarChart3 className="text-[#FF5C35]" size={24} />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-serif font-bold text-[#2C1810] dark:text-white">
-                                Load Analysis
-                            </h1>
-                            <p className="text-[#2C1810]/70 dark:text-gray-400">
-                                Calculate teacher workloads from routines
-                            </p>
-                        </div>
+        <div className="min-h-screen bg-white/50 dark:bg-slate-950 p-6 md:p-8 font-sans">
+            <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 className="text-4xl font-bold bg-linear-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                            Load Analysis
+                        </h1>
+                        <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
+                            Analyze and optimize teacher workloads across departments
+                        </p>
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="bg-white dark:bg-[#1E293B] rounded-[2.5rem] p-6 border border-gray-100 dark:border-gray-800 shadow-lg">
-                    <div className="flex items-center gap-2 mb-4">
-                        <Filter className="text-[#FF5C35]" size={20} />
-                        <h2 className="text-xl font-semibold font-serif text-[#2C1810] dark:text-white">
-                            Select Criteria
+                {/* Filter Card */}
+                <div className="bg-white dark:bg-slate-900 rounded-4xl p-8 shadow-xl shadow-slate-200/50 dark:shadow-black/20 border border-slate-100 dark:border-slate-800 backdrop-blur-xl transition-all duration-300 hover:shadow-2xl">
+                    <div className="flex items-center gap-3 mb-6 bg-orange-50 dark:bg-orange-500/10 w-fit px-4 py-2 rounded-full border border-orange-100 dark:border-orange-500/20">
+                        <Filter className="text-orange-600 dark:text-orange-400" size={18} />
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-orange-900 dark:text-orange-100">
+                            Analysis Filters
                         </h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Department <span className="text-red-500">*</span></label>
-                            <select
-                                value={selectedDepartment}
-                                onChange={(e) => setSelectedDepartment(e.target.value)}
-                                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
-                            >
-                                <option value="">Select Department</option>
-                                {departments.map((dept, index) => (
-                                    <option key={index} value={dept.name}>{dept.name}</option>
-                                ))}
-                            </select>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-1">Department</label>
+                            <div className="relative group">
+                                <select
+                                    value={selectedDepartment}
+                                    onChange={(e) => setSelectedDepartment(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent hover:border-orange-200 dark:hover:border-orange-900 rounded-xl px-5 py-3.5 text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/10 transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="">Select Department</option>
+                                    {departments.map((dept, index) => (
+                                        <option key={index} value={dept.name}>{dept.name}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-orange-500 transition-colors">
+                                    <Users size={18} />
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Semester (Optional)</label>
-                            <select
-                                value={selectedSemester}
-                                onChange={(e) => setSelectedSemester(e.target.value)}
-                                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
-                            >
-                                <option value="">All Semesters</option>
-                                {SEMESTERS.map((sem, index) => (
-                                    <option key={index} value={sem}>Semester {sem}</option>
-                                ))}
-                            </select>
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-1">Semester</label>
+                            <div className="relative group">
+                                <select
+                                    value={selectedSemester}
+                                    onChange={(e) => setSelectedSemester(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent hover:border-orange-200 dark:hover:border-orange-900 rounded-xl px-5 py-3.5 text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/10 transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="">All Semesters</option>
+                                    {SEMESTERS.map((sem, index) => (
+                                        <option key={index} value={sem}>Semester {sem}</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-orange-500 transition-colors">
+                                    <BookOpen size={18} />
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-text-secondary">Shift (Optional)</label>
-                            <select
-                                value={selectedShift}
-                                onChange={(e) => setSelectedShift(e.target.value)}
-                                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
-                            >
-                                <option value="">All Shifts</option>
-                                {SHIFTS.map((shift, index) => (
-                                    <option key={index} value={shift}>{shift} Shift</option>
-                                ))}
-                            </select>
+                        <div className="space-y-3">
+                            <label className="text-xs font-bold uppercase text-slate-400 tracking-wider ml-1">Shift</label>
+                            <div className="relative group">
+                                <select
+                                    value={selectedShift}
+                                    onChange={(e) => setSelectedShift(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent hover:border-orange-200 dark:hover:border-orange-900 rounded-xl px-5 py-3.5 text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:ring-4 focus:ring-orange-500/10 transition-all appearance-none cursor-pointer"
+                                >
+                                    <option value="">All Shifts</option>
+                                    {SHIFTS.map((shift, index) => (
+                                        <option key={index} value={shift}>{shift} Shift</option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-orange-500 transition-colors">
+                                    <Clock size={18} />
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex items-end">
                             <button
                                 onClick={handleAnalyze}
                                 disabled={loading}
-                                className="w-full bg-[#FF5C35] hover:bg-[#e64722] text-white px-6 py-2.5 rounded-lg transition-colors shadow-lg shadow-[#FF5C35]/20 hover:shadow-[#FF5C35]/30 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                                className="w-full bg-linear-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-95 flex justify-center items-center gap-2"
                             >
-                                {loading ? 'Analyzing...' : 'Analyze Load'}
+                                {loading ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <span>Analyzing...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <BarChart3 size={20} />
+                                        <span>Analyze Load</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Summary Cards */}
+                {/* Statistics Cards */}
                 {loadData && (
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
-                            <div className="flex items-center gap-3">
-                                <Users className="text-[#FF5C35]" size={24} />
-                                <div>
-                                    <p className="text-sm text-text-secondary">Total Teachers</p>
-                                    <p className="text-2xl font-bold text-foreground">{loadData.summary.totalTeachers}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in slide-in-from-bottom-4 duration-500 ease-out">
+                        {[
+                            { label: 'Total Teachers', value: loadData.summary.totalTeachers, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                            { label: 'Total Assignments', value: loadData.summary.totalAssignments, icon: FileText, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                            { label: 'Total Periods', value: loadData.summary.totalPeriods, icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                            { label: 'Avg Teacher Load', value: loadData.summary.averageLoad, icon: BarChart3, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/20 dark:shadow-none hover:-translate-y-1 transition-transform cursor-default">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className={`w-12 h-12 rounded-2xl ${stat.bg} flex items-center justify-center`}>
+                                        <stat.icon className={stat.color} size={24} />
+                                    </div>
+                                    <span className="text-3xl font-bold text-slate-700 dark:text-white">
+                                        {stat.value}
+                                    </span>
                                 </div>
+                                <p className="text-slate-400 font-medium uppercase tracking-wider text-xs">
+                                    {stat.label}
+                                </p>
                             </div>
-                        </div>
-
-                        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
-                            <div className="flex items-center gap-3">
-                                <BookOpen className="text-[#FF5C35]" size={24} />
-                                <div>
-                                    <p className="text-sm text-text-secondary">Total Assignments</p>
-                                    <p className="text-2xl font-bold text-foreground">{loadData.summary.totalAssignments}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
-                            <div className="flex items-center gap-3">
-                                <Clock className="text-[#FF5C35]" size={24} />
-                                <div>
-                                    <p className="text-sm text-text-secondary">Total Periods</p>
-                                    <p className="text-2xl font-bold text-foreground">{loadData.summary.totalPeriods}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800">
-                            <div className="flex items-center gap-3">
-                                <BarChart3 className="text-[#FF5C35]" size={24} />
-                                <div>
-                                    <p className="text-sm text-text-secondary">Average Load</p>
-                                    <p className="text-2xl font-bold text-foreground">{loadData.summary.averageLoad}</p>
-                                </div>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 )}
 
                 {/* Results Table */}
                 {loadData && (
-                    <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-6 border border-gray-100 dark:border-gray-800 shadow-lg">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-semibold font-serif text-[#2C1810] dark:text-white">
-                                Teacher Load Distribution
-                            </h2>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={generatePDF}
-                                    className="inline-flex items-center gap-2 bg-[#FF5C35] hover:bg-[#e64722] text-white px-4 py-2 rounded-lg transition-colors shadow-lg"
-                                >
-                                    <FileText size={18} />
-                                    Download PDF
-                                </button>
+                    <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl shadow-slate-200/40 dark:shadow-black/20 overflow-hidden animate-in slide-in-from-bottom-8 duration-700">
+                        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50 dark:bg-slate-800/30">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-1">
+                                    Distribution Report
+                                </h2>
+                                <p className="text-slate-400 text-sm">
+                                    Detailed breakdown of assignments and periods
+                                </p>
                             </div>
+                            <button
+                                onClick={generatePDF}
+                                className="group flex items-center gap-2 bg-slate-800 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold shadow-lg shadow-slate-800/20 hover:shadow-xl hover:scale-105 transition-all"
+                            >
+                                <Download size={18} className="group-hover:-translate-y-1 transition-transform" />
+                                <span>Export PDF</span>
+                            </button>
                         </div>
 
                         <div className="overflow-x-auto">
-                            <table className="w-full border-collapse min-w-[800px]">
+                            <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-[#FF5C35] text-white">
-                                        <th className="border border-white/20 px-4 py-3 text-left font-semibold">SL</th>
-                                        <th className="border border-white/20 px-4 py-3 text-left font-semibold">Teacher Name</th>
-                                        <th className="border border-white/20 px-4 py-3 text-left font-semibold">Subject</th>
-                                        <th className="border border-white/20 px-4 py-3 text-left font-semibold">Code</th>
-                                        <th className="border border-white/20 px-4 py-3 text-left font-semibold">Technology</th>
-                                        <th className="border border-white/20 px-4 py-3 text-center font-semibold">Theory</th>
-                                        <th className="border border-white/20 px-4 py-3 text-center font-semibold">Practical</th>
-                                        <th className="border border-white/20 px-4 py-3 text-center font-semibold">Total</th>
-                                        <th className="border border-white/20 px-4 py-3 text-left font-semibold">Rooms</th>
+                                    <tr className="bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 uppercase text-xs font-bold tracking-wider">
+                                        <th className="p-6">Teacher</th>
+                                        <th className="p-6">Subject</th>
+                                        <th className="p-6">Dept/Group</th>
+                                        <th className="p-6 text-center">Theory</th>
+                                        <th className="p-6 text-center">Practical</th>
+                                        <th className="p-6 text-center">Total Load</th>
+                                        <th className="p-6">Rooms</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                     {loadData.assignments.map((assignment, index) => (
-                                        <tr key={index} className={index % 2 === 0 ? 'bg-white dark:bg-[#1E293B]' : 'bg-[#FFFBF2] dark:bg-[#151e2e]'}>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-[#2C1810] dark:text-white">
-                                                {index + 1}
+                                        <tr key={index} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                                            <td className="p-6">
+                                                <div className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-orange-600 transition-colors">
+                                                    {assignment.teacherName}
+                                                </div>
+                                                <div className="text-xs text-slate-400 font-mono mt-1">SL: {String(index + 1).padStart(2, '0')}</div>
                                             </td>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-[#2C1810] dark:text-white font-medium">
-                                                {assignment.teacherName}
+                                            <td className="p-6">
+                                                <div className="font-medium text-slate-700 dark:text-slate-300">
+                                                    {assignment.subject}
+                                                </div>
+                                                <div className="text-xs text-slate-400 mt-1 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded w-fit">
+                                                    {assignment.subjectCode}
+                                                </div>
                                             </td>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-[#2C1810] dark:text-white">
-                                                {assignment.subject}
+                                            <td className="p-6">
+                                                <div className="flex flex-col gap-1">
+                                                    {assignment.technology.split(', ').map((tech, i) => (
+                                                        <span key={i} className="inline-block bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-md text-xs font-bold w-fit">
+                                                            {tech}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             </td>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-[#2C1810] dark:text-white">
-                                                {assignment.subjectCode}
-                                            </td>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-[#2C1810] dark:text-white text-sm">
-                                                {assignment.technology}
-                                            </td>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-center text-[#2C1810] dark:text-white font-semibold">
+                                            <td className="p-6 text-center font-medium text-slate-600 dark:text-slate-400">
                                                 {assignment.theoryPeriods}
                                             </td>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-center text-[#2C1810] dark:text-white font-semibold">
+                                            <td className="p-6 text-center font-medium text-slate-600 dark:text-slate-400">
                                                 {assignment.practicalPeriods}
                                             </td>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-center text-[#FF5C35] font-bold">
-                                                {assignment.totalLoad}
+                                            <td className="p-6 text-center">
+                                                <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg shadow-slate-900/20">
+                                                    {assignment.totalLoad}
+                                                </span>
                                             </td>
-                                            <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-[#2C1810] dark:text-white text-sm">
-                                                {assignment.rooms}
+                                            <td className="p-6">
+                                                <div className="text-sm font-mono text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 inline-block">
+                                                    {assignment.rooms || '-'}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
-                                    <tr className="bg-[#FF5C35]/10 font-bold">
-                                        <td colSpan="5" className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-right text-[#2C1810] dark:text-white">
-                                            Total Load:
+                                </tbody>
+                                <tfoot>
+                                    <tr className="bg-slate-900 text-white">
+                                        <td colSpan="3" className="p-6 text-right font-bold uppercase tracking-wider text-slate-400">
+                                            Grand Totals
                                         </td>
-                                        <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-center text-[#2C1810] dark:text-white">
+                                        <td className="p-6 text-center font-bold text-lg">
                                             {loadData.summary.totalTheory}
                                         </td>
-                                        <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-center text-[#2C1810] dark:text-white">
+                                        <td className="p-6 text-center font-bold text-lg">
                                             {loadData.summary.totalPractical}
                                         </td>
-                                        <td className="border border-gray-200 dark:border-gray-700 px-4 py-3 text-center text-[#FF5C35] text-lg">
-                                            {loadData.summary.totalPeriods}
+                                        <td className="p-6 text-center">
+                                            <div className="text-2xl font-black text-orange-400">
+                                                {loadData.summary.totalPeriods}
+                                            </div>
                                         </td>
-                                        <td className="border border-gray-200 dark:border-gray-700"></td>
+                                        <td className="p-6"></td>
                                     </tr>
-                                </tbody>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -581,10 +600,14 @@ export default function LoadAnalysis() {
 
                 {/* Empty State */}
                 {!loadData && !loading && (
-                    <div className="bg-white dark:bg-[#1E293B] rounded-2xl p-12 border border-gray-100 dark:border-gray-800 text-center">
-                        <BarChart3 className="mx-auto mb-4 text-gray-300 dark:text-gray-600" size={64} />
-                        <h3 className="text-2xl font-semibold text-foreground mb-2">No Analysis Yet</h3>
-                        <p className="text-text-secondary">Select criteria and click "Analyze Load" to view teacher workloads</p>
+                    <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                        <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                            <BarChart3 className="text-slate-400" size={40} />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Ready to Analyze</h3>
+                        <p className="text-slate-500 max-w-sm text-center">
+                            Select a department and criteria above to optimize your resource allocation.
+                        </p>
                     </div>
                 )}
             </div>
