@@ -187,7 +187,7 @@ export default function Hero() {
             <VideoModal
                 isOpen={isVideoOpen}
                 onClose={() => setIsVideoOpen(false)}
-                videoId="LXb3EKWsInQ"
+                videoId="_gOWjVJ5YHQ"
             />
         </section>
     )
