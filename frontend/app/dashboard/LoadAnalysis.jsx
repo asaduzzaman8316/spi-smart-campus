@@ -127,31 +127,21 @@ export default function LoadAnalysis() {
                                 // Let's try to infer or just count 1 for now, as existing API likely does.
                                 // But wait, standard load calculation usually counts number of classes.
                                 // Let's check duration. 
-                                const start = new Date(`2000-01-01 ${cls.startTime}`);
-                                const end = new Date(`2000-01-01 ${cls.endTime}`);
-                                const diffMinutes = (end - start) / 60000;
+                                // Calculate duration in minutes (Standardized with Backend)
+                                const [startH, startM] = cls.startTime.split(':').map(Number);
+                                const [endH, endM] = cls.endTime.split(':').map(Number);
+                                let startMinutes = startH * 60 + startM;
+                                let endMinutes = endH * 60 + endM;
 
-                                // Standard: 45 or 50 mins = 1 period. 
-                                // Labs might be longer (e.g. 90 mins = 2 periods).
-                                // Let's look at the class type or assume 1 count if simple.
-                                // However, to be "A+", let's approximate:
-                                // < 60 mins = 1
-                                // 60-105 mins = 2
-                                // > 105 mins = 3?
-                                // Actually, let's keep it simple: count = 1 for now unless we see explicit "periods" data.
-                                // The previous API response had "theoryPeriods".
-                                // Let's assume 1 class entry = 1 period for now, or maybe check subject type?
-                                // If room type is "Lab", it's practical.
+                                if (endMinutes < startMinutes) endMinutes += 24 * 60;
 
-                                let periods = 1;
-                                if (diffMinutes > 50) periods = 2; // Rough heuristic for labs
-                                if (diffMinutes > 100) periods = 3;
+                                const duration = endMinutes - startMinutes;
+                                const periods = Math.round(duration / 45);
+                                const isPractical = duration >= 90; // 90+ mins = Practical/Lab
 
-                                if (cls.room && (cls.room.includes('Lab') || cls.room.includes('Shop'))) {
+                                if (isPractical) {
                                     subjectMap[key].practicalPeriods += periods;
                                 } else {
-                                    // If unsure, check subject code or just assume theory?
-                                    // Let's assume Theory unless obvious
                                     subjectMap[key].theoryPeriods += periods;
                                 }
 
