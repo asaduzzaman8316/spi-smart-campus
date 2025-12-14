@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchTeachers, fetchRooms, fetchSubjects, fetchDepartments, fetchRoutines, createRoutine } from '../../Lib/api';
-import { Plus, Trash2, Save, ArrowLeft, GripVertical, Eye, Edit, Clock, BookOpen, User, MapPin } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, GripVertical, Eye, Edit, Clock, BookOpen, User, MapPin, Sparkles, X, ChevronDown, Layers, Check } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { generateBatchRoutines } from '../../Lib/AutoRoutineGenerator';
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
@@ -27,12 +28,31 @@ export default function RoutineBuilder({ onBack, initialData }) {
     const [saving, setSaving] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isPreviewMode, setIsPreviewMode] = useState(false);
+    const [showAutoModal, setShowAutoModal] = useState(false);
+    const [loadItems, setLoadItems] = useState([{ id: 1, subject: '', teacher: '', theoryCount: 0, labCount: 0 }]);
+    const [customConstraints, setCustomConstraints] = useState([]);
 
     const [departments, setDepartments] = useState([]);
     const [teachers, setTeachers] = useState([]);
     const [rooms, setRooms] = useState([]);
     const [subjects, setSubjects] = useState([]);
     const [allRoutines, setAllRoutines] = useState([]);
+
+    // Batch Generator State
+    const [assignments, setAssignments] = useState([]); // [{ id, teacherId, teacherName, subjects: [{ id, subject, theory: 2, lab: 0, technologies: [] }], blockedTimes: [] }]
+    const [technologyOptions, setTechnologyOptions] = useState([]); // Pre-computed list of all possible "Dept-Sem-Shift-Grp"
+
+    // UI Helpers state
+    const [techSearchTerm, setTechSearchTerm] = useState({}); // { [subjectId]: "term" }
+    const [teacherSearchTerm, setTeacherSearchTerm] = useState("");
+    const [roomSearchTerm, setRoomSearchTerm] = useState("");
+    const [showTeacherDropdown, setShowTeacherDropdown] = useState(false);
+
+    // Tech Modal State
+    const [showTechModal, setShowTechModal] = useState(false);
+    const [activeTechSelection, setActiveTechSelection] = useState(null); // { assignId, subId }
+    const [techModalSearchTerm, setTechModalSearchTerm] = useState("");
+    const [isSelectAll, setIsSelectAll] = useState(false);
 
     const [teacherFilterDept, setTeacherFilterDept] = useState('');
     const [roomFilterType, setRoomFilterType] = useState('');
@@ -92,6 +112,34 @@ export default function RoutineBuilder({ onBack, initialData }) {
         };
         fetchData();
     }, []);
+
+    // Generate Technology Options when departments change
+    useEffect(() => {
+        if (Array.isArray(departments) && departments.length > 0) {
+            const options = [];
+            departments.forEach(dept => {
+                SEMESTERS.forEach(sem => {
+                    SHIFTS.forEach(shift => {
+                        GROUPS.forEach(grp => {
+                            if ((shift === "1st" && grp.endsWith("2")) || (shift === "2nd" && grp.endsWith("1"))) return; // Filter invalid Shift-Group combos
+
+                            // User Logic: C1 and C2 only for "CT" (Computer)
+                            const isComputer = dept.name.toLowerCase().includes('computer') || dept.name.toLowerCase().includes('ct') || (dept.code && dept.code === '66');
+                            if ((grp === 'C1' || grp === 'C2') && !isComputer) return;
+
+                            options.push({
+                                id: `${dept.name}|${sem}|${shift}|${grp}`,
+                                label: `${dept.name} - ${sem} - ${shift} (${grp})`,
+                                dept: dept.name, sem, shift, grp
+                            });
+                        });
+                    });
+                });
+            });
+            setTechnologyOptions(options);
+        }
+    }, [departments]);
+
 
     const handleMetaChange = (e) => {
         const { name, value } = e.target;
@@ -316,6 +364,170 @@ export default function RoutineBuilder({ onBack, initialData }) {
         }
     };
 
+    // --- BATCH GENERATOR HANDLERS ---
+    const addTeacherAssignment = (teacher) => {
+        setAssignments([...assignments, {
+            id: Date.now(),
+            teacherId: teacher.id,
+            teacherName: teacher.name,
+            subjects: [{ id: Date.now() + 1, subject: '', theory: 0, lab: 0, technologies: [] }],
+            blockedTimes: []
+        }]);
+        setTeacherSearchTerm("");
+        setShowTeacherDropdown(false);
+    };
+
+    const removeTeacherAssignment = (id) => {
+        setAssignments(assignments.filter(a => a.id !== id));
+    };
+
+    const updateAssignmentSubject = (assignId, subjectId, field, value) => {
+        setAssignments(assignments.map(a => {
+            if (a.id !== assignId) return a;
+            return {
+                ...a,
+                subjects: a.subjects.map(s => s.id === subjectId ? { ...s, [field]: value } : s)
+            };
+        }));
+    };
+
+    // Manage Blocked Times
+    const addBlockedTime = (assignId, day, start, end) => {
+        setAssignments(assignments.map(a => {
+            if (a.id !== assignId) return a;
+            return {
+                ...a,
+                blockedTimes: [...(a.blockedTimes || []), { day, start, end }]
+            };
+        }));
+    };
+
+    const removeBlockedTime = (assignId, index) => {
+        setAssignments(assignments.map(a => {
+            if (a.id !== assignId) return a;
+            const newBlocked = [...(a.blockedTimes || [])];
+            newBlocked.splice(index, 1);
+            return { ...a, blockedTimes: newBlocked };
+        }));
+    };
+
+    const addSubjectRow = (assignId) => {
+        setAssignments(assignments.map(a => {
+            if (a.id !== assignId) return a;
+            return {
+                ...a,
+                subjects: [...a.subjects, { id: Date.now(), subject: '', theory: 0, lab: 0, technologies: [] }]
+            };
+        }));
+    };
+
+    const removeSubjectRow = (assignId, subjectId) => {
+        setAssignments(assignments.map(a => {
+            if (a.id !== assignId) return a;
+            return {
+                ...a,
+                subjects: a.subjects.filter(s => s.id !== subjectId)
+            };
+        }));
+    };
+
+    const toggleTechnology = (assignId, subjectId, techId) => {
+        setAssignments(assignments.map(a => {
+            if (a.id !== assignId) return a;
+            return {
+                ...a,
+                subjects: a.subjects.map(s => {
+                    if (s.id !== subjectId) return s;
+                    const exists = s.technologies.includes(techId);
+                    return {
+                        ...s,
+                        technologies: exists
+                            ? s.technologies.filter(t => t !== techId)
+                            : [...s.technologies, techId]
+                    };
+                })
+            };
+        }));
+    };
+
+    const handleOpenTechModal = (assignId, subId) => {
+        setActiveTechSelection({ assignId, subId });
+        setTechModalSearchTerm("");
+        setShowTechModal(true);
+    };
+
+    const handleToggleTechFromModal = (techId) => {
+        if (!activeTechSelection) return;
+        toggleTechnology(activeTechSelection.assignId, activeTechSelection.subId, techId);
+    };
+
+    const handleSelectAllTech = () => {
+        if (!activeTechSelection) return;
+        const { assignId, subId } = activeTechSelection;
+
+        // Find current subject techs
+        const assignment = assignments.find(a => a.id === assignId);
+        if (!assignment) return;
+        const subject = assignment.subjects.find(s => s.id === subId);
+        if (!subject) return;
+
+        const filteredOptions = technologyOptions.filter(t => t.label.toLowerCase().includes(techModalSearchTerm.toLowerCase()));
+        const allFilteredIds = filteredOptions.map(t => t.id);
+
+        // Determine if we are selecting all or deselecting all based on current state of filtered items
+        // If all filtered are already selected, deselect them. Otherwise, select them.
+        const allSelected = allFilteredIds.every(id => subject.technologies.includes(id));
+
+        setAssignments(assignments.map(a => {
+            if (a.id !== assignId) return a;
+            return {
+                ...a,
+                subjects: a.subjects.map(s => {
+                    if (s.id !== subId) return s;
+
+                    let newTechs = [...s.technologies];
+                    if (allSelected) {
+                        // Deselect all filtered
+                        newTechs = newTechs.filter(id => !allFilteredIds.includes(id));
+                    } else {
+                        // Select all filtered
+                        const toAdd = allFilteredIds.filter(id => !newTechs.includes(id));
+                        newTechs = [...newTechs, ...toAdd];
+                    }
+                    return { ...s, technologies: newTechs };
+                })
+            };
+        }));
+    };
+
+    const handleBatchGenerate = async () => {
+        try {
+            const updatedRoutines = generateBatchRoutines(
+                assignments,
+                allRoutines,
+                rooms,
+                subjects
+            );
+
+            let saveCount = 0;
+            for (const r of updatedRoutines) {
+                await createRoutine({ ...r, lastUpdated: Date.now() });
+                saveCount++;
+            }
+
+            setShowAutoModal(false);
+            toast.success(`Generated & Saved ${saveCount} routines!`);
+
+            // Refresh
+            const newRoutines = await fetchRoutines();
+            setAllRoutines(Array.isArray(newRoutines) ? newRoutines.map(d => ({ ...d, id: d._id })) : (newRoutines.data || []).map(d => ({ ...d, id: d._id })));
+
+        } catch (err) {
+            console.error(err);
+            toast.error("Batch generation failed.");
+        }
+    };
+
     const handleSave = async () => {
         if (!routine.department) {
             toast("Please select a department", { type: "error", position: 'top-right' });
@@ -365,6 +577,12 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     </div>
                     <div className="flex gap-3">
                         <button
+                            onClick={() => setShowAutoModal(true)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center justify-center transition-colors shadow-sm"
+                        >
+                            <Sparkles size={18} className="mr-2" /> Auto Generate
+                        </button>
+                        <button
                             onClick={() => setIsPreviewMode(!isPreviewMode)}
                             className="min-w-[120px] bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-gray-700 dark:text-white px-4 py-2 rounded-md flex items-center justify-center border border-gray-300 dark:border-slate-600 transition-colors"
                         >
@@ -384,6 +602,347 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     </div>
                 </div>
 
+                {/* Auto Generate Modal (New Batch UI) */}
+                {showAutoModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-slate-700">
+                            <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800">
+                                <div>
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <Sparkles className="text-indigo-500" /> Batch Routine Generator
+                                    </h2>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Distribute teacher load across multiple technologies automatically.</p>
+                                </div>
+                                <button onClick={() => setShowAutoModal(false)} className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full transition-colors">
+                                    <X size={20} className="text-gray-500" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/50 dark:bg-slate-950/50">
+
+                                {/* Add Teacher Section (Searchable) */}
+                                <div className="flex flex-col gap-2 relative">
+                                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Add Teacher Load:</label>
+                                    <div className="relative w-full max-w-md">
+                                        <input
+                                            type="text"
+                                            placeholder="Search & Select Teacher..."
+                                            value={teacherSearchTerm}
+                                            onChange={(e) => { setTeacherSearchTerm(e.target.value); setShowTeacherDropdown(true); }}
+                                            onFocus={() => setShowTeacherDropdown(true)}
+                                            className="w-full p-3 pl-10 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500"
+                                        />
+                                        <User className="absolute left-3 top-3.5 text-gray-400" size={18} />
+                                        {showTeacherDropdown && (
+                                            <div className="absolute top-full left-0 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50">
+                                                {teachers.filter(t => t.name.toLowerCase().includes(teacherSearchTerm.toLowerCase())).map(t => (
+                                                    <div
+                                                        key={t.id}
+                                                        onClick={() => addTeacherAssignment(t)}
+                                                        className="p-3 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer text-sm font-medium border-b border-gray-50 dark:border-slate-700/50 last:border-0"
+                                                    >
+                                                        {t.name} <span className="text-xs text-gray-400 block">{t.department}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Assignments List */}
+                                <div className="space-y-6">
+                                    {assignments.map((assignment, idx) => {
+                                        // Total Load Calculation
+                                        const totalTheory = assignment.subjects.reduce((sum, s) => sum + (s.theory * s.technologies.length), 0);
+                                        const totalLab = assignment.subjects.reduce((sum, s) => sum + (s.lab * s.technologies.length), 0);
+
+                                        return (
+                                            <div key={assignment.id} className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                                {/* Header: Teacher Name */}
+                                                <div className="bg-gray-50 dark:bg-slate-800/50 px-6 py-3 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center group">
+                                                    <div>
+                                                        <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                                                            <User size={20} className="text-blue-500" />
+                                                            {assignment.teacherName}
+                                                        </h3>
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            Total Load: <span className="font-bold text-indigo-600">{totalTheory} Theory</span> + <span className="font-bold text-pink-500">{totalLab} Lab</span> = {totalTheory + totalLab} periods
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {/* Block Time Constraint Toggle/Modal Trigger */}
+                                                        <div className="flex items-center gap-2">
+                                                            {(assignment.blockedTimes || []).map((bt, btIdx) => (
+                                                                <span key={btIdx} className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                                                    {bt.day.slice(0, 3)} {bt.start}
+                                                                    <X size={10} className="cursor-pointer" onClick={() => removeBlockedTime(assignment.id, btIdx)} />
+                                                                </span>
+                                                            ))}
+                                                            <div className="relative group/blocked">
+                                                                <button className="text-xs font-semibold text-gray-500 hover:text-red-500 bg-gray-200 dark:bg-slate-700 px-2 py-1 rounded-md transition-colors flex items-center gap-1">
+                                                                    <Clock size={12} /> Block Time
+                                                                </button>
+                                                                {/* Inline Block Time Form */}
+                                                                <div className="hidden group-hover/blocked:block absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl p-3 z-50">
+                                                                    <h4 className="text-xs font-bold mb-2">Add Unavailability</h4>
+                                                                    <select id={`day-${assignment.id}`} className="w-full text-xs p-1 mb-2 bg-gray-50 dark:bg-slate-900 border rounded">
+                                                                        {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
+                                                                    </select>
+                                                                    <div className="flex gap-2 mb-2">
+                                                                        <input type="time" id={`start-${assignment.id}`} className="w-1/2 text-xs p-1 bg-gray-50 dark:bg-slate-900 border rounded" />
+                                                                        <input type="time" id={`end-${assignment.id}`} className="w-1/2 text-xs p-1 bg-gray-50 dark:bg-slate-900 border rounded" />
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const d = document.getElementById(`day-${assignment.id}`).value;
+                                                                            const s = document.getElementById(`start-${assignment.id}`).value;
+                                                                            const e = document.getElementById(`end-${assignment.id}`).value;
+                                                                            if (d && s && e) addBlockedTime(assignment.id, d, s, e);
+                                                                        }}
+                                                                        className="w-full bg-red-500 text-white text-xs py-1 rounded"
+                                                                    >Add Block</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => removeTeacherAssignment(assignment.id)}
+                                                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:bg-red-50 p-1.5 rounded-md transition-all"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Subjects Table */}
+                                                <div className="p-4">
+                                                    <div className="overflow-x-auto">
+                                                        <table className="w-full text-sm">
+                                                            <thead className="text-xs uppercase text-gray-400 font-semibold border-b border-gray-100 dark:border-slate-800">
+                                                                <tr>
+                                                                    <th className="px-3 py-2 text-left w-1/5">Subject</th>
+                                                                    <th className="px-3 py-2 text-left w-2/5">Technologies (Class Groups)</th>
+                                                                    <th className="px-3 py-2 text-center w-20">Theory/Grp</th>
+                                                                    <th className="px-3 py-2 text-center w-20">Lab/Grp</th>
+                                                                    <th className="px-3 py-2 w-10"></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
+                                                                {assignment.subjects.map((sub, sIdx) => {
+                                                                    const subTotal = (sub.theory + sub.lab) * sub.technologies.length;
+                                                                    return (
+                                                                        <tr key={sub.id} className="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
+                                                                            <td className="px-3 py-3 align-top">
+                                                                                {/* Searchable Subject Select */}
+                                                                                <div className="relative group/sub">
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={sub.subject}
+                                                                                        onChange={(e) => updateAssignmentSubject(assignment.id, sub.id, 'subject', e.target.value)}
+                                                                                        placeholder="Search..."
+                                                                                        className="w-full p-2 bg-gray-50 dark:bg-slate-800 border rounded-lg border-gray-200 dark:border-slate-700 focus:ring-1 focus:ring-blue-500"
+                                                                                    />
+                                                                                    {sub.subject && !subjects.find(s => s.name === sub.subject) && (
+                                                                                        <div className="hidden group-hover/sub:block absolute top-full left-0 w-full bg-white dark:bg-slate-800 border rounded shadow-lg z-20 max-h-40 overflow-auto">
+                                                                                            {subjects.filter(s => s.name.toLowerCase().includes(sub.subject.toLowerCase()) || (s.code && s.code.toString().includes(sub.subject))).map(s => (
+                                                                                                <div
+                                                                                                    key={s.id}
+                                                                                                    onClick={() => updateAssignmentSubject(assignment.id, sub.id, 'subject', s.name)}
+                                                                                                    className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer text-xs"
+                                                                                                >
+                                                                                                    {s.name} <span className='text-gray-400'>({s.code})</span>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="mt-1 text-xs text-gray-400">Total: {subTotal} periods</div>
+                                                                            </td>
+                                                                            <td className="px-3 py-3 align-top">
+                                                                                {/* Multi-Select Technologies */}
+                                                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                                                    {sub.technologies.map(techId => {
+                                                                                        const tech = technologyOptions.find(t => t.id === techId);
+                                                                                        return (
+                                                                                            <span key={techId} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                                                                {tech?.label}
+                                                                                                <button
+                                                                                                    onClick={() => toggleTechnology(assignment.id, sub.id, techId)}
+                                                                                                    className="ml-1.5 hover:text-blue-900 dark:hover:text-blue-100"
+                                                                                                >
+                                                                                                    <X size={12} />
+                                                                                                </button>
+                                                                                            </span>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+
+                                                                                <button
+                                                                                    onClick={() => handleOpenTechModal(assignment.id, sub.id)}
+                                                                                    className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-md hover:bg-blue-100 transition-colors flex items-center gap-1 w-full justify-center"
+                                                                                >
+                                                                                    <Plus size={12} /> Add Technology / Class Group
+                                                                                </button>
+                                                                            </td>
+                                                                            <td className="px-3 py-3 align-top">
+                                                                                <input
+                                                                                    type="number" min="0" max="10"
+                                                                                    value={sub.theory}
+                                                                                    onChange={(e) => updateAssignmentSubject(assignment.id, sub.id, 'theory', parseInt(e.target.value) || 0)}
+                                                                                    className="w-full text-center p-2 bg-gray-50 dark:bg-slate-800 border rounded-lg border-gray-200 dark:border-slate-700"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="px-3 py-3 align-top">
+                                                                                <input
+                                                                                    type="number" min="0" max="10"
+                                                                                    value={sub.lab}
+                                                                                    onChange={(e) => updateAssignmentSubject(assignment.id, sub.id, 'lab', parseInt(e.target.value) || 0)}
+                                                                                    className="w-full text-center p-2 bg-gray-50 dark:bg-slate-800 border rounded-lg border-gray-200 dark:border-slate-700"
+                                                                                />
+                                                                            </td>
+                                                                            <td className="px-3 py-3 align-top">
+                                                                                <button
+                                                                                    onClick={() => removeSubjectRow(assignment.id, sub.id)}
+                                                                                    className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50"
+                                                                                >
+                                                                                    <X size={16} />
+                                                                                </button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    )
+                                                                })}
+                                                                <tr>
+                                                                    <td colSpan="5" className="px-3 py-2">
+                                                                        <button
+                                                                            onClick={() => addSubjectRow(assignment.id)}
+                                                                            className="w-full py-2 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors flex items-center justify-center gap-2"
+                                                                        >
+                                                                            <Plus size={16} /> Add Subject
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => addSubjectRow(assignment.id)}
+                                                        className="mt-2 text-xs font-medium text-gray-500 hover:text-indigo-600 flex items-center gap-1 transition-colors px-2 py-1 rounded-md hover:bg-indigo-50"
+                                                    >
+                                                        <Plus size={14} /> Add Another Subject
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {assignments.length === 0 && (
+                                        <div className="text-center py-16 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-2xl">
+                                            <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <Layers className="text-indigo-500" size={32} />
+                                            </div>
+                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Start Planning Loads</h3>
+                                            <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mt-1 mb-6">
+                                                Select a teacher above to begin distributing their subject load across the institute.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="p-6 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowAutoModal(false)}
+                                    className="px-5 py-2.5 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleBatchGenerate}
+                                    disabled={assignments.length === 0}
+                                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-lg shadow-indigo-500/30 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <Sparkles size={18} /> Generate All Routines
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Tech Selection Modal (Layered on top of Auto Modal) */}
+                {showTechModal && activeTechSelection && (
+                    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[85vh] border border-gray-200 dark:border-slate-700">
+                            <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Select Class Groups</h3>
+                                <button onClick={() => setShowTechModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-4 border-b border-gray-200 dark:border-slate-700 space-y-3 bg-gray-50/50 dark:bg-slate-800/50">
+                                <input
+                                    type="text"
+                                    placeholder="Search technologies (e.g. 'Computer 5th')..."
+                                    value={techModalSearchTerm}
+                                    onChange={(e) => setTechModalSearchTerm(e.target.value)}
+                                    autoFocus
+                                    className="w-full p-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-indigo-500"
+                                />
+                                <div className="flex justify-between items-center px-1">
+                                    <span className="text-xs text-gray-500">
+                                        Showing {technologyOptions.filter(t => t.label.toLowerCase().includes(techModalSearchTerm.toLowerCase())).length} options
+                                    </span>
+                                    <button
+                                        onClick={handleSelectAllTech}
+                                        className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                                    >
+                                        Toggle All Visible
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {technologyOptions
+                                        .filter(opt => opt.label.toLowerCase().includes(techModalSearchTerm.toLowerCase()))
+                                        .map(opt => {
+                                            const assignment = assignments.find(a => a.id === activeTechSelection.assignId);
+                                            const subject = assignment?.subjects.find(s => s.id === activeTechSelection.subId);
+                                            const isSelected = subject?.technologies.includes(opt.id);
+
+                                            return (
+                                                <div
+                                                    key={opt.id}
+                                                    onClick={() => handleToggleTechFromModal(opt.id)}
+                                                    className={`p-3 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${isSelected
+                                                        ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                                                        : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'
+                                                        }`}
+                                                >
+                                                    <span className="text-sm font-medium">{opt.label}</span>
+                                                    {isSelected && <Check size={16} className="text-indigo-600 dark:text-indigo-400" />}
+                                                </div>
+                                            );
+                                        })
+                                    }
+                                    {technologyOptions.filter(opt => opt.label.toLowerCase().includes(techModalSearchTerm.toLowerCase())).length === 0 && (
+                                        <div className="col-span-2 text-center py-8 text-gray-500">
+                                            No class groups found matching "{techModalSearchTerm}"
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="p-4 border-t border-gray-200 dark:border-slate-700 flex justify-end">
+                                <button
+                                    onClick={() => setShowTechModal(false)}
+                                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition-colors"
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {/* Preview Mode */}
                 {isPreviewMode ? (
                     <RoutinePreview routine={routine} />
