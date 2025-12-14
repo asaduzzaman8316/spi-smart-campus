@@ -197,7 +197,7 @@ export default function TodayRoutine() {
 
     if (loading) {
         return (
-            <Loader1/>
+            <Loader1 />
         )
     }
 
@@ -442,7 +442,6 @@ export default function TodayRoutine() {
                     )}
                 </div>
             </div>
-            )
         </div>
     )
 }
