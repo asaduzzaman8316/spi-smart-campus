@@ -102,7 +102,7 @@ export const fetchRooms = async (search = '', type = '', location = '', departme
     if (sort) params.append('sort', sort);
 
     const { data } = await api.get(`/rooms${params.toString() ? '?' + params.toString() : ''}`);
-    return data;
+    return data && data.data ? data.data : data;
 };
 
 export const createRoom = async (roomData) => {
@@ -183,7 +183,7 @@ export const fetchNotices = async (category = '', department = '', limit = '') =
     if (category) params.append('category', category);
     if (department) params.append('department', department);
     if (limit) params.append('limit', limit);
-    
+
     const { data } = await api.get(`/notices?${params.toString()}`);
     return data;
 };
