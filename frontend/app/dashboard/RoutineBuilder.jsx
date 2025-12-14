@@ -31,6 +31,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
     const [showAutoModal, setShowAutoModal] = useState(false);
     const [loadItems, setLoadItems] = useState([{ id: 1, subject: '', teacher: '', theoryCount: 0, labCount: 0 }]);
     const [customConstraints, setCustomConstraints] = useState([]);
+    const [generationFailures, setGenerationFailures] = useState([]); // Array of { routine, items: [] }
+    const [showFailuresModal, setShowFailuresModal] = useState(false);
 
     const [departments, setDepartments] = useState([]);
     const [teachers, setTeachers] = useState([]);
@@ -502,7 +504,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
     const handleBatchGenerate = async () => {
         try {
-            const updatedRoutines = generateBatchRoutines(
+            const { routines: updatedRoutines, failures } = generateBatchRoutines(
                 assignments,
                 allRoutines,
                 rooms,
@@ -511,12 +513,22 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
             let saveCount = 0;
             for (const r of updatedRoutines) {
+                // Only save if it's new or has been modified (naive check: simply save all involved)
+                // In a real app we might want to check diffs.
+                // For now, save all.
                 await createRoutine({ ...r, lastUpdated: Date.now() });
                 saveCount++;
             }
 
             setShowAutoModal(false);
-            toast.success(`Generated & Saved ${saveCount} routines!`);
+            
+            if (failures.length > 0) {
+                setGenerationFailures(failures);
+                setShowFailuresModal(true);
+                toast.warning(`Generated with issues. ${failures.length} assignments failed.`);
+            } else {
+                toast.success(`Generated & Saved ${saveCount} routines successfully!`);
+            }
 
             // Refresh
             const newRoutines = await fetchRoutines();
@@ -943,6 +955,88 @@ export default function RoutineBuilder({ onBack, initialData }) {
                         </div>
                     </div>
                 )}
+                
+                {/* Failures Report Modal */}
+                {showFailuresModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col border border-red-200 dark:border-red-900 overflow-hidden">
+                             <div className="p-6 border-b border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 flex justify-between items-center">
+                                 <div>
+                                     <h2 className="text-xl font-bold text-red-700 dark:text-red-400 flex items-center gap-2">
+                                         <span className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">!</span>
+                                         Unplaced Classes
+                                     </h2>
+                                     <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">Some classes could not be assigned a room automatically.</p>
+                                 </div>
+                                 <button onClick={() => setShowFailuresModal(false)} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full transition-colors">
+                                     <X size={20} className="text-red-500" />
+                                 </button>
+                             </div>
+                             
+                             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                 {generationFailures.map((fail, idx) => (
+                                     <div key={idx} className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                         <div className="bg-gray-50 dark:bg-slate-800 px-4 py-2 border-b border-gray-200 dark:border-slate-700 font-semibold text-gray-700 dark:text-gray-300">
+                                            {fail.routine}
+                                         </div>
+                                         <div className="divide-y divide-gray-100 dark:divide-slate-700">
+                                             {fail.items.map((item, i) => (
+                                                 <div key={i} className="p-4 bg-white dark:bg-slate-900">
+                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                         <div>
+                                                             <h4 className="font-bold text-gray-900 dark:text-white">{item.subject}</h4>
+                                                             <p className="text-sm text-gray-500 mb-2">{item.type} Class • {item.teacher}</p>
+                                                             <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold">
+                                                                 {item.reason}
+                                                             </span>
+                                                         </div>
+                                                         
+                                                         {/* Suggestions */}
+                                                         {item.suggestions && item.suggestions.length > 0 && (
+                                                             <div className="flex-1 sm:ml-8 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                                                 <h5 className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-1">
+                                                                    <Sparkles size={12} /> Suggestion: Merge Opportunity
+                                                                 </h5>
+                                                                 <div className="space-y-2">
+                                                                    {item.suggestions.slice(0, 2).map((sugg, sIdx) => (
+                                                                        <div key={sIdx} className="text-xs text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                                                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></span>
+                                                                            <div>
+                                                                                <p>Check <strong>{sugg.routine}</strong></p>
+                                                                                <p className="opacity-80">
+                                                                                    {sugg.day} @ {sugg.time} in <span className="font-semibold">{sugg.room || 'No Room'}</span>
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                 </div>
+                                                             </div>
+                                                         )}
+                                                         
+                                                         {(!item.suggestions || item.suggestions.length === 0) && (
+                                                             <div className="text-sm text-gray-400 italic">
+                                                                 No merge options found. Try manual assignment.
+                                                             </div>
+                                                         )}
+                                                     </div>
+                                                 </div>
+                                             ))}
+                                         </div>
+                                     </div>
+                                 ))}
+                             </div>
+                             
+                             <div className="p-4 bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 flex justify-end">
+                                 <button
+                                     onClick={() => setShowFailuresModal(false)}
+                                     className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium rounded-lg hover:opacity-90 transition-opacity"
+                                 >
+                                     Close & Review
+                                 </button>
+                             </div>
+                         </div>
+                    </div>
+                )}
                 {/* Preview Mode */}
                 {isPreviewMode ? (
                     <RoutinePreview routine={routine} />
@@ -1198,7 +1292,14 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Teacher</label>
                                                             <select
                                                                 value={cls.teacher || ''}
-                                                                onChange={(e) => updateClass(cls.id, 'teacher', e.target.value)}
+                                                                onChange={(e) => {
+                                                                    const selectedTeacher = e.target.value;
+                                                                    if (busyTeachers.has(selectedTeacher) && selectedTeacher !== cls.teacher) {
+                                                                        toast.error("This teacher is currently busy in another class.");
+                                                                        return;
+                                                                    }
+                                                                    updateClass(cls.id, 'teacher', selectedTeacher);
+                                                                }}
                                                                 className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
                                                             >
                                                                 <option className='text-gray-500' value="">Select Teacher</option>
@@ -1238,7 +1339,14 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Room</label>
                                                             <select
                                                                 value={cls.room || ''}
-                                                                onChange={(e) => updateClass(cls.id, 'room', e.target.value)}
+                                                                onChange={(e) => {
+                                                                    const selectedRoom = e.target.value;
+                                                                    if (busyRooms.has(selectedRoom) && selectedRoom !== cls.room) {
+                                                                         toast.error("This room is currently fully booked.");
+                                                                         return;
+                                                                    }
+                                                                    updateClass(cls.id, 'room', selectedRoom);
+                                                                }}
                                                                 className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
                                                             >
                                                                 <option className='text-gray-500' value="">Room</option>

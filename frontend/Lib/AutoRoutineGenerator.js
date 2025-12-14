@@ -128,42 +128,20 @@ export const generateRoutine = (
     };
 
     // --- PHASE 1: Identify Merging Opportunities ---
-    // Look for existing classes with same Teacher + Subject
-    const potentialMerges = [];
-    allRoutines.forEach(r => {
-        if (r.shift !== currentRoutineConfig.shift) return; // Only merge within same shift
-
-        r.days.forEach(d => {
-            d.classes.forEach(cls => {
-                if (cls.teacher && cls.subject) {
-                    loadItems.forEach(load => {
-                        if (load.teacher === cls.teacher && load.subject === cls.subject) {
-                            // Candidate found!
-                            potentialMerges.push({
-                                day: d.name,
-                                slot: { start: cls.startTime, end: cls.endTime },
-                                existingClass: cls,
-                                loadItem: load
-                            });
-                        }
-                    })
-                }
-            })
-        })
-    });
+    // DISABLED: User requested UNIQ ROOMS for every class during auto-generation.
+    // "not combine the class in autocreate routine time"
 
     // 4. Check Advanced Constraint: Separation of Theory/Lab for same Subject
-    const isConstraintViolated = (dayName, subjectName, typeToCheck) => {
-        // Rule: If we are placing 'Theory', check if 'Lab' exists for this subject on this day.
-        // Rule: If we are placing 'Lab', check if 'Theory' exists for this subject on this day.
+    // 4. Check Advanced Constraint: Separation of Theory/Lab for same Subject
+    const isConstraintViolated = (dayName, subjectName) => {
+        // Rule: A subject can appear ONLY ONCE per day.
+        // If ANY class with this subject exists, it is a violation.
 
         const day = generatedDays.find(d => d.name === dayName);
         if (!day) return false;
 
-        const oppositeType = typeToCheck === 'Theory' ? 'Lab' : 'Theory';
-
         // Check local generated classes
-        return day.classes.some(c => c.subject === subjectName && c.type === oppositeType);
+        return day.classes.some(c => c.subject === subjectName);
     };
 
     // Helper to add class
@@ -188,6 +166,45 @@ export const generateRoutine = (
         });
     };
 
+    // --- Building Constraint Logic ---
+    const getRoomScore = (room, department, isLab, previousClassRoom) => {
+        let score = 0;
+        const location = room.location || ""; // e.g. "Computer Building", "Administration Building"
+
+        // Define Target Buildings based on Department
+        // Computer & Electromedical -> "Computer Building"
+        // Others -> "Administration Building"
+        const isTechDept = ["Computer", "Electromedical"].some(d => department.includes(d));
+        const targetBuilding = isTechDept ? "Computer Building" : "Administration Building";
+
+        // 1. Building Preference
+        if (location === targetBuilding) {
+            score += 10;
+        } else {
+            // Strong penalty for Labs in wrong building
+            if (isLab) score -= 50;
+            // Moderate penalty for Theory in wrong building
+            else score -= 5;
+        }
+
+        // 2. Proximity / Continuity (Minimize Walking)
+        if (previousClassRoom && previousClassRoom.location === location) {
+            score += 5;
+        }
+
+        // 3. Department Preference (Secondary)
+        if (room.department === department) {
+            score += 2;
+        }
+
+        return score;
+    };
+
+
+
+
+    // 2. Process Labs (Prioritize 3 periods, fallback to 2 periods)
+
     // Queue of items to place
     // Expand loadItems into discrete units
     let toPlace = [];
@@ -196,49 +213,11 @@ export const generateRoutine = (
         for (let i = 0; i < item.labCount; i++) toPlace.push({ ...item, type: 'Lab' });
     });
 
-    // --- EXECUTION: Consuming the Queue ---
-
-    // 1. Process "Sticky/Merged" classes first
-    // If we found a merge opportunity, use it (if we need to place a Theory class)
-    // We prioritize merging to save resources.
-    // (Simplification: We only merge Theory for now, Labs are complex)
-
-    // Sort potentionMerges by "most frequent"? No, just greedily take them.
-    for (let i = 0; i < toPlace.length; i++) {
-        const item = toPlace[i];
-        if (item.type !== 'Theory') continue; // Skip labs for merge phase
-
-        // Find a merge candidate
-        const mergeIdx = potentialMerges.findIndex(m =>
-            m.loadItem.subject === item.subject &&
-            m.loadItem.teacher === item.teacher &&
-            // Check if this specific Day/Slot is already filled in *this* routine
-            !generatedDays.find(d => d.name === m.day).classes.some(c => isOverlapping(c.startTime, c.endTime, m.slot.start, m.slot.end))
-        );
-
-        if (mergeIdx !== -1) {
-            const match = potentialMerges[mergeIdx];
-            // Validate Room Capacity?? (Skip for now, assuming "Combine" implies room is big enough or virtual)
-            // But we must check if Room is "Busy"? 
-            // Actually, if we merge, we JOIN the room. So strict busy check is skipped for THIS room.
-
-            // Wait: If the room is occupied by the OTHER class, it is technically "Busy" in isRoomBusy logic.
-            // But here we want to SHARE it.
-            // So we explicitly assign the SAME room.
-
-            addClass(match.day, match.slot, item, match.existingClass.room, true);
-
-            // Remove from queue
-            toPlace.splice(i, 1);
-            i--;
-            // Remove from potential merges (don't double book same slot)
-            potentialMerges.splice(mergeIdx, 1);
-        }
-    }
-
-    // 2. Process Labs (Prioritize 3 periods, fallback to 2 periods)
     const labs = toPlace.filter(x => x.type === 'Lab');
     const theories = toPlace.filter(x => x.type === 'Theory');
+
+    // Track items that couldn't be placed
+    const unplacedItems = [];
 
     labs.forEach(lab => {
         let placed = false;
@@ -253,8 +232,8 @@ export const generateRoutine = (
             for (const day of days) {
                 if (placed) break;
 
-                // CONSTRAINT CHECK: Separate Theory & Lab
-                if (isConstraintViolated(day.name, lab.subject, 'Lab')) continue;
+                // CONSTRAINT CHECK: Separate Theory & Lab (Now strict Frequency Check)
+                if (isConstraintViolated(day, lab.subject)) continue;
 
                 for (let s = 0; s <= slots.length - slotsNeeded; s++) {
                     const startSlot = slots[s];
@@ -274,39 +253,31 @@ export const generateRoutine = (
                     if (teacherConflict) continue;
 
                     // Check Room Availability
-                    // Find a valid Lab Room
-                    const validRoom = rooms.find(r =>
+                    // Find a valid Lab Room using Scoring
+                    const validRooms = rooms.filter(r =>
                         r.type === 'Lab' &&
-                        // Prefer same department if possible
-                        (!r.department || r.department === currentRoutineConfig.department) &&
                         !isRoomBusy(r.number || r.name, day, startSlot.start, endSlot.end)
                     );
 
+                    // Sort valid rooms by score
+                    validRooms.sort((a, b) => {
+                        const scoreA = getRoomScore(a, currentRoutineConfig.department, true, null);
+                        const scoreB = getRoomScore(b, currentRoutineConfig.department, true, null);
+                        return scoreB - scoreA; // Descending
+                    });
+
+                    // Pick best room (first one)
+                    const validRoom = validRooms[0];
+
                     if (validRoom) {
-                        const subjectObj = subjects.find(s => s.name === lab.subject);
-
-                        const newClass = {
-                            id: Math.random().toString(36).substr(2, 9),
-                            startTime: startSlot.start,
-                            endTime: endSlot.end,
-                            subject: lab.subject,
-                            subjectCode: subjectObj ? subjectObj.code : '',
-                            teacher: lab.teacher,
-                            room: validRoom.number || validRoom.name,
-                            isMerged: false,
-                            type: 'Lab'
-                        };
-
-                        const d = generatedDays.find(di => di.name === day);
-                        d.classes.push(newClass);
-                        d.classes.sort((a, b) => a.startTime.localeCompare(b.startTime));
-
+                        addClass(day, { start: startSlot.start, end: endSlot.end }, lab, validRoom.number || validRoom.name);
                         placed = true;
                         break;
                     }
                 }
             }
         }
+        if (!placed) unplacedItems.push(lab);
     });
 
     // 3. Process Remaining Theory
@@ -325,7 +296,7 @@ export const generateRoutine = (
             if (placed) break;
 
             // CONSTRAINT CHECK: Separate Theory & Lab
-            if (isConstraintViolated(day, theory.subject, 'Theory')) continue;
+            if (isConstraintViolated(day, theory.subject)) continue;
 
             for (const slot of slots) {
                 // Check if slot overlaps with any class already in this day
@@ -339,21 +310,69 @@ export const generateRoutine = (
                 // Find Room
                 // Prefer same building if previous class exists? (Complexity++]
                 // Simple: Find FIRST free Theory room
-                const validRoom = rooms.find(r =>
-                    r.type !== 'Lab' && // Theory usually not in lab
+                // Find Valid Room with Scoring
+                const validRooms = rooms.filter(r =>
+                    r.type !== 'Lab' &&
                     !isRoomBusy(r.number || r.name, day, slot.start, slot.end)
                 );
 
-                if (validRoom) {
-                    addClass(day, slot, theory, validRoom.number || validRoom.name);
+                // Find previous class room for continuity
+                // Simple logic: check the LAST added class in this day
+                // (Note: `generatedDays` is being modified, so we can check it)
+                const currentDayObj = generatedDays.find(d => d.name === day);
+                const lastClass = currentDayObj.classes[currentDayObj.classes.length - 1];
+                let previousRoomObj = null;
+                if (lastClass) {
+                    previousRoomObj = rooms.find(r => (r.number || r.name) === lastClass.room);
+                }
+
+                validRooms.sort((a, b) => {
+                    const scoreA = getRoomScore(a, currentRoutineConfig.department, false, previousRoomObj);
+                    const scoreB = getRoomScore(b, currentRoutineConfig.department, false, previousRoomObj);
+                    return scoreB - scoreA;
+                });
+
+                const chosenRoom = validRooms[0]; // Best room
+
+                if (chosenRoom) {
+                    addClass(day, slot, theory, chosenRoom.number || chosenRoom.name);
                     placed = true;
                     break;
                 }
             }
         }
+        if (!placed) unplacedItems.push(theory);
     });
 
-    return generatedDays;
+    // --- Generate Merge Suggestions for Unplaced Items ---
+    const failuresWithSuggestions = unplacedItems.map(item => {
+        // Look for ANY existing class with same teacher + subject in OTHER routines
+        const suggestions = [];
+        allRoutines.forEach(r => {
+            if (r.shift !== currentRoutineConfig.shift) return;
+
+            r.days.forEach(d => {
+                d.classes.forEach(c => {
+                    if (c.teacher === item.teacher && c.subject === item.subject) {
+                        suggestions.push({
+                            routine: `${r.department} ${r.semester}${r.shift === '1st' ? 'st' : 'nd'} (${r.group})`,
+                            day: d.name,
+                            time: `${c.startTime}-${c.endTime}`,
+                            room: c.room
+                        });
+                    }
+                });
+            });
+        });
+
+        return {
+            ...item,
+            reason: "No Room/Time Available",
+            suggestions: suggestions
+        };
+    });
+
+    return { generatedDays, unplacedItems: failuresWithSuggestions };
 };
 
 
@@ -367,6 +386,7 @@ export const generateBatchRoutines = (
     // 1. Create a working copy of all routines so we can update them as we go
     // (We need to track allocations across the batch)
     let workingRoutines = JSON.parse(JSON.stringify(allExistingRoutines));
+    let allFailures = [];
 
     // We also might need to CREATE new routines if they don't exist yet
     // Helper to find or create
@@ -420,7 +440,7 @@ export const generateBatchRoutines = (
                 // Our modified `generateRoutine` now checks `currentRoutineConfig.days` and keeps them if present.
                 // So we can safely pass [loadItem] as the "new load" to add.
 
-                const updatedDays = generateRoutine(
+                const { generatedDays, unplacedItems } = generateRoutine(
                     targetRoutine,
                     [loadItem], // Only add this subject's load
                     [], // No manual constraints passed here for now
@@ -431,7 +451,15 @@ export const generateBatchRoutines = (
                 );
 
                 // 5. Update the routine with new days
-                targetRoutine.days = updatedDays;
+                targetRoutine.days = generatedDays;
+
+                // Collect failures
+                if (unplacedItems && unplacedItems.length > 0) {
+                    allFailures.push({
+                        routine: `${targetRoutine.department} - ${targetRoutine.semester} (${targetRoutine.group})`,
+                        items: unplacedItems
+                    });
+                }
 
                 // WorkingRoutines is now updated implicitly because targetRoutine is a reference to an object inside it?
                 // Yes, JS objects are references. 
@@ -444,5 +472,5 @@ export const generateBatchRoutines = (
         }
     }
 
-    return workingRoutines;
+    return { routines: workingRoutines, failures: allFailures };
 };
