@@ -70,6 +70,23 @@ const createOrUpdateRoutine = async (req, res) => {
     }
 };
 
+// @desc    Update a routine by ID
+// @route   PUT /api/routines/:id
+const updateRoutineById = async (req, res) => {
+    try {
+        const routine = await Routine.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+        if (!routine) {
+            return res.status(404).json({ message: 'Routine not found' });
+        }
+        res.status(200).json(routine);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 // @desc    Delete a routine
 // @route   DELETE /api/routines/:id
 // @access  Private
@@ -264,6 +281,7 @@ module.exports = {
     getRoutines,
     findRoutine,
     createOrUpdateRoutine,
+    updateRoutineById,
     deleteRoutine,
     analyzeLoad
 };

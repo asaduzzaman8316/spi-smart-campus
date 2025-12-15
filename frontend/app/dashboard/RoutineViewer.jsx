@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-import { fetchRoutines, deleteRoutine, fetchDepartments } from '../../Lib/api';
-import { Trash2, Calendar, BookOpen, Pencil, Clock, User, MapPin, AlertTriangle, X } from 'lucide-react';
+import { fetchRoutines, deleteRoutine, fetchDepartments, updateRoutine, fetchTeachers, fetchRooms, fetchSubjects } from '../../Lib/api';
+import { Trash2, Calendar, BookOpen, Pencil, Clock, User, MapPin, AlertTriangle, X, Sparkles, MessageSquare } from 'lucide-react';
+import { generateRoutine } from '../../Lib/AutoRoutineGenerator';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { toast } from 'react-toastify';
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 
@@ -79,6 +81,7 @@ const RoutineTable = ({ routine, onEdit, onDeleteClick }) => {
                     </p>
                 </div>
                 <div className="flex gap-2">
+
                     <button
                         onClick={() => onEdit(routine)}
                         className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 rounded-lg transition-colors flex items-center gap-1"
@@ -176,6 +179,15 @@ export default function RoutineViewer({ onBack, onEdit }) {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [routineToDelete, setRoutineToDelete] = useState(null);
 
+    // Refactor Modal State
+    const [showRefactorModal, setShowRefactorModal] = useState(false);
+    const [targetRoutine, setTargetRoutine] = useState(null); // null = All
+    const [refactorOptions, setRefactorOptions] = useState({
+        reduceLab: false,
+        note: ''
+    });
+    const [isRefactoring, setIsRefactoring] = useState(false);
+
     // Filters
     const [filters, setFilters] = useState({
         department: '',
@@ -249,6 +261,154 @@ export default function RoutineViewer({ onBack, onEdit }) {
         });
     };
 
+    // Helper: Extract Load from existing routine
+    const extractLoadFromRoutine = (routine) => {
+        const loadMap = new Map();
+        routine.days.forEach(day => {
+            day.classes.forEach(cls => {
+                const key = `${cls.subject}|${cls.teacher}|${cls.type || 'Theory'}`; // Use unique key
+                if (!loadMap.has(key)) {
+                    loadMap.set(key, {
+                        subject: cls.subject,
+                        teacher: cls.teacher,
+                        theoryCount: 0,
+                        labCount: 0,
+                        type: cls.type || 'Theory'
+                    });
+                }
+                const item = loadMap.get(key);
+                if ((cls.type === 'Lab')) {
+                    // Start/End time logic for lab count? 3 periods = 1 lab block? 
+                    // AutoGenerator expects "labCount" as number of BLOCKS or PERIODS?
+                    // AutoGenerator `loadItems.forEach` expands: `for(i=0; i<item.labCount; i++)`.
+                    // So we count distinct BLOCKS, not periods?
+                    // Usually 1 entry in `classes` = 1 block (even if spanning slots).
+                    // Yes, `generatedDays.classes` stores 1 object per class (with startTime/endTime).
+                    item.labCount += 1;
+                } else {
+                    item.theoryCount += 1;
+                }
+            });
+        });
+        return Array.from(loadMap.values());
+    };
+
+    const handleOpenRefactor = (routine = null) => {
+        setTargetRoutine(routine);
+        setRefactorOptions({ reduceLab: false, note: routine ? (routine.note || '') : '' });
+        setShowRefactorModal(true);
+    };
+
+    const confirmRefactor = async () => {
+        setIsRefactoring(true);
+        try {
+            const roomsResponse = await fetchRooms();
+            const rooms = Array.isArray(roomsResponse) ? roomsResponse : (roomsResponse.data || []);
+
+            // Determine targets
+            // If targetRoutine is set, we only refactor that one (Case 2 logic inside refactorRoutine needs care)
+            // But refactorRoutine is designed to refactor a list of routines against a background of 'allRoutines'.
+
+            // "Refactor All" button passes targetRoutine=null (lines 400).
+            // "Refactor" single button (if any? existing code has `handleOpenRefactor`)
+
+            // Should we refactor ALL loaded routines or just filtered ones? 
+            // The prompt says "Refactor All". Let's assume filteredRoutines if filters are active, or all loaded routines.
+            // But `routines` state contains all fetched routines.
+            // Let's pass `routines` (all) to be safe, or just `filteredRoutines`?
+            // Safer to pass ALL routines to refactorRoutine so it can optimize globally.
+            // However, if the user only wants to refactor a specific subset (e.g. filtered), refactorRoutine can handle that if we pass them as the first arg.
+
+            let routinesToProcess = routines;
+            if (targetRoutine) {
+                routinesToProcess = [targetRoutine];
+            } else if (refactorOptions.reduceLab && filters.department) {
+                // If reduceLab is on, and a department is filtered, restrict to that department?
+                // The Modal doesn't have a department selector in Viewer (it uses the one in Builder).
+                // But in Viewer, we have the filter bar.
+                // Let's rely on the logic:
+                // If reduceLab is true, and we are in "Refactor All" mode:
+                // We should probably ask the user for a department?
+                // But the Viewer modal (lines 1350 in `RoutineViewer`... wait, where is the modal?)
+                // The modal code is at the bottom of `RoutineViewer`.
+                // Existing `refactorOptions` has `reduceLab`.
+
+                // Let's pass ALL routines to `refactorRoutine`. 
+                // `refactorRoutine` logic for reduceLab requires a `targetDept` in config.
+                // We need to update the Viewer's Refactor Modal to allow selecting a department IF reduceLab is checked.
+                // OR we can infer it if `filters.department` is set.
+            }
+
+            // We need to check if we can get targetDept from filters or modal.
+            // For now, let's look at how we call `refactorRoutine`:
+            // refactorRoutine(routinesToRefactor, config)
+            // config = { reduceLab, targetDept, allRoutines, rooms }
+
+            const config = {
+                reduceLab: refactorOptions.reduceLab,
+                targetDept: filters.department || "", // Use filter as target dept if available
+                allRoutines: routines,
+                rooms: rooms
+            };
+
+            const { routines: updatedRoutinesData, changes, message } = refactorRoutine(
+                routinesToProcess,
+                config
+            );
+
+            if (changes === 0) {
+                toast.info("No optimization changes needed.");
+                setIsRefactoring(false);
+                setShowRefactorModal(false);
+                return;
+            }
+
+            for (const r of targets) {
+                const loadItems = extractLoadFromRoutine(r);
+
+                // Run Generator
+                // We pass `allRoutinesRef` but exclude CURRENT routine to avoid self-conflict
+                const otherRoutines = allRoutinesRef.filter(rx => rx.id !== r.id);
+
+                const { generatedDays } = generateRoutine(
+                    r,
+                    loadItems,
+                    [], // constraints (not preserving manual blocks yet? Complexity)
+                    otherRoutines,
+                    roomList,
+                    teacherList,
+                    subjectList,
+                    { combineClasses: false, reduceLab: refactorOptions.reduceLab }
+                );
+
+                const updatedRoutine = {
+                    ...r,
+                    days: generatedDays,
+                    note: refactorOptions.note, // Save note
+                    lastUpdated: Date.now()
+                };
+
+                // Update Backend
+                await updateRoutine(r.id, updatedRoutine);
+
+                // Update Local ref
+                const idx = allRoutinesRef.findIndex(rx => rx.id === r.id);
+                if (idx !== -1) allRoutinesRef[idx] = updatedRoutine;
+                updatedCount++;
+            }
+
+            setRoutines(allRoutinesRef);
+            toast.success(`Successfully refactored ${updatedCount} routine(s).`);
+            setShowRefactorModal(false);
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Refactor failed.");
+        } finally {
+            setIsRefactoring(false);
+        }
+    };
+
     const filteredRoutines = routines.filter(routine => {
         return (
             (!filters.department || routine.department === filters.department) &&
@@ -271,18 +431,20 @@ export default function RoutineViewer({ onBack, onEdit }) {
     }
 
     return (
-        <div className="space-y-6 px-2 pb-20">
+        <div className="space-y-6 px-2 pb-20 pt-16">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Saved Routines</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm">Viewing {filteredRoutines.length} routines (Table View)</p>
                 </div>
-                <button
-                    onClick={onBack}
-                    className="text-sm text-gray-500 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:underline self-start md:self-auto"
-                >
-                    Back to Dashboard
-                </button>
+                <div className="flex flex-col text-right">
+                    <button
+                        onClick={onBack}
+                        className="text-sm text-gray-500 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:underline"
+                    >
+                        Back to Dashboard
+                    </button>
+                </div>
             </div>
 
             {/* Filter Section */}
@@ -407,6 +569,81 @@ export default function RoutineViewer({ onBack, onEdit }) {
                                     Delete
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Refactor Modal */}
+            {showRefactorModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-200 dark:border-slate-700">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Sparkles className="text-purple-600" />
+                                {targetRoutine ? 'Reformat Routine' : 'Refactor All Routines'}
+                            </h3>
+                            <button onClick={() => setShowRefactorModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 mb-6">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {targetRoutine
+                                    ? `Optimize the routine for ${targetRoutine.department} - ${targetRoutine.semester} (${targetRoutine.shift})`
+                                    : "Optimize ALL routines in the system. This may take a while."}
+                            </p>
+
+                            <div className="space-y-3">
+
+
+                                <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-800/50 cursor-pointer hover:bg-gray-100 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={refactorOptions.reduceLab}
+                                        onChange={(e) => setRefactorOptions(prev => ({ ...prev, reduceLab: e.target.checked }))}
+                                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                                    />
+                                    <div className="flex-1">
+                                        <span className="block text-sm font-semibold text-gray-900 dark:text-white">Reduce Lab Duration</span>
+                                        <span className="block text-xs text-gray-500">Try 2-period labs if 3-periods cannot fit</span>
+                                    </div>
+                                </label>
+
+                                <div className="pt-2">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                        <MessageSquare size={12} /> Comments / Notes
+                                    </label>
+                                    <textarea
+                                        value={refactorOptions.note}
+                                        onChange={(e) => setRefactorOptions(prev => ({ ...prev, note: e.target.value }))}
+                                        placeholder="Add a note about this routine..."
+                                        className="w-full text-sm p-3 rounded-lg bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-purple-500 min-h-[80px]"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowRefactorModal(false)}
+                                className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmRefactor}
+                                disabled={isRefactoring}
+                                className="flex-1 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-xl shadow-lg shadow-purple-500/30 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isRefactoring ? 'Processing...' : (
+                                    <>
+                                        <Sparkles size={16} />
+                                        {targetRoutine ? 'Reformat' : 'Refactor All'}
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
                 </div>

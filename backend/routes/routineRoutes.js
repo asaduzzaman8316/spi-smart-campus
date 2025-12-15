@@ -4,6 +4,7 @@ const {
     getRoutines,
     findRoutine,
     createOrUpdateRoutine,
+    updateRoutineById,
     deleteRoutine,
     analyzeLoad
 } = require('../controllers/routineController');
@@ -14,6 +15,6 @@ router.route('/find').get(findRoutine);
 router.route('/analyze-load').get(analyzeLoad);
 
 router.route('/').post(createOrUpdateRoutine);
-router.route('/:id').delete(idValidation, deleteRoutine);
+router.route('/:id').delete(idValidation, deleteRoutine).put(updateRoutineById);
 
 module.exports = router;

@@ -2,9 +2,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { fetchTeachers, fetchRooms, fetchSubjects, fetchDepartments, fetchRoutines, createRoutine } from '../../Lib/api';
-import { Plus, Trash2, Save, ArrowLeft, GripVertical, Eye, Edit, Clock, BookOpen, User, MapPin, Sparkles, X, ChevronDown, Layers, Check } from 'lucide-react';
+import { Plus, Trash2, Save, ArrowLeft, GripVertical, Eye, Edit, Clock, BookOpen, User, MapPin, Sparkles, X, ChevronDown, Layers, Check, GitMerge, RefreshCcw } from 'lucide-react';
+import { generateBatchRoutines, generateRoutine, refactorRoutine } from '../../Lib/AutoRoutineGenerator';
 import { toast } from 'react-toastify';
-import { generateBatchRoutines } from '../../Lib/AutoRoutineGenerator';
+
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
@@ -29,6 +30,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
     const [isEditMode, setIsEditMode] = useState(false);
     const [isPreviewMode, setIsPreviewMode] = useState(false);
     const [showAutoModal, setShowAutoModal] = useState(false);
+    const [batchShift, setBatchShift] = useState(""); // "1st" or "2nd"
+    const [showShiftSelectionModal, setShowShiftSelectionModal] = useState(false);
     const [loadItems, setLoadItems] = useState([{ id: 1, subject: '', teacher: '', theoryCount: 0, labCount: 0 }]);
     const [customConstraints, setCustomConstraints] = useState([]);
     const [generationFailures, setGenerationFailures] = useState([]); // Array of { routine, items: [] }
@@ -55,6 +58,29 @@ export default function RoutineBuilder({ onBack, initialData }) {
     const [activeTechSelection, setActiveTechSelection] = useState(null); // { assignId, subId }
     const [techModalSearchTerm, setTechModalSearchTerm] = useState("");
     const [isSelectAll, setIsSelectAll] = useState(false);
+
+    // Merge Modal State (Manual)
+    const [showMergeModal, setShowMergeModal] = useState(false);
+    const [mergeData, setMergeData] = useState({
+        routineAId: '',
+        routineBId: '',
+        subject: '',
+        teacher: '',
+        room: '',
+        day: 'Sunday',
+        startTime: '',
+        endTime: ''
+    });
+
+    // Batch Merge Modal State
+    const [batchMergeData, setBatchMergeData] = useState(null); // { assignId, subId, sourceTechId }
+    const [showBatchMergeModal, setShowBatchMergeModal] = useState(false);
+    const [batchMergeSearchTerm, setBatchMergeSearchTerm] = useState("");
+
+    // Refactor State
+    const [showRefactorModal, setShowRefactorModal] = useState(false);
+    const [isRefactoring, setIsRefactoring] = useState(false);
+    const [refactorConfig, setRefactorConfig] = useState({ reduceLab: false, targetDept: '' });
 
     const [teacherFilterDept, setTeacherFilterDept] = useState('');
     const [roomFilterType, setRoomFilterType] = useState('');
@@ -122,12 +148,51 @@ export default function RoutineBuilder({ onBack, initialData }) {
             departments.forEach(dept => {
                 SEMESTERS.forEach(sem => {
                     SHIFTS.forEach(shift => {
-                        GROUPS.forEach(grp => {
-                            if ((shift === "1st" && grp.endsWith("2")) || (shift === "2nd" && grp.endsWith("1"))) return; // Filter invalid Shift-Group combos
+                        // Filter by selected Batch Shift if active
+                        // If we are in the "RoutineBuilder" main edit mode, we might not care about this filter 
+                        // BUT this `technologyOptions` is mainly used for the BATCH GENERATOR (Auto Generate) 
+                        // So we should respect `batchShift`.
+                        // However, `technologyOptions` is ALSO used in other contexts? 
+                        // Looking at usage: 
+                        // 1. Used in `handleSelectAllTech` (Batch Gen)
+                        // 2. Used in `toggleTechnology` (checking existence?) - No, just ID.
+                        // 3. Used in Tech Modal (Batch Gen)
+                        // 4. Used in `activeTechSelection` rendering (Batch Gen)
+                        // It seems `technologyOptions` is EXCLUSIVELY for Batch Generator tech selection.
 
-                            // User Logic: C1 and C2 only for "CT" (Computer)
-                            const isComputer = dept.name.toLowerCase().includes('computer') || dept.name.toLowerCase().includes('ct') || (dept.code && dept.code === '66');
-                            if ((grp === 'C1' || grp === 'C2') && !isComputer) return;
+                        if (batchShift && shift !== batchShift) return;
+
+                        GROUPS.forEach(grp => {
+                            // Logic:
+                            // 1st Shift: A1, B1. 
+                            // 2nd Shift: A2, B2.
+                            // Exception: Civil Technology (C1 for 1st, C2 for 2nd).
+
+                            const deptName = dept.name.toLowerCase();
+                            const isCivil = deptName.includes('civil');
+                            const isComputer = deptName.includes('computer') || deptName.includes('ct') || (dept.code && dept.code === '66');
+
+                            // 1. Filter Groups based on Shift
+                            if (shift === "1st") {
+                                if (grp === "C1") {
+                                    // C1 only allowed for Civil (and maybe Computer if legacy support needed, but user said "only C1 for Civil")
+                                    // User said: "this list show C1 , here add a condition olny C1 and C2 only for Civil Technology , or other department have only A1, B1, A2, B2 only for civil add extra C1 C2, C1 is for 1st shift and C2 is for 2nd"
+                                    if (!isCivil) return;
+                                } else if (grp === "C2") {
+                                    return; // C2 is for 2nd shift
+                                } else if (!grp.endsWith("1")) {
+                                    return; // A2, B2 not allowed in 1st
+                                }
+                            } else if (shift === "2nd") {
+                                if (grp === "C2") {
+                                    // C2 only for Civil
+                                    if (!isCivil) return;
+                                } else if (grp === "C1") {
+                                    return; // C1 is for 1st shift
+                                } else if (!grp.endsWith("2")) {
+                                    return; // A1, B1 not allowed in 2nd
+                                }
+                            }
 
                             options.push({
                                 id: `${dept.name}|${sem}|${shift}|${grp}`,
@@ -140,7 +205,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
             });
             setTechnologyOptions(options);
         }
-    }, [departments]);
+    }, [departments, batchShift]);
 
 
     const handleMetaChange = (e) => {
@@ -372,7 +437,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
             id: Date.now(),
             teacherId: teacher.id,
             teacherName: teacher.name,
-            subjects: [{ id: Date.now() + 1, subject: '', theory: 0, lab: 0, technologies: [] }],
+            subjects: [{ id: Date.now() + 1, subject: '', theory: 0, lab: 0, technologies: [], mergedGroups: {} }],
             blockedTimes: []
         }]);
         setTeacherSearchTerm("");
@@ -418,7 +483,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
             if (a.id !== assignId) return a;
             return {
                 ...a,
-                subjects: [...a.subjects, { id: Date.now(), subject: '', theory: 0, lab: 0, technologies: [] }]
+                subjects: [...a.subjects, { id: Date.now(), subject: '', theory: 0, lab: 0, technologies: [], mergedGroups: {} }]
             };
         }));
     };
@@ -502,6 +567,51 @@ export default function RoutineBuilder({ onBack, initialData }) {
         }));
     };
 
+    const handleOpenBatchMerge = (assignId, subId, techId) => {
+        setBatchMergeData({ assignId, subId, sourceTechId: techId });
+        setBatchMergeSearchTerm("");
+        setShowBatchMergeModal(true);
+    };
+
+    const handleConfirmBatchMerge = (targetTechId) => {
+        if (!batchMergeData) return;
+        const { assignId, subId, sourceTechId } = batchMergeData;
+
+        setAssignments(assignments.map(a => {
+            if (a.id !== assignId) return a;
+            return {
+                ...a,
+                subjects: a.subjects.map(s => {
+                    if (s.id !== subId) return s;
+
+                    // 1. Add target to technologies if not present
+                    const newTechs = s.technologies.includes(targetTechId)
+                        ? s.technologies
+                        : [...s.technologies, targetTechId];
+
+                    // 2. Register merge: source -> target
+                    // We store it as: mergedGroups: { [sourceId]: [targetId, ...] }
+                    const currentMerges = s.mergedGroups || {};
+                    const sourceMerges = currentMerges[sourceTechId] || [];
+
+                    if (!sourceMerges.includes(targetTechId)) {
+                        return {
+                            ...s,
+                            technologies: newTechs,
+                            mergedGroups: {
+                                ...currentMerges,
+                                [sourceTechId]: [...sourceMerges, targetTechId]
+                            }
+                        };
+                    }
+                    return s;
+                })
+            };
+        }));
+        setShowBatchMergeModal(false);
+        toast.success("Groups merged successfully!");
+    };
+
     const handleBatchGenerate = async () => {
         try {
             const { routines: updatedRoutines, failures } = generateBatchRoutines(
@@ -521,7 +631,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
             }
 
             setShowAutoModal(false);
-            
+
             if (failures.length > 0) {
                 setGenerationFailures(failures);
                 setShowFailuresModal(true);
@@ -537,6 +647,51 @@ export default function RoutineBuilder({ onBack, initialData }) {
         } catch (err) {
             console.error(err);
             toast.error("Batch generation failed.");
+        }
+    };
+
+    const handleRefactor = async () => {
+        setIsRefactoring(true);
+        try {
+            // Filter routines if targetDept is specified (Case 2: Isolation)
+            const routinesToProcess = (refactorConfig.reduceLab && refactorConfig.targetDept)
+                ? allRoutines.filter(r => r.department === refactorConfig.targetDept)
+                : allRoutines;
+
+            const { routines: updatedRoutines, changes, message } = refactorRoutine(
+                routinesToProcess,
+                { ...refactorConfig, allRoutines: allRoutines, rooms: rooms }
+            );
+
+            if (changes === 0) {
+                toast.info("No optimization changes needed.");
+                setIsRefactoring(false);
+                setShowRefactorModal(false);
+                return;
+            }
+
+            // Save updates
+            let saveCount = 0;
+            // Filter only changed routines? 
+            // refactorRoutine returns DEEP CLONE. IDs match.
+            for (const r of updatedRoutines) {
+                await createRoutine({ ...r, lastUpdated: Date.now() });
+                saveCount++;
+            }
+
+            toast.success(message);
+
+            // Refresh
+            const newRoutines = await fetchRoutines();
+            setAllRoutines(Array.isArray(newRoutines) ? newRoutines.map(d => ({ ...d, id: d._id })) : (newRoutines.data || []).map(d => ({ ...d, id: d._id })));
+
+            setShowRefactorModal(false);
+
+        } catch (err) {
+            console.error("Refactor failed:", err);
+            toast.error("Refactor failed to apply changes.");
+        } finally {
+            setIsRefactoring(false);
         }
     };
 
@@ -574,6 +729,104 @@ export default function RoutineBuilder({ onBack, initialData }) {
         }
     };
 
+    const handleMergeClasses = async () => {
+        const { routineAId, routineBId, subject, teacher, room, day, startTime, endTime } = mergeData;
+
+        if (!routineAId || !routineBId || !subject || !teacher || !room || !startTime || !endTime) {
+            toast.error("Please fill in all fields.");
+            return;
+        }
+
+        if (routineAId === routineBId) {
+            toast.error("Please select two different routines.");
+            return;
+        }
+
+        const routineA = allRoutines.find(r => r.id === routineAId);
+        const routineB = allRoutines.find(r => r.id === routineBId);
+
+        if (!routineA || !routineB) {
+            toast.error("Selected routines not found.");
+            return;
+        }
+
+        // Create new class object
+        const newClassA = {
+            id: Math.random().toString(36).substr(2, 9),
+            startTime,
+            endTime,
+            subject,
+            subjectCode: subjects.find(s => s.name === subject)?.code || '',
+            teacher,
+            room,
+            isMerged: true,
+            mergedWith: routineB.group // specific to routine A
+        };
+
+        const newClassB = {
+            id: Math.random().toString(36).substr(2, 9),
+            startTime,
+            endTime,
+            subject,
+            subjectCode: subjects.find(s => s.name === subject)?.code || '',
+            teacher,
+            room,
+            isMerged: true,
+            mergedWith: routineA.group // specific to routine B
+        };
+
+        // Update Routine A
+        const updatedRoutineA = {
+            ...routineA,
+            days: routineA.days.map(d => {
+                if (d.name === day) {
+                    // Remove overlapping classes AND classes with the same subject
+                    const nonOverlappingClasses = d.classes.filter(c =>
+                        !(c.startTime < endTime && c.endTime > startTime) &&
+                        c.subject !== subject
+                    );
+                    return { ...d, classes: [...nonOverlappingClasses, newClassA] };
+                }
+                return d;
+            }),
+            lastUpdated: Date.now()
+        };
+
+        // Update Routine B
+        const updatedRoutineB = {
+            ...routineB,
+            days: routineB.days.map(d => {
+                if (d.name === day) {
+                    // Remove overlapping classes AND classes with the same subject
+                    const nonOverlappingClasses = d.classes.filter(c =>
+                        !(c.startTime < endTime && c.endTime > startTime) &&
+                        c.subject !== subject
+                    );
+                    return { ...d, classes: [...nonOverlappingClasses, newClassB] };
+                }
+                return d;
+            }),
+            lastUpdated: Date.now()
+        };
+
+        try {
+            await Promise.all([
+                createRoutine(updatedRoutineA),
+                createRoutine(updatedRoutineB)
+            ]);
+            toast.success("Classes merged and added successfully!");
+            setShowMergeModal(false);
+
+            // Refresh
+            const newRoutines = await fetchRoutines();
+            setAllRoutines(Array.isArray(newRoutines) ? newRoutines.map(d => ({ ...d, id: d._id })) : (newRoutines.data || []).map(d => ({ ...d, id: d._id })));
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to merge classes.");
+        }
+    };
+
     return (
         <div className='bg-gray-50 dark:bg-gray-950 min-h-screen'>
             <div className="container  mx-auto max-w-12xl py-8 px-2 pb-24">
@@ -589,11 +842,25 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     </div>
                     <div className="flex gap-3">
                         <button
-                            onClick={() => setShowAutoModal(true)}
+                            onClick={() => setShowShiftSelectionModal(true)}
                             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center justify-center transition-colors shadow-sm"
                         >
                             <Sparkles size={18} className="mr-2" /> Auto Generate
                         </button>
+                        <button
+                            onClick={() => setShowRefactorModal(true)}
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md flex items-center justify-center transition-colors shadow-sm"
+                        >
+                            <RefreshCcw size={18} className="mr-2" /> Refactor All
+                        </button>
+
+                        <button
+                            onClick={() => setShowMergeModal(true)}
+                            className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md flex items-center justify-center transition-colors shadow-sm"
+                        >
+                            <GitMerge size={18} className="mr-2" /> Merge Classes
+                        </button>
+
                         <button
                             onClick={() => setIsPreviewMode(!isPreviewMode)}
                             className="min-w-[120px] bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-gray-700 dark:text-white px-4 py-2 rounded-md flex items-center justify-center border border-gray-300 dark:border-slate-600 transition-colors"
@@ -614,6 +881,44 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     </div>
                 </div>
 
+                {/* Shift Selection Modal */}
+                {showShiftSelectionModal && (
+                    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col border border-gray-200 dark:border-slate-700 scale-100 transition-transform">
+                            <div className="p-5 border-b border-gray-100 dark:border-slate-800 text-center">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Select Shift</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Choose a shift to generate routines for</p>
+                            </div>
+                            <div className="p-6 grid gap-4">
+                                {["1st", "2nd"].map(shift => (
+                                    <button
+                                        key={shift}
+                                        onClick={() => {
+                                            setBatchShift(shift);
+                                            setShowShiftSelectionModal(false);
+                                            setShowAutoModal(true);
+                                        }}
+                                        className="py-4 px-6 rounded-xl border-2 border-gray-100 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all group flex items-center justify-between"
+                                    >
+                                        <span className="text-lg font-bold text-gray-700 dark:text-gray-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-400">{shift} Shift</span>
+                                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 flex items-center justify-center">
+                                            <Clock size={16} className="text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="p-4 bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
+                                <button
+                                    onClick={() => setShowShiftSelectionModal(false)}
+                                    className="w-full py-2.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Auto Generate Modal (New Batch UI) */}
                 {showAutoModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -621,7 +926,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
                             <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800">
                                 <div>
                                     <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                        <Sparkles className="text-indigo-500" /> Batch Routine Generator
+                                        <Sparkles className="text-indigo-500" /> Batch Routine Generator <span className='text-sm bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200'>{batchShift} Shift</span>
                                     </h2>
                                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Distribute teacher load across multiple technologies automatically.</p>
                                 </div>
@@ -774,12 +1079,19 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                                                 <div className="flex flex-wrap gap-2 mb-2">
                                                                                     {sub.technologies.map(techId => {
                                                                                         const tech = technologyOptions.find(t => t.id === techId);
+                                                                                        const mergedWith = sub.mergedGroups?.[techId] || [];
                                                                                         return (
-                                                                                            <span key={techId} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                                                            <span
+                                                                                                key={techId}
+                                                                                                onDoubleClick={() => handleOpenBatchMerge(assignment.id, sub.id, techId)}
+                                                                                                title={mergedWith.length > 0 ? `Merged with: ${mergedWith.length} groups` : "Double-click to merge"}
+                                                                                                className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border cursor-pointer select-none transition-colors ${mergedWith.length > 0 ? 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900/40 dark:text-teal-300 dark:border-teal-800' : 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800'}`}
+                                                                                            >
+                                                                                                {mergedWith.length > 0 && <GitMerge size={12} className="mr-1" />}
                                                                                                 {tech?.label}
                                                                                                 <button
-                                                                                                    onClick={() => toggleTechnology(assignment.id, sub.id, techId)}
-                                                                                                    className="ml-1.5 hover:text-blue-900 dark:hover:text-blue-100"
+                                                                                                    onClick={(e) => { e.stopPropagation(); toggleTechnology(assignment.id, sub.id, techId); }}
+                                                                                                    className="ml-1.5 opacity-60 hover:opacity-100"
                                                                                                 >
                                                                                                     <X size={12} />
                                                                                                 </button>
@@ -955,49 +1267,49 @@ export default function RoutineBuilder({ onBack, initialData }) {
                         </div>
                     </div>
                 )}
-                
+
                 {/* Failures Report Modal */}
                 {showFailuresModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col border border-red-200 dark:border-red-900 overflow-hidden">
-                             <div className="p-6 border-b border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 flex justify-between items-center">
-                                 <div>
-                                     <h2 className="text-xl font-bold text-red-700 dark:text-red-400 flex items-center gap-2">
-                                         <span className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">!</span>
-                                         Unplaced Classes
-                                     </h2>
-                                     <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">Some classes could not be assigned a room automatically.</p>
-                                 </div>
-                                 <button onClick={() => setShowFailuresModal(false)} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full transition-colors">
-                                     <X size={20} className="text-red-500" />
-                                 </button>
-                             </div>
-                             
-                             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                                 {generationFailures.map((fail, idx) => (
-                                     <div key={idx} className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                                         <div className="bg-gray-50 dark:bg-slate-800 px-4 py-2 border-b border-gray-200 dark:border-slate-700 font-semibold text-gray-700 dark:text-gray-300">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col border border-red-200 dark:border-red-900 overflow-hidden">
+                            <div className="p-6 border-b border-red-100 dark:border-red-900/30 bg-red-50 dark:bg-red-900/10 flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-xl font-bold text-red-700 dark:text-red-400 flex items-center gap-2">
+                                        <span className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">!</span>
+                                        Unplaced Classes
+                                    </h2>
+                                    <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">Some classes could not be assigned a room automatically.</p>
+                                </div>
+                                <button onClick={() => setShowFailuresModal(false)} className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full transition-colors">
+                                    <X size={20} className="text-red-500" />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                {generationFailures.map((fail, idx) => (
+                                    <div key={idx} className="border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                                        <div className="bg-gray-50 dark:bg-slate-800 px-4 py-2 border-b border-gray-200 dark:border-slate-700 font-semibold text-gray-700 dark:text-gray-300">
                                             {fail.routine}
-                                         </div>
-                                         <div className="divide-y divide-gray-100 dark:divide-slate-700">
-                                             {fail.items.map((item, i) => (
-                                                 <div key={i} className="p-4 bg-white dark:bg-slate-900">
-                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                                         <div>
-                                                             <h4 className="font-bold text-gray-900 dark:text-white">{item.subject}</h4>
-                                                             <p className="text-sm text-gray-500 mb-2">{item.type} Class • {item.teacher}</p>
-                                                             <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold">
-                                                                 {item.reason}
-                                                             </span>
-                                                         </div>
-                                                         
-                                                         {/* Suggestions */}
-                                                         {item.suggestions && item.suggestions.length > 0 && (
-                                                             <div className="flex-1 sm:ml-8 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
-                                                                 <h5 className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-1">
+                                        </div>
+                                        <div className="divide-y divide-gray-100 dark:divide-slate-700">
+                                            {fail.items.map((item, i) => (
+                                                <div key={i} className="p-4 bg-white dark:bg-slate-900">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                        <div>
+                                                            <h4 className="font-bold text-gray-900 dark:text-white">{item.subject}</h4>
+                                                            <p className="text-sm text-gray-500 mb-2">{item.type} Class • {item.teacher}</p>
+                                                            <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold">
+                                                                {item.reason}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Suggestions */}
+                                                        {item.suggestions && item.suggestions.length > 0 && (
+                                                            <div className="flex-1 sm:ml-8 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                                                <h5 className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-1">
                                                                     <Sparkles size={12} /> Suggestion: Merge Opportunity
-                                                                 </h5>
-                                                                 <div className="space-y-2">
+                                                                </h5>
+                                                                <div className="space-y-2">
                                                                     {item.suggestions.slice(0, 2).map((sugg, sIdx) => (
                                                                         <div key={sIdx} className="text-xs text-gray-700 dark:text-gray-300 flex items-start gap-2">
                                                                             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></span>
@@ -1009,32 +1321,328 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                                             </div>
                                                                         </div>
                                                                     ))}
-                                                                 </div>
-                                                             </div>
-                                                         )}
-                                                         
-                                                         {(!item.suggestions || item.suggestions.length === 0) && (
-                                                             <div className="text-sm text-gray-400 italic">
-                                                                 No merge options found. Try manual assignment.
-                                                             </div>
-                                                         )}
-                                                     </div>
-                                                 </div>
-                                             ))}
-                                         </div>
-                                     </div>
-                                 ))}
-                             </div>
-                             
-                             <div className="p-4 bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 flex justify-end">
-                                 <button
-                                     onClick={() => setShowFailuresModal(false)}
-                                     className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium rounded-lg hover:opacity-90 transition-opacity"
-                                 >
-                                     Close & Review
-                                 </button>
-                             </div>
-                         </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {(!item.suggestions || item.suggestions.length === 0) && (
+                                                            <div className="text-sm text-gray-400 italic">
+                                                                No merge options found. Try manual assignment.
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="p-4 bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 flex justify-end">
+                                <button
+                                    onClick={() => setShowFailuresModal(false)}
+                                    className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-medium rounded-lg hover:opacity-90 transition-opacity"
+                                >
+                                    Close & Review
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Merge Class Modal */}
+                {showMergeModal && (
+                    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl flex flex-col border border-gray-200 dark:border-slate-700 max-h-[90vh] overflow-y-auto">
+                            <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <GitMerge className="text-teal-500" /> Merge Classes
+                                </h3>
+                                <button onClick={() => setShowMergeModal(false)} className="p-2 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-full transition-colors">
+                                    <X size={20} className="text-gray-500" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Routine A Selection */}
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Select First Routine (Group A)</label>
+                                        <select
+                                            className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                            value={mergeData.routineAId}
+                                            onChange={(e) => setMergeData(prev => ({ ...prev, routineAId: e.target.value }))}
+                                        >
+                                            <option value="">Select Routine A</option>
+                                            {allRoutines.map(r => (
+                                                <option key={r.id} value={r.id}>
+                                                    {r.department} - {r.semester} - {r.shift} ({r.group})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    {/* Routine B Selection */}
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Select Second Routine (Group B)</label>
+                                        <select
+                                            className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                            value={mergeData.routineBId}
+                                            onChange={(e) => setMergeData(prev => ({ ...prev, routineBId: e.target.value }))}
+                                        >
+                                            <option value="">Select Routine B</option>
+                                            {allRoutines.map(r => (
+                                                <option key={r.id} value={r.id}>
+                                                    {r.department} - {r.semester} - {r.shift} ({r.group})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-gray-100 dark:border-slate-800 pt-4">
+                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Class Details</h4>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {/* Subject */}
+                                        <div className="col-span-2">
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1">Subject</label>
+                                            <select
+                                                className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                                value={mergeData.subject}
+                                                onChange={(e) => setMergeData(prev => ({ ...prev, subject: e.target.value }))}
+                                            >
+                                                <option value="">Select Subject</option>
+                                                {subjects.map(s => (
+                                                    <option key={s.id} value={s.name}>{s.name} ({s.code})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Teacher */}
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1">Teacher</label>
+                                            <select
+                                                className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                                value={mergeData.teacher}
+                                                onChange={(e) => setMergeData(prev => ({ ...prev, teacher: e.target.value }))}
+                                            >
+                                                <option value="">Select Teacher</option>
+                                                {teachers.map(t => (
+                                                    <option key={t.id} value={t.name}>{t.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Room */}
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1">Room</label>
+                                            <select
+                                                className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                                value={mergeData.room}
+                                                onChange={(e) => setMergeData(prev => ({ ...prev, room: e.target.value }))}
+                                            >
+                                                <option value="">Select Room</option>
+                                                {rooms.map(r => (
+                                                    <option key={r.id} value={r.number || r.name}>{r.number || r.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Day */}
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1">Day</label>
+                                            <select
+                                                className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                                value={mergeData.day}
+                                                onChange={(e) => setMergeData(prev => ({ ...prev, day: e.target.value }))}
+                                            >
+                                                {DAYS.map(d => (
+                                                    <option key={d} value={d}>{d}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Time Slots */}
+                                        <div className="flex gap-2">
+                                            <div className="w-1/2">
+                                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1">Start</label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                                    value={mergeData.startTime}
+                                                    onChange={(e) => setMergeData(prev => ({ ...prev, startTime: e.target.value }))}
+                                                />
+                                            </div>
+                                            <div className="w-1/2">
+                                                <label className="block text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase mb-1">End</label>
+                                                <input
+                                                    type="time"
+                                                    className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                                    value={mergeData.endTime}
+                                                    onChange={(e) => setMergeData(prev => ({ ...prev, endTime: e.target.value }))}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-4 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-3 bg-gray-50 dark:bg-slate-800 rounded-b-xl">
+                                <button
+                                    onClick={() => setShowMergeModal(false)}
+                                    className="px-5 py-2.5 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleMergeClasses}
+                                    className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg shadow-lg shadow-teal-500/30 transition-all flex items-center gap-2"
+                                >
+                                    <GitMerge size={18} /> Confirm Merge
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Batch Merge Modal */}
+                {showBatchMergeModal && batchMergeData && (
+                    <div className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh] border border-gray-200 dark:border-slate-700">
+                            <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                        <GitMerge size={18} className="text-teal-500" /> Convert to Combined Class
+                                    </h3>
+                                    <p className="text-xs text-gray-500">Select a group to merge with.</p>
+                                </div>
+                                <button onClick={() => setShowBatchMergeModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-4 border-b border-gray-200 dark:border-slate-700 space-y-3 bg-gray-50/50 dark:bg-slate-800/50">
+                                <input
+                                    type="text"
+                                    placeholder="Search groups..."
+                                    value={batchMergeSearchTerm}
+                                    onChange={(e) => setBatchMergeSearchTerm(e.target.value)}
+                                    autoFocus
+                                    className="w-full p-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-sm outline-none focus:ring-2 focus:ring-teal-500"
+                                />
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-2">
+                                <div className="space-y-2">
+                                    {technologyOptions
+                                        .filter(opt =>
+                                            opt.label.toLowerCase().includes(batchMergeSearchTerm.toLowerCase()) &&
+                                            opt.id !== batchMergeData.sourceTechId // Exclude self
+                                        )
+                                        .map(opt => (
+                                            <div
+                                                key={opt.id}
+                                                onClick={() => handleConfirmBatchMerge(opt.id)}
+                                                className="p-3 rounded-lg border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:border-teal-200 dark:hover:border-teal-800 cursor-pointer transition-all flex items-center justify-between group"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <span className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-xs">
+                                                        {opt.grp}
+                                                    </span>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-medium text-gray-900 dark:text-white">{opt.label}</span>
+                                                        <span className="text-xs text-gray-500">{opt.dept}</span>
+                                                    </div>
+                                                </div>
+                                                <Plus size={16} className="text-gray-400 group-hover:text-teal-600" />
+                                            </div>
+                                        ))
+                                    }
+                                    {technologyOptions.filter(opt => opt.label.toLowerCase().includes(batchMergeSearchTerm.toLowerCase())).length === 0 && (
+                                        <div className="text-center py-8 text-gray-500">
+                                            No groups found.
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* Refactor Modal */}
+                {showRefactorModal && (
+                    <div className="fixed inset-0 z-80 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md flex flex-col border border-gray-200 dark:border-slate-700">
+                            <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center bg-gray-50 dark:bg-slate-800">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <RefreshCcw size={18} className="text-orange-500" /> Refactor Routine
+                                </h3>
+                                <button onClick={() => setShowRefactorModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-4">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Refactoring attempts to resolve 'Unplaced' classes by reshuffling rooms and time slots.
+                                </p>
+
+                                <div className="space-y-3 pt-2">
+                                    <label className="flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            checked={refactorConfig.reduceLab}
+                                            onChange={(e) => setRefactorConfig(prev => ({ ...prev, reduceLab: e.target.checked }))}
+                                            className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
+                                        />
+                                        <div>
+                                            <span className="font-semibold text-gray-900 dark:text-white text-sm block">Reduce Lab Duration</span>
+                                            <span className="text-xs text-gray-500 block">Reduce 3-period labs to 2 periods to free up space (Department specific).</span>
+                                        </div>
+                                    </label>
+
+                                    {refactorConfig.reduceLab && (
+                                        <div className="animate-in slide-in-from-top-2 duration-200">
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 ml-1">Target Department</label>
+                                            <select
+                                                value={refactorConfig.targetDept}
+                                                onChange={(e) => setRefactorConfig(prev => ({ ...prev, targetDept: e.target.value }))}
+                                                className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
+                                            >
+                                                <option value="">Select Department</option>
+                                                {departments.map((dept, index) => (
+                                                    <option key={index} value={dept.name}>{dept.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="p-4 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-3 bg-gray-50 dark:bg-slate-800 rounded-b-xl">
+                                <button
+                                    onClick={() => setShowRefactorModal(false)}
+                                    className="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleRefactor}
+                                    disabled={isRefactoring || (refactorConfig.reduceLab && !refactorConfig.targetDept)}
+                                    className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isRefactoring ? (
+                                        <>
+                                            <RefreshCcw size={16} className="animate-spin" /> Processing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RefreshCcw size={16} /> Start Refactor
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 )}
                 {/* Preview Mode */}
@@ -1342,8 +1950,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                                 onChange={(e) => {
                                                                     const selectedRoom = e.target.value;
                                                                     if (busyRooms.has(selectedRoom) && selectedRoom !== cls.room) {
-                                                                         toast.error("This room is currently fully booked.");
-                                                                         return;
+                                                                        toast.error("This room is currently fully booked.");
+                                                                        return;
                                                                     }
                                                                     updateClass(cls.id, 'room', selectedRoom);
                                                                 }}
