@@ -46,10 +46,10 @@ export default function TeacherLoadViewer({ onBack }) {
                     assignment => assignment.teacherName === teacherName
                 );
 
-                // Calculate totals
-                const totalTheory = teacherAssignments.reduce((sum, a) => sum + a.theoryPeriods, 0);
-                const totalLab = teacherAssignments.reduce((sum, a) => sum + a.practicalPeriods, 0);
-                const totalLoad = teacherAssignments.reduce((sum, a) => sum + a.totalLoad, 0);
+                // Calculate totals (Using Class Counts NOT Periods)
+                const totalTheory = teacherAssignments.reduce((sum, a) => sum + (a.theoryCount || 0), 0);
+                const totalLab = teacherAssignments.reduce((sum, a) => sum + (a.practicalCount || 0), 0);
+                const totalLoad = teacherAssignments.reduce((sum, a) => sum + (a.totalClasses || 0), 0);
 
                 setLoadData({
                     assignments: teacherAssignments,
@@ -135,7 +135,7 @@ export default function TeacherLoadViewer({ onBack }) {
                                             <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Theory Classes</p>
                                         </div>
                                         <p className="text-3xl font-bold text-blue-700 dark:text-blue-300">{loadData.totalTheory}</p>
-                                        <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">periods/week</p>
+                                        <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-1">classes/week</p>
                                     </div>
 
                                     <div className="p-6 rounded-2xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
@@ -144,7 +144,7 @@ export default function TeacherLoadViewer({ onBack }) {
                                             <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Lab Classes</p>
                                         </div>
                                         <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">{loadData.totalLab}</p>
-                                        <p className="text-xs text-purple-600/70 dark:text-purple-400/70 mt-1">periods/week</p>
+                                        <p className="text-xs text-purple-600/70 dark:text-purple-400/70 mt-1">classes/week</p>
                                     </div>
 
                                     <div className="p-6 rounded-2xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
@@ -153,7 +153,7 @@ export default function TeacherLoadViewer({ onBack }) {
                                             <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Total Load</p>
                                         </div>
                                         <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">{loadData.totalLoad}</p>
-                                        <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-1">periods/week</p>
+                                        <p className="text-xs text-orange-600/70 dark:text-orange-400/70 mt-1">classes/week</p>
                                     </div>
 
                                     <div className="p-6 rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
@@ -187,15 +187,15 @@ export default function TeacherLoadViewer({ onBack }) {
                                                     <div className="flex items-center gap-4 ml-4">
                                                         <div className="text-center">
                                                             <p className="text-xs text-gray-500 dark:text-gray-400">Theory</p>
-                                                            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{assignment.theoryPeriods}</p>
+                                                            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{assignment.theoryCount || 0}</p>
                                                         </div>
                                                         <div className="text-center">
                                                             <p className="text-xs text-gray-500 dark:text-gray-400">Lab</p>
-                                                            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{assignment.practicalPeriods}</p>
+                                                            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{assignment.practicalCount || 0}</p>
                                                         </div>
                                                         <div className="text-center">
                                                             <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                                                            <p className="text-lg font-bold text-[#FF5C35]">{assignment.totalLoad}</p>
+                                                            <p className="text-lg font-bold text-[#FF5C35]">{assignment.totalClasses || 0}</p>
                                                         </div>
                                                     </div>
                                                 </div>

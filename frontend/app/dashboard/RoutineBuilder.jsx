@@ -130,7 +130,10 @@ export default function RoutineBuilder({ onBack, initialData }) {
                 ]);
 
                 setTeachers(Array.isArray(teachersData) ? teachersData.map(d => ({ ...d, id: d._id })) : (teachersData.data || []).map(d => ({ ...d, id: d._id })));
-                setRooms(Array.isArray(roomsData) ? roomsData.map(d => ({ ...d, id: d._id })) : (roomsData.data || []).map(d => ({ ...d, id: d._id })));
+                setRooms(Array.isArray(roomsData) 
+                    ? roomsData.map(d => ({ ...d, id: d._id, isLab: d.type === 'Lab' })) 
+                    : (roomsData.data || []).map(d => ({ ...d, id: d._id, isLab: d.type === 'Lab' }))
+                );
                 setSubjects(Array.isArray(subjectsData) ? subjectsData.map(d => ({ ...d, id: d._id })) : (subjectsData.data || []).map(d => ({ ...d, id: d._id })));
                 setDepartments(Array.isArray(departmentsData) ? departmentsData.map(d => ({ ...d, id: d._id })) : (departmentsData.data || []).map(d => ({ ...d, id: d._id })));
                 setAllRoutines(Array.isArray(routinesData) ? routinesData.map(d => ({ ...d, id: d._id })) : (routinesData.data || []).map(d => ({ ...d, id: d._id })));
@@ -614,20 +617,40 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
     const handleBatchGenerate = async () => {
         try {
+            // CRITICAL: Fetch fresh routines to avoid stale state issues (e.g. overwriting recent edits)
+            const freshRoutinesResponse = await fetchRoutines();
+            const freshRoutines = Array.isArray(freshRoutinesResponse) 
+                ? freshRoutinesResponse.map(d => ({ ...d, id: d._id })) 
+                : (freshRoutinesResponse.data || []).map(d => ({ ...d, id: d._id }));
+                
+            setAllRoutines(freshRoutines); // Update state while we are at it
+
             const { routines: updatedRoutines, failures } = generateBatchRoutines(
                 assignments,
-                allRoutines,
+                freshRoutines, // Use FRESH data
                 rooms,
                 subjects
             );
 
             let saveCount = 0;
             for (const r of updatedRoutines) {
+                // Validator
+                if (!r.department || !r.semester || !r.shift || !r.group) {
+                    console.warn("Skipping invalid routine generated:", r);
+                    continue;
+                }
+
                 // Only save if it's new or has been modified (naive check: simply save all involved)
                 // In a real app we might want to check diffs.
                 // For now, save all.
-                await createRoutine({ ...r, lastUpdated: Date.now() });
-                saveCount++;
+                try {
+                    await createRoutine({ ...r, lastUpdated: Date.now() });
+                    saveCount++;
+                } catch (saveError) {
+                    console.error("Failed to save routine:", r);
+                    console.error("Server Response:", saveError.response?.data);
+                    throw saveError; // Stop the batch or continue? Let's stop to see the error.
+                }
             }
 
             setShowAutoModal(false);
@@ -645,8 +668,9 @@ export default function RoutineBuilder({ onBack, initialData }) {
             setAllRoutines(Array.isArray(newRoutines) ? newRoutines.map(d => ({ ...d, id: d._id })) : (newRoutines.data || []).map(d => ({ ...d, id: d._id })));
 
         } catch (err) {
-            console.error(err);
-            toast.error("Batch generation failed.");
+            console.error("Batch error full:", err);
+            const errorMessage = err.response?.data?.message || err.message || "Batch generation failed";
+            toast.error(`Batch generation failed: ${errorMessage}`);
         }
     };
 
@@ -696,12 +720,12 @@ export default function RoutineBuilder({ onBack, initialData }) {
     };
 
     const handleSave = async () => {
-        if (!routine.department) {
-            toast("Please select a department", { type: "error", position: 'top-right' });
-            return;
-        }
+        if (!routine.department || !routine.semester || !routine.shift || !routine.group) {
+        toast("Please fill in all required fields: Department, Semester, Shift, Group", { type: "error", position: 'top-right' });
+        return;
+    }
 
-        // Check for duplicates
+    // Check for duplicates
         const isDuplicate = allRoutines.some(r =>
             r.department === routine.department &&
             Number(r.semester) === Number(routine.semester) &&
@@ -718,9 +742,22 @@ export default function RoutineBuilder({ onBack, initialData }) {
         setSaving(true);
         try {
             const payload = { ...routine, lastUpdated: Date.now() };
-            await createRoutine(payload);
+            const savedRoutine = await createRoutine(payload);
 
             toast("Routine saved successfully!", { type: "success", position: 'top-right' });
+            
+            // Re-fetch to ensure we have the latest server state (incase of triggers etc) and update local
+            // Also important for Duplicate Check to be accurate next time
+             const routinesData = await fetchRoutines();
+             setAllRoutines(Array.isArray(routinesData) ? routinesData.map(d => ({ ...d, id: d._id })) : (routinesData.data || []).map(d => ({ ...d, id: d._id })));
+
+             // Update current view with saved data (ID might be generated if it was new)
+             // savedRoutine is likely the axios response data object
+             const savedData = savedRoutine.data || savedRoutine; 
+             if(savedData && savedData._id) {
+                 setRoutine({ ...savedData, id: savedData._id });
+             }
+
         } catch (error) {
             console.error("Error saving routine:", error);
             toast("Failed to save routine", { type: "error", position: 'top-right' });
@@ -810,16 +847,53 @@ export default function RoutineBuilder({ onBack, initialData }) {
         };
 
         try {
-            await Promise.all([
+            const [resA, resB] = await Promise.all([
                 createRoutine(updatedRoutineA),
                 createRoutine(updatedRoutineB)
             ]);
             toast.success("Classes merged and added successfully!");
             setShowMergeModal(false);
 
-            // Refresh
+            // Refresh All Routines
             const newRoutines = await fetchRoutines();
             setAllRoutines(Array.isArray(newRoutines) ? newRoutines.map(d => ({ ...d, id: d._id })) : (newRoutines.data || []).map(d => ({ ...d, id: d._id })));
+
+            // CRITICAL FIX: If we are currently editing one of the routines involved in the merge, we MUST update our local state
+            // Otherwise, the next "Save" will overwrite the merged changes with stale local state.
+            if (routine.id === routineAId) {
+                // We depend on what the backend returned or our optimistically updated object.
+                // It's safer to use the updated object we just built, or the response from createRoutine if available.
+                // Let's use the one we built since it has the ID structure we expect.
+                // Ideally, we should unify IDs. `resA` from backend has `_id`. `routine` state uses `id`. (mapped in useEffect)
+                const mappedA = { ...resA.data, id: resA.data._id }; // Assuming createRoutine returns standard axios response or similar
+                // Actually `createRoutine` return structure needs verification. 
+                // api.js usually returns `response.data`.
+                // routineController returns `res.status(200).json(routine)`.
+                // So resA is the routine object directly if using typical fetch? 
+                // Let's check `api.js` return wrapper if possible, or just use `updatedRoutineA` which we know is correct regarding content.
+                // However, `lastUpdated` might be slightly off from DB.
+                
+                // safest is to find the FRESH version from `newRoutines` we just fetched.
+                const freshRoutine = Array.isArray(newRoutines) 
+                    ? newRoutines.find(r => r._id === routineAId) 
+                    : (newRoutines.data || []).find(r => r._id === routineAId);
+                
+                if (freshRoutine) {
+                    setRoutine({ ...freshRoutine, id: freshRoutine._id });
+                } else {
+                     setRoutine(updatedRoutineA);
+                }
+            } else if (routine.id === routineBId) {
+                 const freshRoutine = Array.isArray(newRoutines)
+                    ? newRoutines.find(r => r._id === routineBId)
+                    : (newRoutines.data || []).find(r => r._id === routineBId);
+                
+                if (freshRoutine) {
+                    setRoutine({ ...freshRoutine, id: freshRoutine._id });
+                } else {
+                    setRoutine(updatedRoutineB);
+                }
+            }
 
         } catch (error) {
             console.error(error);

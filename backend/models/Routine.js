@@ -1,5 +1,22 @@
 const mongoose = require('mongoose');
 
+const classSchema = mongoose.Schema({
+    startTime: String,
+    endTime: String,
+    subject: String,
+    subjectCode: String,
+    teacher: String,
+    room: String,
+    type: String, // 'Theory' or 'Lab'
+    isMerged: Boolean,
+    id: String // Frontend generated ID
+}, { _id: false }); // Disable auto _id for classes to avoid conflicts, or keep it if needed. Let's disable to rely on 'id' string.
+
+const daySchema = mongoose.Schema({
+    name: String,
+    classes: [classSchema]
+}, { _id: false });
+
 const routineSchema = mongoose.Schema({
     department: {
         type: String,
@@ -17,17 +34,7 @@ const routineSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    days: [{
-        name: String,
-        classes: [{
-            startTime: String,
-            endTime: String,
-            subject: String,
-            subjectCode: String,
-            teacher: String,
-            room: String
-        }]
-    }],
+    days: [daySchema],
     lastUpdated: {
         type: Number,
         default: 0

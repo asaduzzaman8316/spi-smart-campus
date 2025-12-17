@@ -133,6 +133,19 @@ export const generateRoutine = (
         return false;
     };
 
+    const isGroupBusy = (dayName, start, end) => {
+        // Check Current Generated Local State (which now includes pre-fetched existing classes)
+        const currentDay = generatedDays.find(d => d.name === dayName);
+        if (!currentDay) return false;
+
+        for (const cls of currentDay.classes) {
+            if (isOverlapping(cls.startTime, cls.endTime, start, end)) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     // Helper to find existing room invocation if ANY to merge with
     const findMergeRoom = (teacherName, subjectName, type, dayName, start, end) => {
         if (!options.combineClasses) return null;
@@ -300,6 +313,9 @@ export const generateRoutine = (
                     const startSlot = slots[s];
                     const endSlot = slots[s + slotsNeeded - 1]; // Inclusive
 
+                    // Check if Group is Busy (Self-Overlap) - ADDED FIX
+                    if (isGroupBusy(day, startSlot.start, endSlot.end)) continue;
+
                     // Check Teacher Availability for WHOLE block
                     let teacherConflict = false;
                     for (let check = 0; check < slotsNeeded; check++) {
@@ -395,6 +411,9 @@ export const generateRoutine = (
                         const startSlot = slots[s];
                         const endSlot = slots[s + 1];
 
+                        // Check if Group is Busy (Self-Overlap) - ADDED FIX
+                        if (isGroupBusy(day, startSlot.start, endSlot.end)) continue;
+
                         let teacherConflict = false;
                         for (let check = 0; check < 2; check++) {
                             const checkSlot = slots[s + check];
@@ -446,6 +465,9 @@ export const generateRoutine = (
                     const startSlot = slots[s];
                     const endSlot = slots[s + fallbackSlots - 1];
 
+                    // Check if Group is Busy (Self-Overlap) - ADDED FIX
+                    if (isGroupBusy(day, startSlot.start, endSlot.end)) continue;
+
                     // Teacher Check Only
                     let teacherConflict = false;
                     for (let check = 0; check < fallbackSlots; check++) {
@@ -480,6 +502,9 @@ export const generateRoutine = (
             for (const slot of slots) {
                 if (placed) break;
 
+                // Check if Group is Busy (Self-Overlap) - ADDED FIX
+                if (isGroupBusy(day, slot.start, slot.end)) continue;
+
                 // Teacher Check
                 if (isTeacherBusy(theory.teacher, day, slot.start, slot.end, theory.subject)) continue;
 
@@ -489,7 +514,7 @@ export const generateRoutine = (
                 // Merge Check
                 let chosenRoomName = null;
                 let isMerged = false;
-                const mergeRoom = findMergeRoom(theory.teacher, theory.subject, day, slot.start, slot.end);
+                const mergeRoom = findMergeRoom(theory.teacher, theory.subject, theory.type, day, slot.start, slot.end);
 
                 const subjectObj = subjects.find(s => s.name === theory.subject);
                 const subjectDept = subjectObj ? subjectObj.department : null;
@@ -566,6 +591,9 @@ export const generateRoutine = (
 
                     for (const slot of slots) {
                         if (placed) break;
+                        // Check if Group is Busy (Self-Overlap) - ADDED FIX
+                        if (isGroupBusy(day, slot.start, slot.end)) continue;
+
                         if (isTeacherBusy(theory.teacher, day, slot.start, slot.end, theory.subject, theory.type)) continue;
                         if (isLinkedRoutineBusy(day, slot.start, slot.end)) continue;
 
@@ -595,7 +623,11 @@ export const generateRoutine = (
             for (const day of days) {
                 if (placed) break;
                 if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
+                if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
                 for (const slot of slots) {
+                    // Check if Group is Busy (Self-Overlap) - ADDED FIX
+                    if (isGroupBusy(day, slot.start, slot.end)) continue;
+
                     if (isTeacherBusy(theory.teacher, day, slot.start, slot.end, theory.subject, theory.type)) continue;
                     if (isLinkedRoutineBusy(day, slot.start, slot.end)) continue;
                     // Force Place
@@ -655,11 +687,13 @@ export const generateBatchRoutines = (
     // Helper to find or create
     const getRoutine = (techId) => {
         const [dept, sem, shift, grp] = techId.split('|');
+
+        // Robust Matching: Trim whitespace and case-insensitive check for strings
         let routine = workingRoutines.find(r =>
-            r.department === dept &&
-            r.semester == sem &&
-            r.shift === shift &&
-            r.group === grp
+            r.department.trim().toLowerCase() === dept.trim().toLowerCase() &&
+            Number(r.semester) === Number(sem) && // Ensure number comparison
+            r.shift === shift && // Shift usually matches exactly (dropdown)
+            r.group === grp      // Group usually matches exactly
         );
 
         if (!routine) {
@@ -774,10 +808,10 @@ export const refactorRoutine = (routines, config) => {
             ];
         } else {
             return [
-                 { start: "13:30", end: "14:15" }, { start: "14:15", end: "15:00" },
-                 { start: "15:00", end: "15:45" }, { start: "15:45", end: "16:30" },
-                 { start: "16:30", end: "17:15" }, { start: "17:15", end: "18:00" },
-                 { start: "18:00", end: "18:45" },
+                { start: "13:30", end: "14:15" }, { start: "14:15", end: "15:00" },
+                { start: "15:00", end: "15:45" }, { start: "15:45", end: "16:30" },
+                { start: "16:30", end: "17:15" }, { start: "17:15", end: "18:00" },
+                { start: "18:00", end: "18:45" },
             ];
         }
     };
@@ -794,8 +828,8 @@ export const refactorRoutine = (routines, config) => {
         for (const r of config.allRoutines) {
             // We consider conflicts with OTHER routines. 
             // For self-conflict (within same routine), we handle that by removing the old class instance first or checking separately.
-            if (r.id === ignoreRoutineId) continue; 
-            
+            if (r.id === ignoreRoutineId) continue;
+
             const d = r.days.find(x => x.name === day);
             if (!d) continue;
 
@@ -819,7 +853,7 @@ export const refactorRoutine = (routines, config) => {
                             const slots = getSlots(routine.shift);
                             const startIdx = slots.findIndex(s => s.start === cls.startTime);
                             const endIdx = slots.findIndex(s => s.end === cls.endTime);
-                            
+
                             if (startIdx !== -1 && endIdx !== -1) {
                                 const duration = endIdx - startIdx + 1;
                                 if (duration === 3) {
@@ -840,27 +874,27 @@ export const refactorRoutine = (routines, config) => {
     // 2. UNPLACED RESOLUTION PHASE & RE-SHUFFLE
     refactoredRoutines.forEach(routine => {
         const slots = getSlots(routine.shift);
-        
+
         routine.days.forEach(day => {
             // We iterate a COPY of classes so we can modify the day.classes array safely
             [...day.classes].forEach(cls => {
                 if (cls.room === "Unplaced") {
-                    
+
                     // ATTEMPT 1: Keep Time, Find Room
                     if (config.rooms) {
-                        const availableRooms = config.rooms.filter(r => 
+                        const availableRooms = config.rooms.filter(r =>
                             (cls.type === 'Lab' ? r.isLab : !r.isLab)
                         );
-                        
+
                         for (const room of availableRooms) {
                             const roomName = room.name || room.number;
                             if (!isSlotBusy(null, roomName, day.name, cls.startTime, cls.endTime, routine.id)) {
                                 // Double check internal routine conflict? 
                                 // (Assume "Unplaced" means no room, but Time is booked, so no internal time conflict)
-                                
+
                                 cls.room = roomName;
                                 totalChanges++;
-                                return; 
+                                return;
                             }
                         }
                     }
@@ -871,16 +905,16 @@ export const refactorRoutine = (routines, config) => {
                         // Try to find ANY slot
                         outerLoop:
                         for (const dName of days) {
-                            
+
                             // Check Load constraint
-                             const targetDay = routine.days.find(x => x.name === dName);
-                             // Simple constraint: Don't exceed 2 theories or 1 lab? 
-                             // Refactor should be aggressive. Valid slot is prioritized.
-                             // But avoid strict duplicate subjects per day unless allowed?
-                             // Let's assume loose constraints for Refactor to ensure placement.
-                            
+                            const targetDay = routine.days.find(x => x.name === dName);
+                            // Simple constraint: Don't exceed 2 theories or 1 lab? 
+                            // Refactor should be aggressive. Valid slot is prioritized.
+                            // But avoid strict duplicate subjects per day unless allowed?
+                            // Let's assume loose constraints for Refactor to ensure placement.
+
                             for (let s = 0; s < slots.length; s++) {
-                                const duration = (cls.type === 'Lab') ? 2 : 1; 
+                                const duration = (cls.type === 'Lab') ? 2 : 1;
                                 const currentStartIdx = slots.findIndex(sl => sl.start === cls.startTime);
                                 const currentEndIdx = slots.findIndex(sl => sl.end === cls.endTime);
                                 let needed = 1;
@@ -894,13 +928,13 @@ export const refactorRoutine = (routines, config) => {
 
                                 // Check Teacher & Room availability
                                 if (config.rooms) {
-                                    const availableRooms = config.rooms.filter(r => 
+                                    const availableRooms = config.rooms.filter(r =>
                                         (cls.type === 'Lab' ? r.isLab : !r.isLab)
                                     );
-                                    
-                                     for (const room of availableRooms) {
+
+                                    for (const room of availableRooms) {
                                         const roomName = room.name || room.number;
-                                        
+
                                         // 1. External Busy
                                         if (isSlotBusy(cls.teacher, roomName, dName, tryStart, tryEnd, routine.id)) continue;
 
@@ -910,8 +944,8 @@ export const refactorRoutine = (routines, config) => {
                                             for (const existing of targetDay.classes) {
                                                 if (existing.id === cls.id) continue; // Skip self if on same day
                                                 if (isOverlapping(existing.startTime, existing.endTime, tryStart, tryEnd)) {
-                                                    internalConflict = true; 
-                                                    break; 
+                                                    internalConflict = true;
+                                                    break;
                                                 }
                                             }
                                         }
@@ -920,17 +954,17 @@ export const refactorRoutine = (routines, config) => {
                                         // Found a spot!
                                         // Remove from old day
                                         day.classes = day.classes.filter(x => x.id !== cls.id);
-                                        
+
                                         // Add to new day
                                         const newCls = { ...cls, startTime: tryStart, endTime: tryEnd, room: roomName };
-                                        
+
                                         if (!targetDay) { // Should not happen if we init days
                                             // Handle case
                                         } else {
                                             targetDay.classes.push(newCls);
-                                            targetDay.classes.sort((a,b) => a.startTime.localeCompare(b.startTime));
+                                            targetDay.classes.sort((a, b) => a.startTime.localeCompare(b.startTime));
                                         }
-                                        
+
                                         totalChanges++;
                                         break outerLoop; // Move to next unplaced item
                                     }
@@ -943,9 +977,9 @@ export const refactorRoutine = (routines, config) => {
         });
     });
 
-    return { 
-        routines: refactoredRoutines, 
+    return {
+        routines: refactoredRoutines,
         changes: totalChanges,
-        message: `Refactor complete. ${totalChanges} adjustments made.` 
+        message: `Refactor complete. ${totalChanges} adjustments made.`
     };
 };

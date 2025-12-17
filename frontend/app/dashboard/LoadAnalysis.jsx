@@ -111,6 +111,8 @@ export default function LoadAnalysis() {
                                         technologies: new Set(), // Changed to Set for multiple
                                         theoryPeriods: 0,
                                         practicalPeriods: 0,
+                                        theoryCount: 0,     // NEW: Track counts
+                                        practicalCount: 0,  // NEW: Track counts
                                         totalLoad: 0,
                                         rooms: new Set()
                                     };
@@ -140,9 +142,11 @@ export default function LoadAnalysis() {
                                 const isPractical = duration >= 90; // 90+ mins = Practical/Lab
 
                                 if (isPractical) {
-                                    subjectMap[key].practicalPeriods += periods;
+                                    subjectMap[key].practicalPeriods += periods; // Keep total duration
+                                    subjectMap[key].practicalCount += 1;         // Count Class
                                 } else {
-                                    subjectMap[key].theoryPeriods += periods;
+                                    subjectMap[key].theoryPeriods += periods;    // Keep total duration
+                                    subjectMap[key].theoryCount += 1;            // Count Class
                                 }
 
                                 subjectMap[key].rooms.add(cls.room);
@@ -153,13 +157,15 @@ export default function LoadAnalysis() {
 
                 // Convert map to array rows
                 Object.values(subjectMap).forEach(item => {
-                    item.totalLoad = item.theoryPeriods + item.practicalPeriods;
+                    // Update Total Load to use COUNTS not PERIODS
+                    item.totalLoad = item.theoryCount + item.practicalCount;
+
                     // Join unique technologies with comma/newline? Comma for now to save space, or newline for list
                     item.technology = Array.from(item.technologies).join(', '); // Comma separated as per image
                     item.rooms = Array.from(item.rooms).filter(Boolean).join(', ');
 
-                    totalTheory += item.theoryPeriods;
-                    totalPractical += item.practicalPeriods;
+                    totalTheory += item.theoryCount;       // Use Count
+                    totalPractical += item.practicalCount; // Use Count
 
                     assignments.push(item);
                 });
@@ -250,10 +256,10 @@ export default function LoadAnalysis() {
                 row.push(assignment.technology);
 
                 // Col 6: T
-                row.push({ content: assignment.theoryPeriods, styles: { halign: 'center' } });
+                row.push({ content: assignment.theoryCount, styles: { halign: 'center' } });
 
                 // Col 7: P
-                row.push({ content: assignment.practicalPeriods, styles: { halign: 'center' } });
+                row.push({ content: assignment.practicalCount, styles: { halign: 'center' } });
 
                 // Col 8: Load (Subject Total)
                 row.push({ content: assignment.totalLoad, styles: { halign: 'center' } });
@@ -546,10 +552,10 @@ export default function LoadAnalysis() {
                                                 </div>
                                             </td>
                                             <td className="p-6 text-center font-medium text-slate-600 dark:text-slate-400">
-                                                {assignment.theoryPeriods}
+                                                {assignment.theoryCount}
                                             </td>
                                             <td className="p-6 text-center font-medium text-slate-600 dark:text-slate-400">
-                                                {assignment.practicalPeriods}
+                                                {assignment.practicalCount}
                                             </td>
                                             <td className="p-6 text-center">
                                                 <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg shadow-slate-900/20">

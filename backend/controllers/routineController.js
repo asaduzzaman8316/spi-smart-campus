@@ -195,6 +195,8 @@ const analyzeLoad = async (req, res) => {
                             groupsMap: new Map(), // Use Map for grouping by Sem/Dept
                             theoryPeriods: 0,
                             practicalPeriods: 0,
+                            theoryCount: 0,
+                            practicalCount: 0,
                             rooms: new Set()
                         });
                     }
@@ -212,8 +214,10 @@ const analyzeLoad = async (req, res) => {
 
                     if (isPractical) {
                         entry.practicalPeriods += periods;
+                        entry.practicalCount += 1;
                     } else {
                         entry.theoryPeriods += periods;
+                        entry.theoryCount += 1;
                     }
 
                     if (cls.room) entry.rooms.add(cls.room);
@@ -238,7 +242,10 @@ const analyzeLoad = async (req, res) => {
                 technology: technology,
                 theoryPeriods: entry.theoryPeriods,
                 practicalPeriods: entry.practicalPeriods,
-                totalLoad: entry.theoryPeriods + entry.practicalPeriods,
+                theoryCount: entry.theoryCount,
+                practicalCount: entry.practicalCount,
+                totalLoad: entry.theoryPeriods + entry.practicalPeriods, // Keep period load validation if needed
+                totalClasses: entry.theoryCount + entry.practicalCount, // New class count
                 rooms: Array.from(entry.rooms).join(', ')
             };
         });
