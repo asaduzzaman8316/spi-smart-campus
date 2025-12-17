@@ -69,25 +69,25 @@
 }
 
 .dark {
-  /* Brand Palette */
-  --brand-primary: #FF5C35; 
-  --brand-secondary: #FFFFFF;
+  /* Brand Palette - Updated to Sky Blue */
+  --brand-primary: #38BDF8;   /* Sky 400 */
+  --brand-secondary: #0F172A; /* Slate 900 */
   
-  /* Legacy gradient mapping */
-  --brand-start: #FF5C35;
-  --brand-mid: #FF7D5F;
-  --brand-end: #FF9E85;
+  /* Legacy gradient mapping - Matching Sky/Blue theme */
+  --brand-start: #38BDF8;     /* Sky 400 */
+  --brand-mid: #0EA5E9;       /* Sky 500 */
+  --brand-end: #0284C7;       /* Sky 600 */
 
-  /* Base Colors */
-  --background: #0B1120;   /* Deep Midnight Blue */
-  --foreground: #FFFFFF;
+  /* Base Colors - Updated to Slate Theme */
+  --background: #0F172A;      /* Slate 900 (Background) */
+  --foreground: #E5E7EB;      /* Gray 200 (Text) */
 
   /* Semantic Mappings */
-  --icon-color: #FF5C35;
-  --icon-bg: rgba(255, 92, 53, 0.2);
-  --text-secondary: #94A3B8; 
-  --border-color: #1F2937;   
-  --card-bg: #1E293B;        /* Dark Slate */
+  --icon-color: #38BDF8;      /* Sky 400 */
+  --icon-bg: rgba(56, 189, 248, 0.15);
+  --text-secondary: #94A3B8;  /* Slate 400 */
+  --border-color: #334155;    /* Slate 700 */
+  --card-bg: #1E293B;         /* Slate 800 (Surface) */
 }
 
 body {
