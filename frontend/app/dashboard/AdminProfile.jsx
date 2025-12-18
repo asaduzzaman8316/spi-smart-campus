@@ -67,10 +67,10 @@ export default function AdminProfile() {
                     assignment => assignment.teacherName === user.name
                 );
 
-                // Calculate totals
-                const totalTheory = userAssignments.reduce((sum, a) => sum + a.theoryPeriods, 0);
-                const totalLab = userAssignments.reduce((sum, a) => sum + a.practicalPeriods, 0);
-                const totalLoad = userAssignments.reduce((sum, a) => sum + a.totalLoad, 0);
+                // Calculate totals (Using Class Counts NOT Periods)
+                const totalTheory = userAssignments.reduce((sum, a) => sum + (a.theoryCount || 0), 0);
+                const totalLab = userAssignments.reduce((sum, a) => sum + (a.practicalCount || 0), 0);
+                const totalLoad = userAssignments.reduce((sum, a) => sum + (a.totalClasses || 0), 0);
 
                 setLoadData({
                     assignments: userAssignments,
@@ -451,34 +451,41 @@ export default function AdminProfile() {
                                 </div>
 
                                 {/* Subject List */}
-                                <div className="space-y-3">
-                                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Subject Breakdown</h4>
-                                    {loadData.assignments.map((assignment, index) => (
-                                        <div key={index} className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex-1">
-                                                    <h5 className="font-semibold text-gray-900 dark:text-white">{assignment.subject}</h5>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                        {assignment.subjectCode} • {assignment.technology}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-4 ml-4">
-                                                    <div className="text-center">
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">Theory</p>
-                                                        <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{assignment.theoryPeriods}</p>
+                                <div className="bg-white dark:bg-card-bg rounded-3xl p-6 shadow border border-gray-100 dark:border-gray-800">
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Subject Breakdown</h3>
+                                    <div className="space-y-3">
+                                        {loadData.assignments.map((assignment, index) => (
+                                            <div key={index} className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <h5 className="font-semibold text-gray-900 dark:text-white">{assignment.subject}</h5>
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                            {assignment.subjectCode} • {assignment.technology}
+                                                        </p>
+                                                        {assignment.rooms && (
+                                                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                                                Rooms: {assignment.rooms}
+                                                            </p>
+                                                        )}
                                                     </div>
-                                                    <div className="text-center">
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">Lab</p>
-                                                        <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{assignment.practicalPeriods}</p>
-                                                    </div>
-                                                    <div className="text-center">
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                                                        <p className="text-lg font-bold text-[#FF5C35]">{assignment.totalLoad}</p>
+                                                    <div className="flex items-center gap-4 ml-4">
+                                                        <div className="text-center">
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">Theory</p>
+                                                            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{assignment.theoryCount || 0}</p>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">Lab</p>
+                                                            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{assignment.practicalCount || 0}</p>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                                                            <p className="text-lg font-bold text-[#FF5C35]">{assignment.totalClasses || 0}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                             </>
                         ) : (

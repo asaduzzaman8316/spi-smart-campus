@@ -105,7 +105,7 @@ export default function RootLayout({ children }) {
           strategy="beforeInteractive"
         />
         <StoreProvider>
-          <CustomThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <CustomThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
             <AuthProvider>
               <SidebarProvider>
                 <PreferencesProvider>
