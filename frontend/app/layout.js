@@ -40,7 +40,7 @@ export const metadata = {
   openGraph: {
     title: "SPI Smart Campus - Sylhet Polytechnic Institute",
     description: "Access class routines, teacher profiles, and campus updates for Sylhet Polytechnic Institute.",
-    url: "https://spi-smart-campus.vercel.app",
+    url: "https://spismartcampus.vercel.app",
     siteName: "SPI Smart Campus",
     images: [
       {
@@ -81,8 +81,8 @@ export default function RootLayout({ children }) {
     "@type": "EducationalOrganization",
     "name": "Sylhet Polytechnic Institute",
     "alternateName": "SPI",
-    "url": "https://spi-smart-campus.vercel.app",
-    "logo": "https://spi-smart-campus.vercel.app/sy.png",
+    "url": "https://spismartcampus.vercel.app",
+    "logo": "https://spismartcampus.vercel.app/sy.png",
     "sameAs": [
       "http://sylhetpoly.gov.bd/",
       "https://www.facebook.com/sylhetpolytechnic"

@@ -116,9 +116,24 @@ const analyzeLoad = async (req, res) => {
         const routines = await Routine.find(query).lean();
 
         if (!routines || routines.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'No routines found for the specified criteria'
+            return res.status(200).json({
+                success: true,
+                data: {
+                    assignments: [],
+                    summary: {
+                        totalTeachers: 0,
+                        totalAssignments: 0,
+                        totalPeriods: 0,
+                        totalTheory: 0,
+                        totalPractical: 0,
+                        averageLoad: 0
+                    },
+                    filters: {
+                        department: department || 'All',
+                        semester: semester || 'All',
+                        shift: shift || 'All'
+                    }
+                }
             });
         }
 

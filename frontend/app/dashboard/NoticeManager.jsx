@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { fetchNotices, createNotice, updateNotice, deleteNotice, fetchDepartments } from '../../Lib/api';
-import { Plus, Search, Filter, Trash2, Edit2, X, Check, Paperclip, Pin, Bell } from 'lucide-react';
+import { Plus, Search, Filter, Trash2, Edit2, X, Check, Paperclip, Pin, Bell, Sparkles } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import dynamic from 'next/dynamic';
@@ -30,6 +30,7 @@ export default function NoticeManager() {
         department: 'All',
         isPinned: false
     });
+    const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -196,6 +197,54 @@ export default function NoticeManager() {
         }
     }), [customImageHandler]);
 
+    const generateNoticeWithAI = async () => {
+        if (!formData.title.trim()) {
+            toast.warning('Please enter a title first to generate content.');
+            return;
+        }
+
+        setIsGenerating(true);
+        try {
+            const prompt = `Write a professional, official notice for Sylhet Polytechnic Institute based on this topic: "${formData.title}". 
+            Context: Category: ${formData.category}, Target Audience: ${formData.targetAudience}, Department: ${formData.department}.
+            The tone should be formal, clear, and authoritative. 
+            Return the content formatted in HTML (using <p>, <ul>, <li>, <strong>, etc.) suitable for a rich text editor. 
+            Do NOT include the title in the body. Do not include markdown code blocks (like \`\`\`html). Just return the raw HTML string.`;
+
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [
+                        { role: 'system', content: 'You are an expert administrative assistant for a Polytechnic Institute. You write professional official notices.' },
+                        { role: 'user', content: prompt }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            // Clean up if the AI wraps in code blocks despite instructions
+            let cleanContent = data.content.replace(/```html/g, '').replace(/```/g, '');
+
+            setFormData(prev => ({
+                ...prev,
+                content: prev.content + cleanContent // Append or replace? Usually replace or append. Let's append if empty, or just set. User might want to edit. 
+                // Let's set it. If they want to keep old, they shouldn't click generate. Or maybe append is safer? 
+                // Let's go with set for now as it's "Create AI", implies generation.
+            }));
+            setFormData(prev => ({ ...prev, content: cleanContent }));
+
+            toast.success('Notice content generated successfully!');
+        } catch (error) {
+            console.error('AI Generation Error:', error);
+            toast.error('Failed to generate notice content.');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const filteredNotices = notices.filter(notice =>
         (categoryFilter === 'All' || notice.category === categoryFilter) &&
         (notice.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -330,7 +379,7 @@ export default function NoticeManager() {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-[#1E293B] rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-[#1E293B] rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200 no-scrollbar">
                         <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center sticky top-0 bg-white dark:bg-[#1E293B] z-10">
                             <h2 className="text-2xl font-serif font-bold text-[#2C1810] dark:text-white">
                                 {editingNotice ? 'Edit Notice' : 'New Notice'}
@@ -346,14 +395,29 @@ export default function NoticeManager() {
                         <form onSubmit={handleSubmit} className="p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2 col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title <span className="text-red-500">*</span></label>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title <span className="text-red-500">*</span></label>
+                                        <button
+                                            type="button"
+                                            onClick={generateNoticeWithAI}
+                                            disabled={isGenerating || !formData.title.trim()}
+                                            className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                                        >
+                                            {isGenerating ? (
+                                                <span className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                                            ) : (
+                                                <Sparkles size={12} />
+                                            )}
+                                            {isGenerating ? 'Drafting...' : 'Auto-Write with AI'}
+                                        </button>
+                                    </div>
                                     <input
                                         type="text"
                                         required
                                         value={formData.title}
                                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                         className="w-full bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#FF5C35]/20 focus:border-[#FF5C35]"
-                                        placeholder="Enter notice title"
+                                        placeholder="Enter notice title (e.g. Schedule for Mid-Term Exam)"
                                     />
                                 </div>
 
