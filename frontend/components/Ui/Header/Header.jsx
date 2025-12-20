@@ -24,12 +24,12 @@ export default function Header() {
 
     const navLinks = [
         { name: 'Home', href: '/' },
+        { name: 'Today', href: '/today' },
+        { name: 'Routine', href: '/routine' },
+        { name: 'Quiz', href: '/quiz' },
         { name: 'Notice Board', href: '/notices' },
         { name: 'Complaint', href: '/complaint' },
         { name: 'About', href: '/about' },
-        { name: 'Today', href: '/today' },
-        { name: 'Routine', href: '/routine' },
-        { name: 'Teacher', href: '/teacher' },
     ];
 
     const isActive = (path) => pathname === path;

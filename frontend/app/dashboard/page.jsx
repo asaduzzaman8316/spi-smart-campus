@@ -10,6 +10,7 @@ import RoomManager from "./RoomManager";
 import TeacherAccountManager from "./TeacherAccountManager";
 import TeacherRoutine from "./TeacherRoutine";
 import TeacherToday from "./TeacherToday";
+import QuizManager from './QuizManager';
 
 import AdminProfile from "./AdminProfile";
 import AdminManager from "./AdminManager";
@@ -24,20 +25,7 @@ import { useSearchParams } from 'next/navigation';
 import DepartmentOverview from './DepartmentOverview';
 import InstituteOverview from './InstituteOverview';
 import TeacherOverview from './TeacherOverview';
-import {
-    Calendar,
-    Users,
-    FileText,
-    Clock,
-    BookOpen,
-    Building,
-    List,
-    User,
-    Menu,
-    Bell,
-    Shield,
-    BarChart3
-} from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
     <button
@@ -138,6 +126,8 @@ export default function DashboardPage() {
                 return <ComplaintManager />;
             case 'teacher-load':
                 return <TeacherLoadViewer onBack={() => setActiveView('overview')} />;
+            case 'quiz-manager':
+                return <QuizManager />;
             default:
                 return <div>Select a view</div>;
         }

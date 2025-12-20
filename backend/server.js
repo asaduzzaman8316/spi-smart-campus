@@ -79,6 +79,7 @@ app.use('/api/setup', require('./routes/setupRoutes'));
 app.use('/api/notices', require('./routes/noticeRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/complaints', require('./routes/complaintRoutes'));
+app.use('/api/quizzes', require('./routes/quizRoutes'));
 
 app.use(notFound);
 app.use(errorHandler);

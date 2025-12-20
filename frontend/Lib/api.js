@@ -202,3 +202,63 @@ export const deleteNotice = async (id) => {
     const { data } = await api.delete(`/notices/${id}`);
     return data;
 };
+
+// Quizzes
+export const fetchQuizzes = async (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.keys(filters).forEach(key => {
+        if (filters[key] && filters[key] !== 'All') {
+            params.append(key, filters[key]);
+        }
+    });
+
+    const { data } = await api.get(`/quizzes?${params.toString()}`);
+    return data;
+};
+
+export const fetchMyQuizzes = async () => {
+    const { data } = await api.get('/quizzes/my-quizzes');
+    return data;
+};
+
+export const createQuiz = async (quizData) => {
+    const { data } = await api.post('/quizzes', quizData);
+    return data;
+};
+
+export const deleteQuiz = async (id) => {
+    const { data } = await api.delete(`/quizzes/${id}`);
+    return data;
+};
+
+export const toggleQuizStatus = async (id) => {
+    const { data } = await api.put(`/quizzes/${id}/status`);
+    return data;
+};
+
+export const verifyQuizAccess = async (id, accessCode) => {
+    const { data } = await api.post(`/quizzes/${id}/access`, { accessCode });
+    return data;
+};
+
+export const fetchQuizForStudent = async (id) => {
+    const { data } = await api.get(`/quizzes/${id}/start`);
+    return data;
+};
+
+export const submitQuiz = async (id, submissionData) => {
+    const { data } = await api.post(`/quizzes/${id}/submit`, submissionData);
+    return data;
+};
+
+export const fetchQuizResults = async (id, filters = {}) => {
+    const params = new URLSearchParams();
+    Object.keys(filters).forEach(key => {
+        if (filters[key] && filters[key] !== 'All') {
+            params.append(key, filters[key]);
+        }
+    });
+
+    const { data } = await api.get(`/quizzes/${id}/results?${params.toString()}`);
+    return data;
+};
