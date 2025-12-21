@@ -162,39 +162,35 @@ export default function RoutineDisplay() {
     if (!filteredRoutine) return;
 
     const doc = new jsPDF('l', 'mm', 'a4');
+    const pageWidth = doc.internal.pageSize.width;
 
-    // Header Background
-    doc.setFillColor(255, 92, 53); // Brand Orange
-    doc.rect(0, 0, 297, 35, 'F'); // Reduced height slightly
-
-    // Title
-    doc.setTextColor(255, 255, 255);
+    // Center header text on white background
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text("SPI Smart Campus", 148, 12, { align: 'center' });
+    doc.text("SYLHET POLYTECHNIC INSTITUTE, SYLHET", pageWidth / 2, 15, { align: 'center' });
 
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Class Routine: ${filteredRoutine.department}`, 148, 20, { align: 'center' });
+    doc.text(`Class Routine: ${filteredRoutine.department}`, pageWidth / 2, 23, { align: 'center' });
 
     doc.setFontSize(10);
-    doc.text(`Semester: ${filteredRoutine.semester} | Shift: ${filteredRoutine.shift} | Group: ${filteredRoutine.group}`, 148, 28, { align: 'center' });
+    doc.text(`Semester: ${filteredRoutine.semester} | Shift: ${filteredRoutine.shift} | Group: ${filteredRoutine.group}`, pageWidth / 2, 30, { align: 'center' });
 
-    // Table Headers
+    // Table Headers with period numbers
     const headers = [
       'Day',
-      ...timeSlots.map(slot => slot.label)
+      ...timeSlots.map((slot, i) => `${i + 1}\n${slot.label.replace(' - ', '-')}`)
     ];
 
     // Table Body
     const body = DAYS.map(dayName => {
-      const row = [{ content: dayName, styles: { fontStyle: 'bold', fillColor: [237, 233, 254] } }];
+      const row = [{ content: dayName, styles: { fontStyle: 'bold' } }];
       const day = filteredRoutine.days.find(d => d.name === dayName);
 
       for (let i = 0; i < timeSlots.length; i++) {
-        // Check if this slot is covered by a previous merged cell
         if (shouldSkipSlot(dayName, i)) {
-          continue; // Skip adding a cell for this slot
+          continue;
         }
 
         const classInfo = getClassForSlot(dayName, i);
@@ -205,52 +201,58 @@ export default function RoutineDisplay() {
           let roomStr = classInfo.room || '';
           if (roomStr) {
             const room = rooms.find(r => r.number === roomStr || r.name === roomStr);
-            if (room && room.type) {
-              roomStr += ` (${room.type})`;
-            }
+            if (room && room.type) roomStr += ` (${room.type})`;
           }
 
           row.push({
             content: `${classInfo.subjectCode}\n${classInfo.subject}\n${classInfo.teacher || ''}\n${roomStr}`,
             colSpan: colspan,
-            styles: { halign: 'center', valign: 'middle' }
+            styles: {
+              halign: 'center',
+              valign: 'middle',
+              fontStyle: 'bold' // Applying bold as requested for subject info
+            }
           });
         } else {
           row.push({
-            content: '----',
+            content: '---',
             colSpan: 1,
-            styles: { halign: 'center', valign: 'middle', textColor: [150, 150, 150] }
+            styles: { halign: 'center', valign: 'middle', textColor: [100, 100, 100] }
           });
         }
       }
       return row;
     });
 
-    // Generate Table
+    // Generate Table with borders and centered margins
     autoTable(doc, {
-      startY: 40,
+      startY: 35,
       head: [headers],
       body: body,
+      theme: 'grid',
       styles: {
-        fontSize: 8, // Reduced font size
-        cellPadding: 2, // Reduced padding
+        fontSize: 7,
+        cellPadding: 2,
         overflow: 'linebreak',
-        lineWidth: 0.1,
-        lineColor: [200, 200, 200]
+        lineWidth: 0.2, // Border thickness
+        lineColor: [0, 0, 0], // Black border
+        textColor: [0, 0, 0], // Black text
+        valign: 'middle',
+        halign: 'center',
+        fillColor: [245, 245, 245] // Light gray background for odd rows (1, 3, 5)
       },
       headStyles: {
-        fillColor: [255, 92, 53], // Brand Orange
-        textColor: [255, 255, 255],
+        fillColor: [255, 255, 255], // White background
+        textColor: [0, 0, 0], // Black text
         fontStyle: 'bold',
-        halign: 'center',
-        valign: 'middle'
+        lineWidth: 0.2,
+        lineColor: [0, 0, 0]
       },
       alternateRowStyles: {
-        fillColor: [245, 243, 255] // Purple-50
+        fillColor: [255, 255, 255] // White background for even rows (2, 4)
       },
-      theme: 'grid',
-      margin: { top: 40, left: 10, right: 10, bottom: 10 }, // Adjust margins
-      tableWidth: 'auto' // Use full width
+      margin: { left: 10, right: 10 },
+      tableWidth: 'auto'
     });
 
     doc.save(`Routine_${filteredRoutine.department}_Sem${filteredRoutine.semester}.pdf`);
@@ -298,11 +300,11 @@ export default function RoutineDisplay() {
               <select
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
               >
-                <option value="" className="text-text-secondary">Select Department</option>
+                <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Department</option>
                 {departments.slice(0, 7).map(dept => (
-                  <option key={dept.id} value={dept.name} className="text-foreground">
+                  <option key={dept.id} value={dept.name} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                     {dept.name}
                   </option>
                 ))}
@@ -314,11 +316,11 @@ export default function RoutineDisplay() {
               <select
                 value={selectedSemester}
                 onChange={(e) => setSelectedSemester(e.target.value)}
-                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
               >
-                <option value="" className="text-text-secondary">Select Semester</option>
+                <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Semester</option>
                 {SEMESTERS.map(sem => (
-                  <option key={sem} value={sem} className="text-foreground">
+                  <option key={sem} value={sem} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                     Semester {sem}
                   </option>
                 ))}
@@ -331,11 +333,11 @@ export default function RoutineDisplay() {
               <select
                 value={selectedShift}
                 onChange={(e) => setSelectedShift(e.target.value)}
-                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
               >
-                <option value="" className="text-text-secondary">Select Shift</option>
+                <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Shift</option>
                 {SHIFTS.map(shift => (
-                  <option key={shift} value={shift} className="text-foreground">
+                  <option key={shift} value={shift} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                     {shift} Shift
                   </option>
                 ))}
@@ -348,15 +350,15 @@ export default function RoutineDisplay() {
               <select
                 value={selectedGroup}
                 onChange={(e) => setSelectedGroup(e.target.value)}
-                className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
               >
-                <option value="" className="text-text-secondary">Select Group</option>
+                <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Group</option>
                 {GROUPS.filter(grp => {
                   if (selectedShift === "1st") return ["A1", "B1"].includes(grp);
                   if (selectedShift === "2nd") return ["A2", "B2"].includes(grp);
                   return true;
                 }).map(grp => (
-                  <option key={grp} value={grp} className="text-foreground">
+                  <option key={grp} value={grp} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                     Group {grp}
                   </option>
                 ))}

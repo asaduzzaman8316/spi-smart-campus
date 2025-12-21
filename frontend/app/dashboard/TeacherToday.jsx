@@ -67,70 +67,91 @@ export default function TeacherToday({ onBack }) {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="bg-linear-to-r from-purple-500 to-pink-500 rounded-2xl p-8 text-white shadow-lg mb-8">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div>
-                        <h2 className="text-3xl font-bold mb-2">Today&apos;s Schedule</h2>
-                        <p className="text-purple-100 text-lg flex items-center gap-2">
-                            <Calendar size={20} />
-                            {currentDayStr}, {new Date().toLocaleDateString()}
-                        </p>
+        <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Header Card */}
+            <div className="bg-[#FF5C35] rounded-[2.5rem] p-10 text-white shadow-2xl shadow-[#FF5C35]/20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
+                    <div className="text-center md:text-left">
+                        <h2 className="text-4xl font-black mb-3 tracking-tight">Today&apos;s Classes</h2>
+                        <div className="flex items-center justify-center md:justify-start gap-3 bg-black/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 ">
+                            <Calendar size={18} className="text-orange-100" />
+                            <span className="text-orange-50 font-bold uppercase tracking-wider text-sm">
+                                {currentDayStr}, {new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </span>
+                        </div>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/20">
-                        <div className="text-3xl font-bold">{todayClasses.length}</div>
-                        <div className="text-sm text-purple-100">Classes Today</div>
+                    <div className="bg-white text-[#FF5C35] p-6 rounded-3xl shadow-xl flex items-center gap-6 border-4 border-white/20 transform hover:scale-105 transition-transform">
+                        <div className="text-center">
+                            <div className="text-5xl font-black leading-none">{todayClasses.length}</div>
+                            <div className="text-[10px] font-bold uppercase tracking-widest mt-1 opacity-70">Total Sessions</div>
+                        </div>
+                        <div className="w-px h-12 bg-[#FF5C35]/20"></div>
+                        <Clock className="size-10" />
                     </div>
                 </div>
             </div>
 
             {todayClasses.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                    <div className="mx-auto w-16 h-16 bg-yellow-100 dark:bg-yellow-900/20 rounded-full flex items-center justify-center mb-4">
-                        <AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+                <div className="text-center py-24 bg-white dark:bg-[#1E293B] rounded-[3rem] border border-gray-100 dark:border-gray-800 shadow-sm">
+                    <div className="w-24 h-24 bg-[#FF5C35]/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Calendar className="h-10 w-10 text-[#FF5C35]/30" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No Classes Today</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Enjoy your free day!</p>
+                    <h3 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Workspace Clear</h3>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium text-lg">No classes scheduled for today. Time for deep work!</p>
                 </div>
             ) : (
-                <div className="grid gap-4">
+                <div className="grid gap-6">
                     {todayClasses.map((cls, idx) => (
-                        <div key={idx} className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                            {/* Accent Line */}
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-linear-to-b from-purple-500 to-pink-500 group-hover:w-2 transition-all"></div>
+                        <div key={idx} className="bg-white dark:bg-[#1E293B] rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-xl hover:shadow-[#FF5C35]/5 transition-all relative overflow-hidden group border-l-8 border-l-[#FF5C35]">
 
-                            <div className="flex flex-col md:flex-row gap-6 items-start md:items-center pl-4">
-                                {/* Time */}
-                                <div className="min-w-[140px]">
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white font-mono">{cls.startTime}</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">to {cls.endTime}</p>
+                            <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center">
+                                {/* Time Column */}
+                                <div className="bg-gray-50 dark:bg-gray-900/50 p-6 rounded-3xl min-w-[160px] text-center border border-gray-100 dark:border-gray-800 group-hover:bg-[#FF5C35] group-hover:text-white transition-colors duration-500">
+                                    <h3 className="text-2xl font-black font-mono leading-none tracking-tighter">{cls.startTime}</h3>
+                                    <div className="w-8 h-1 bg-[#FF5C35] group-hover:bg-white mx-auto my-3 rounded-full opacity-30"></div>
+                                    <p className="text-xs font-bold uppercase tracking-widest opacity-60">to {cls.endTime}</p>
                                 </div>
 
-                                {/* Subject */}
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <BookOpen size={18} className="text-purple-500" />
-                                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">{cls.subject}</h4>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">{cls.subjectCode}</span>
-                                        {cls.room && (
-                                            <span className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded">
-                                                <MapPin size={12} /> {cls.room}
+                                {/* Subject Info */}
+                                <div className="flex-1 space-y-4">
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className="bg-[#FF5C35]/10 text-[#FF5C35] text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border border-[#FF5C35]/20">
+                                                {cls.subjectCode}
                                             </span>
-                                        )}
+                                            <div className="flex items-center gap-1.5 text-gray-400 dark:text-gray-500 font-bold text-[10px] uppercase">
+                                                <MapPin size={12} className="text-[#FF5C35]" strokeWidth={2.5} />
+                                                Room: {cls.room}
+                                            </div>
+                                        </div>
+                                        <h4 className="text-2xl font-black text-gray-900 dark:text-white group-hover:text-[#FF5C35] transition-colors duration-300 tracking-tight leading-tight">
+                                            {cls.subject}
+                                        </h4>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-3">
+                                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-[10px] font-black uppercase px-4 py-1.5 rounded-full border border-gray-200 dark:border-gray-700">
+                                            {cls.department}
+                                        </span>
+                                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold px-4 py-1.5 rounded-full border border-gray-200 dark:border-gray-700">
+                                            Sem {cls.semester} • {cls.group}
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Class Details */}
-                                <div className="flex flex-wrap gap-2 justify-end">
-                                    <div className="text-right">
-                                        <div className="text-sm font-medium text-gray-900 dark:text-white">{cls.department}</div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            Semester {cls.semester} • {cls.shift} Shift • Group {cls.group}
-                                        </div>
+                                {/* Shift Details */}
+                                <div className="text-right hidden sm:block">
+                                    <div className="bg-[#FF5C35]/5 dark:bg-[#FF5C35]/10 px-6 py-3 rounded-2xl border border-[#FF5C35]/10">
+                                        <div className="text-lg font-black text-[#FF5C35] uppercase tracking-tighter leading-none">{cls.shift} Shift</div>
+                                        <div className="text-[10px] font-bold text-gray-400 uppercase mt-1">Official Session</div>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Decorative Background Elements */}
+                            <div className="absolute top-0 right-0 p-8 opacity-0 group-hover:opacity-10 transition-opacity">
+                                <BookOpen size={120} className="text-[#FF5C35]" strokeWidth={1} />
                             </div>
                         </div>
                     ))}

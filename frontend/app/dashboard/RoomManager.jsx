@@ -160,12 +160,6 @@ export default function RoomManager({ onBack }) {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8 bg-white dark:bg-card-bg p-8 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-sm">
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={onBack}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full transition-colors"
-                        >
-                            <ArrowLeft className="text-gray-900 dark:text-white" size={24} />
-                        </button>
                         <div className="flex items-center gap-3">
                             <div className="bg-[#FFFBF2] dark:bg-[#0B1120] p-4 rounded-full border border-gray-100 dark:border-gray-800">
                                 <Building className="text-[#FF5C35]" size={28} />
@@ -354,8 +348,7 @@ export default function RoomManager({ onBack }) {
                                     >
                                         <option value="Computer Building">Computer Building</option>
                                         <option value="Administration Building">Administration Building</option>
-                                        <option value="New Building">New Building</option>
-                                        <option value="Old Building">Old Building</option>
+                                        <option value="RD Building">RD Building</option>
                                     </select>
                                 </div>
 

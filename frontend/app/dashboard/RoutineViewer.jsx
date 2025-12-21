@@ -437,14 +437,6 @@ export default function RoutineViewer({ onBack, onEdit }) {
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Saved Routines</h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm">Viewing {filteredRoutines.length} routines (Table View)</p>
                 </div>
-                <div className="flex flex-col text-right">
-                    <button
-                        onClick={onBack}
-                        className="text-sm text-gray-500 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white hover:underline"
-                    >
-                        Back to Dashboard
-                    </button>
-                </div>
             </div>
 
             {/* Filter Section */}

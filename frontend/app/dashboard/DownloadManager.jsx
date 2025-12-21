@@ -221,36 +221,55 @@ const DownloadManager = () => {
         const brandColor = [255, 92, 53]; // #FF5C35
 
         const renderTable = (headerTitle, subHeader, data, slots, fileName) => {
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            // Professional grayscale header (matching RoutineClient)
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text("SYLHET POLYTECHNIC INSTITUTE, SYLHET", pageWidth / 2, 15, { align: 'center' });
+
             doc.setFontSize(14);
-            doc.setTextColor(44, 24, 16);
-            doc.text("SYLHET POLYTECHNIC INSTITUTE, SYLHET", pageWidth / 2, 12, { align: 'center' });
-            doc.setFontSize(10);
-            doc.text("Class Routine-2025", pageWidth / 2, 17, { align: 'center' });
-            doc.setFontSize(11);
-            doc.text(headerTitle, pageWidth / 2, 22, { align: 'center' });
+            doc.setFont('helvetica', 'normal');
+            doc.text(headerTitle, pageWidth / 2, 23, { align: 'center' });
 
             if (subHeader) {
+                let subStr = "";
+                if (subHeader.left && subHeader.right) subStr = `${subHeader.left} | ${subHeader.right}`;
+                else if (subHeader.center) subStr = subHeader.center;
+
                 doc.setFontSize(10);
-                doc.text(subHeader.left || '', 15, 30);
-                doc.text(subHeader.right || '', pageWidth - 15, 30, { align: 'right' });
-                if (subHeader.center) doc.text(subHeader.center, pageWidth / 2, 30, { align: 'center' });
+                doc.text(subStr, pageWidth / 2, 30, { align: 'center' });
             }
 
             autoTable(doc, {
-                startY: subHeader ? 35 : 30,
+                startY: 35,
                 head: [['Day', ...slots.map((t, i) => `${i + 1}\n${t.label.replace(' - ', '-')}`)]],
                 body: data,
                 theme: 'grid',
-                styles: { fontSize: 7, cellPadding: 1, minCellHeight: 12, valign: 'middle', halign: 'center', lineWidth: 0.1, lineColor: [0, 0, 0], overflow: 'linebreak' },
-                headStyles: { fillColor: brandColor, textColor: [255, 255, 255], fontStyle: 'bold' },
-                columnStyles: { 0: { fontStyle: 'bold', fillColor: [245, 245, 245], cellWidth: 20 } },
-                didParseCell: function (data) {
-                    if (data.row.index >= 0 && data.column.index > 0) {
-                        const cellData = data.cell.raw;
-                        if (cellData && cellData.colSpan > 1) {
-                            data.cell.colSpan = cellData.colSpan;
-                        }
-                    }
+                styles: {
+                    fontSize: 7.5,
+                    cellPadding: 2,
+                    minCellHeight: 14,
+                    valign: 'middle',
+                    halign: 'center',
+                    lineWidth: 0.1,
+                    lineColor: [0, 0, 0],
+                    textColor: [0, 0, 0],
+                    overflow: 'linebreak'
+                },
+                headStyles: {
+                    fillColor: [240, 240, 240],
+                    textColor: [0, 0, 0],
+                    fontStyle: 'bold',
+                    lineWidth: 0.1,
+                    lineColor: [0, 0, 0]
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', fillColor: [250, 250, 250], cellWidth: 22, halign: 'center' }
+                },
+                alternateRowStyles: {
+                    fillColor: [255, 255, 255]
                 }
             });
         };
@@ -279,10 +298,14 @@ const DownloadManager = () => {
                         }
                         const slotData = getSlotData(routines, day, i, 'teacher', teacher.name, currentSlots);
                         if (slotData) {
-                            row.push({ content: slotData.content, colSpan: slotData.colSpan });
+                            row.push({
+                                content: slotData.content,
+                                colSpan: slotData.colSpan,
+                                styles: { fontStyle: 'bold' }
+                            });
                             skipCount = slotData.colSpan - 1;
                         } else {
-                            row.push("---");
+                            row.push({ content: "---", styles: { halign: 'center', valign: 'middle' } });
                         }
                     });
                     return row;
@@ -311,10 +334,14 @@ const DownloadManager = () => {
                         }
                         const slotData = getSlotData(routines, day, i, 'room', room.number || room.name, currentSlots);
                         if (slotData) {
-                            row.push({ content: slotData.content, colSpan: slotData.colSpan });
+                            row.push({
+                                content: slotData.content,
+                                colSpan: slotData.colSpan,
+                                styles: { fontStyle: 'bold' }
+                            });
                             skipCount = slotData.colSpan - 1;
                         } else {
-                            row.push("---");
+                            row.push({ content: "---", styles: { halign: 'center', valign: 'middle' } });
                         }
                     });
                     return row;
@@ -354,12 +381,13 @@ const DownloadManager = () => {
                         if (cls) {
                             const spanInfo = getClassSpanInfo(cls, currentSlots);
                             row.push({
-                                content: `${cls.subjectCode}\n${cls.teacher}\n${cls.room}`,
-                                colSpan: spanInfo.colSpan
+                                content: `${cls.subjectCode}\n${cls.subject}\n${cls.teacher}\n${cls.room}`,
+                                colSpan: spanInfo.colSpan,
+                                styles: { fontStyle: 'bold' }
                             });
                             skipCount = spanInfo.colSpan - 1;
                         } else {
-                            row.push("---");
+                            row.push({ content: "---", styles: { halign: 'center', valign: 'middle' } });
                         }
                     });
                     return row;

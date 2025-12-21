@@ -5,18 +5,18 @@ const DeveloperTeam = () => {
     const mentors = [
         {
             id: 1,
-            name: 'Dr. Sarah Johnson',
-            role: 'Project Mentor',
-            image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop',
+            name: 'Ruma Akter',
+            role: 'Instructor & Head of the Dept.',
+            image: 'https://sylhet.polytech.gov.bd/sites/default/files/files/sylhet.polytech.gov.bd/teacher_list/a38f81c0_bfd0_4247_a0f0_75c6b010e3ad/2025-02-04-12-05-294aa908f58539454f9bd3efcdfd47c8.jpg',
             bio: 'Guiding students with expertise in software engineering. Passionate about nurturing innovation and technical excellence.',
             verified: true,
             link: ''
         },
         {
             id: 2,
-            name: 'Prof. Ahmed Rahman',
-            role: 'Technical Advisor',
-            image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop',
+            name: 'Md Sydur Rahman',
+            role: 'Junior Instructor',
+            image: '/sydur.jpeg',
             bio: 'Expert in Full-Stack Development and System Architecture. Committed to building scalable solutions.',
             verified: true,
             link: ''
@@ -65,7 +65,7 @@ const DeveloperTeam = () => {
             id: 7,
             name: 'Md. Saikat Islam',
             role: 'Database Administrator',
-            image: '/saikat.jpg',
+            image: '/saikat.png',
             bio: 'Optimizing databases for performance and scalability.',
             verified: true,
             link: 'https://tis-protfolio.vercel.app/'
@@ -74,14 +74,14 @@ const DeveloperTeam = () => {
             id: 8,
             name: 'Md Mohosinath Mahomud',
             role: 'QA & Testing Specialist',
-            image: '/moho.jpg',
+            image: '/mohos.jpg',
             bio: 'Ensuring quality with thorough testing strategies.',
             verified: true,
             link: ''
         },
     ]
 
-    
+
 
     return (
         <>

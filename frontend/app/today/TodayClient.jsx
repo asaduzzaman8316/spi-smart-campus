@@ -2,11 +2,8 @@
 import React, { useState, useEffect } from 'react'
 import { usePreferences } from '@/context/PreferencesContext'
 import { fetchDepartments, fetchRoutines, fetchTeachers, fetchRooms } from '../../Lib/api'
-import { Filter, Calendar, Clock, MapPin, User, BookOpen, Sun, AlertCircle, Download } from 'lucide-react'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
+import { Filter, Calendar, Clock, MapPin, User, BookOpen, Sun, AlertCircle } from 'lucide-react'
 import Image from 'next/image'
-import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import Loader1 from '@/components/Ui/Loader1'
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
@@ -113,87 +110,6 @@ export default function TodayRoutine() {
         }
     }, [selectedDepartment, selectedSemester, selectedShift, selectedGroup, routines, currentDay])
 
-    const downloadPDF = () => {
-        if (todayClasses.length === 0) return
-
-        const doc = new jsPDF()
-
-        // Header Background
-        doc.setFillColor(88, 28, 135); // Purple-900
-        doc.rect(0, 0, 210, 40, 'F');
-
-        // Title
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
-        doc.text("CPI Smart Campus", 105, 15, { align: 'center' });
-
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Today's Schedule: ${currentDay}`, 105, 25, { align: 'center' });
-
-        doc.setFontSize(10);
-        doc.text(`${selectedDepartment} - Semester ${selectedSemester} | ${selectedShift} Shift | Group ${selectedGroup}`, 105, 33, { align: 'center' });
-        doc.text(`Date: ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, 105, 38, { align: 'center' });
-
-        // Table Columns
-        const columns = [
-            { header: 'Time', dataKey: 'time' },
-            { header: 'Subject', dataKey: 'subject' },
-            { header: 'Teacher', dataKey: 'teacher' },
-            { header: 'Room', dataKey: 'room' }
-        ]
-
-        // Table Rows
-        const rows = todayClasses.map(cls => {
-            let roomStr = cls.room || '-';
-            if (cls.room) {
-                const room = rooms.find(r => r.number === cls.room || r.name === cls.room);
-                if (room && room.type) {
-                    roomStr += `\n(${room.type})`;
-                }
-            }
-
-            return {
-                time: `${cls.startTime} - ${cls.endTime}`,
-                subject: `${cls.subjectCode}\n${cls.subject}`,
-                teacher: cls.teacher || '-',
-                room: roomStr
-            }
-        })
-
-        // Generate Table
-        autoTable(doc, {
-            startY: 45,
-            head: [columns.map(c => c.header)],
-            body: rows.map(r => columns.map(c => r[c.dataKey])),
-            styles: {
-                fontSize: 10,
-                cellPadding: 3,
-                overflow: 'linebreak',
-                valign: 'middle',
-                lineWidth: 0.1,
-                lineColor: [200, 200, 200]
-            },
-            headStyles: {
-                fillColor: [109, 40, 217], // Purple-700
-                textColor: [255, 255, 255],
-                fontStyle: 'bold'
-            },
-            alternateRowStyles: {
-                fillColor: [245, 243, 255] // Purple-50
-            },
-            columnStyles: {
-                0: { fontStyle: 'bold', cellWidth: 35 }, // Time
-                1: { cellWidth: 'auto' }, // Subject
-                2: { cellWidth: 40 }, // Teacher
-                3: { cellWidth: 25, halign: 'center' } // Room
-            },
-            theme: 'grid',
-        })
-
-        doc.save(`Today_Schedule_${currentDay}.pdf`)
-    }
 
     if (loading) {
         return (
@@ -232,11 +148,11 @@ export default function TodayRoutine() {
                                 <select
                                     value={selectedDepartment}
                                     onChange={(e) => setSelectedDepartment(e.target.value)}
-                                    className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                                    className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
                                 >
-                                    <option value="" className="text-text-secondary">Select Department</option>
+                                    <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Department</option>
                                     {departments.slice(0, 7).map(dept => (
-                                        <option key={dept.id} value={dept.name} className="text-foreground">
+                                        <option key={dept.id} value={dept.name} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                                             {dept.name}
                                         </option>
                                     ))}
@@ -249,11 +165,11 @@ export default function TodayRoutine() {
                                 <select
                                     value={selectedSemester}
                                     onChange={(e) => setSelectedSemester(e.target.value)}
-                                    className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                                    className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
                                 >
-                                    <option value="" className="text-text-secondary">Select Semester</option>
+                                    <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Semester</option>
                                     {SEMESTERS.map(sem => (
-                                        <option key={sem} value={sem} className="text-foreground">
+                                        <option key={sem} value={sem} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                                             Semester {sem}
                                         </option>
                                     ))}
@@ -266,11 +182,11 @@ export default function TodayRoutine() {
                                 <select
                                     value={selectedShift}
                                     onChange={(e) => setSelectedShift(e.target.value)}
-                                    className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                                    className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
                                 >
-                                    <option value="" className="text-text-secondary">Select Shift</option>
+                                    <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Shift</option>
                                     {SHIFTS.map(shift => (
-                                        <option key={shift} value={shift} className="text-foreground">
+                                        <option key={shift} value={shift} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                                             {shift} Shift
                                         </option>
                                     ))}
@@ -283,15 +199,15 @@ export default function TodayRoutine() {
                                 <select
                                     value={selectedGroup}
                                     onChange={(e) => setSelectedGroup(e.target.value)}
-                                    className="w-full bg-background border border-border-color rounded-lg px-4 py-2.5 text-foreground focus:outline-none focus:ring focus:ring-brand-mid focus:border-brand-mid transition-all"
+                                    className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
                                 >
-                                    <option value="" className="text-text-secondary">Select Group</option>
+                                    <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Group</option>
                                     {GROUPS.filter(grp => {
                                         if (selectedShift === "1st") return ["A1", "B1"].includes(grp);
                                         if (selectedShift === "2nd") return ["A2", "B2"].includes(grp);
                                         return true;
                                     }).map(grp => (
-                                        <option key={grp} value={grp} className="text-foreground">
+                                        <option key={grp} value={grp} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                                             Group {grp}
                                         </option>
                                     ))}
@@ -328,13 +244,6 @@ export default function TodayRoutine() {
                                             {selectedShift} Shift • Group {selectedGroup}
                                         </p>
                                     </div>
-                                    <button
-                                        onClick={downloadPDF}
-                                        className="inline-flex items-center gap-2 bg-[#FF5C35] hover:bg-[#e64722] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-lg shadow-[#FF5C35]/20 hover:shadow-[#FF5C35]/30"
-                                    >
-                                        <Download size={18} />
-                                        Download PDF
-                                    </button>
                                 </div>
                             </div>
 

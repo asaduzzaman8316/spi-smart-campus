@@ -183,12 +183,6 @@ export default function TeacherLoadViewer({ onBack }) {
             <div className="max-w-7xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="bg-white dark:bg-[#1E293B] rounded-3xl p-8 shadow border border-gray-100 dark:border-gray-800">
-                    <button
-                        onClick={onBack}
-                        className="mb-4 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-[#FF5C35] transition font-bold">
-                        <ChevronLeft size={20} />
-                        Back to Dashboard
-                    </button>
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-full bg-[#FF5C35]/10 flex items-center justify-center">
