@@ -117,6 +117,28 @@ export default function SubjectManager({ onBack }) {
             return;
         }
 
+        // Check for duplicate subject code
+        const isDuplicateCode = subjects.some(s =>
+            String(s.code).trim().toLowerCase() === String(currentSubject.code).trim().toLowerCase() &&
+            (s.docId !== currentSubject.docId && s.id !== currentSubject.id)
+        );
+
+        if (isDuplicateCode) {
+            toast.error("Subject with this code already exists");
+            return;
+        }
+
+        // Check for duplicate name globally
+        const isDuplicateName = subjects.some(s =>
+            String(s.name).trim().toLowerCase() === String(currentSubject.name).trim().toLowerCase() &&
+            (s.docId !== currentSubject.docId && s.id !== currentSubject.id)
+        );
+
+        if (isDuplicateName) {
+            toast.error("Subject with this name already exists");
+            return;
+        }
+
         setSaving(true);
         try {
             const subjectData = {

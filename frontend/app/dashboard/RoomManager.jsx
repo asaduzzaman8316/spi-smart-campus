@@ -105,6 +105,17 @@ export default function RoomManager({ onBack }) {
             return;
         }
 
+        // Check for duplicate room number
+        const isDuplicate = rooms.some(r =>
+            String(r.number).toLowerCase().trim() === String(currentRoom.number).toLowerCase().trim() &&
+            (r.docId !== currentRoom.docId) // Ensure we're not checking against itself in edit mode
+        );
+
+        if (isDuplicate) {
+            toast.error("Room number already exists");
+            return;
+        }
+
         setSaving(true);
         try {
             const roomData = {

@@ -15,7 +15,7 @@ const INITIAL_TEACHER = {
     shift: '',
     role: '',
     image: '',
-    userType: 'teacher'||'',
+    userType: 'teacher' || '',
     id: 0
 };
 
@@ -127,6 +127,17 @@ export default function TeacherManager({ onBack }) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(currentTeacher.email)) {
             toast.error("Please enter a valid email address");
+            return;
+        }
+
+        // Check for duplicate email
+        const isDuplicate = teachers.some(t =>
+            t.email.toLowerCase() === currentTeacher.email.toLowerCase() &&
+            (t.docId !== currentTeacher.docId && t.id !== currentTeacher.id)
+        );
+
+        if (isDuplicate) {
+            toast.error("A teacher with this email already exists");
             return;
         }
 
