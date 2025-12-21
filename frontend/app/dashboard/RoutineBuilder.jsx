@@ -130,8 +130,8 @@ export default function RoutineBuilder({ onBack, initialData }) {
                 ]);
 
                 setTeachers(Array.isArray(teachersData) ? teachersData.map(d => ({ ...d, id: d._id })) : (teachersData.data || []).map(d => ({ ...d, id: d._id })));
-                setRooms(Array.isArray(roomsData) 
-                    ? roomsData.map(d => ({ ...d, id: d._id, isLab: d.type === 'Lab' })) 
+                setRooms(Array.isArray(roomsData)
+                    ? roomsData.map(d => ({ ...d, id: d._id, isLab: d.type === 'Lab' }))
                     : (roomsData.data || []).map(d => ({ ...d, id: d._id, isLab: d.type === 'Lab' }))
                 );
                 setSubjects(Array.isArray(subjectsData) ? subjectsData.map(d => ({ ...d, id: d._id })) : (subjectsData.data || []).map(d => ({ ...d, id: d._id })));
@@ -619,10 +619,10 @@ export default function RoutineBuilder({ onBack, initialData }) {
         try {
             // CRITICAL: Fetch fresh routines to avoid stale state issues (e.g. overwriting recent edits)
             const freshRoutinesResponse = await fetchRoutines();
-            const freshRoutines = Array.isArray(freshRoutinesResponse) 
-                ? freshRoutinesResponse.map(d => ({ ...d, id: d._id })) 
+            const freshRoutines = Array.isArray(freshRoutinesResponse)
+                ? freshRoutinesResponse.map(d => ({ ...d, id: d._id }))
                 : (freshRoutinesResponse.data || []).map(d => ({ ...d, id: d._id }));
-                
+
             setAllRoutines(freshRoutines); // Update state while we are at it
 
             const { routines: updatedRoutines, failures } = generateBatchRoutines(
@@ -674,6 +674,69 @@ export default function RoutineBuilder({ onBack, initialData }) {
         }
     };
 
+    const handleManualResolve = async (routineId, item, suggestion) => {
+        if (suggestion.type === 'New Slot') {
+            const routineToUpdate = allRoutines.find(r => r.id === routineId);
+            if (!routineToUpdate) {
+                toast.error("Routine not found for update.");
+                return;
+            }
+
+            const [startTime, endTime] = suggestion.time.split("-");
+
+            const newClass = {
+                id: Math.random().toString(36).substr(2, 9),
+                startTime,
+                endTime,
+                subject: item.subject,
+                subjectCode: subjects.find(s => s.name === item.subject)?.code || '',
+                teacher: item.teacher,
+                room: suggestion.room,
+                type: item.type // Preserve type (Lab/Theory)
+            };
+
+            const updatedRoutine = {
+                ...routineToUpdate,
+                days: routineToUpdate.days.map(d =>
+                    d.name === suggestion.day
+                        ? { ...d, classes: [...d.classes, newClass].sort((a, b) => a.startTime.localeCompare(b.startTime)) }
+                        : d
+                ),
+                lastUpdated: Date.now()
+            };
+
+            try {
+                // Save to Backend
+                const saved = await createRoutine(updatedRoutine);
+
+                // Update Local State
+                const freshRoutines = await fetchRoutines();
+                setAllRoutines(Array.isArray(freshRoutines) ? freshRoutines.map(d => ({ ...d, id: d._id })) : (freshRoutines.data || []).map(d => ({ ...d, id: d._id })));
+
+                // Update Failures UI (Remove fixed item)
+                setGenerationFailures(prev => prev.map(fail => {
+                    if (fail.routineId !== routineId) return fail;
+                    return {
+                        ...fail,
+                        items: fail.items.filter(i => i.subject !== item.subject || i.teacher !== item.teacher || i.type !== item.type)
+                    };
+                }).filter(fail => fail.items.length > 0));
+
+                if (generationFailures.every(f => f.items.length === 0)) {
+                    setShowFailuresModal(false);
+                }
+
+                toast.success("Class assigned successfully!");
+
+            } catch (err) {
+                console.error(err);
+                toast.error("Failed to assign class.");
+            }
+        } else {
+            toast.info("Merge suggestions require manual handling for now.");
+        }
+    };
+
     const handleRefactor = async () => {
         setIsRefactoring(true);
         try {
@@ -721,11 +784,11 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
     const handleSave = async () => {
         if (!routine.department || !routine.semester || !routine.shift || !routine.group) {
-        toast("Please fill in all required fields: Department, Semester, Shift, Group", { type: "error", position: 'top-right' });
-        return;
-    }
+            toast("Please fill in all required fields: Department, Semester, Shift, Group", { type: "error", position: 'top-right' });
+            return;
+        }
 
-    // Check for duplicates
+        // Check for duplicates
         const isDuplicate = allRoutines.some(r =>
             r.department === routine.department &&
             Number(r.semester) === Number(routine.semester) &&
@@ -745,18 +808,18 @@ export default function RoutineBuilder({ onBack, initialData }) {
             const savedRoutine = await createRoutine(payload);
 
             toast("Routine saved successfully!", { type: "success", position: 'top-right' });
-            
+
             // Re-fetch to ensure we have the latest server state (incase of triggers etc) and update local
             // Also important for Duplicate Check to be accurate next time
-             const routinesData = await fetchRoutines();
-             setAllRoutines(Array.isArray(routinesData) ? routinesData.map(d => ({ ...d, id: d._id })) : (routinesData.data || []).map(d => ({ ...d, id: d._id })));
+            const routinesData = await fetchRoutines();
+            setAllRoutines(Array.isArray(routinesData) ? routinesData.map(d => ({ ...d, id: d._id })) : (routinesData.data || []).map(d => ({ ...d, id: d._id })));
 
-             // Update current view with saved data (ID might be generated if it was new)
-             // savedRoutine is likely the axios response data object
-             const savedData = savedRoutine.data || savedRoutine; 
-             if(savedData && savedData._id) {
-                 setRoutine({ ...savedData, id: savedData._id });
-             }
+            // Update current view with saved data (ID might be generated if it was new)
+            // savedRoutine is likely the axios response data object
+            const savedData = savedRoutine.data || savedRoutine;
+            if (savedData && savedData._id) {
+                setRoutine({ ...savedData, id: savedData._id });
+            }
 
         } catch (error) {
             console.error("Error saving routine:", error);
@@ -872,22 +935,22 @@ export default function RoutineBuilder({ onBack, initialData }) {
                 // So resA is the routine object directly if using typical fetch? 
                 // Let's check `api.js` return wrapper if possible, or just use `updatedRoutineA` which we know is correct regarding content.
                 // However, `lastUpdated` might be slightly off from DB.
-                
+
                 // safest is to find the FRESH version from `newRoutines` we just fetched.
-                const freshRoutine = Array.isArray(newRoutines) 
-                    ? newRoutines.find(r => r._id === routineAId) 
+                const freshRoutine = Array.isArray(newRoutines)
+                    ? newRoutines.find(r => r._id === routineAId)
                     : (newRoutines.data || []).find(r => r._id === routineAId);
-                
+
                 if (freshRoutine) {
                     setRoutine({ ...freshRoutine, id: freshRoutine._id });
                 } else {
-                     setRoutine(updatedRoutineA);
+                    setRoutine(updatedRoutineA);
                 }
             } else if (routine.id === routineBId) {
-                 const freshRoutine = Array.isArray(newRoutines)
+                const freshRoutine = Array.isArray(newRoutines)
                     ? newRoutines.find(r => r._id === routineBId)
                     : (newRoutines.data || []).find(r => r._id === routineBId);
-                
+
                 if (freshRoutine) {
                     setRoutine({ ...freshRoutine, id: freshRoutine._id });
                 } else {
@@ -1377,31 +1440,35 @@ export default function RoutineBuilder({ onBack, initialData }) {
                                                             </span>
                                                         </div>
 
-                                                        {/* Suggestions */}
-                                                        {item.suggestions && item.suggestions.length > 0 && (
+                                                        {/* Suggestions (Only Show 'New Slot' Actions) */}
+                                                        {item.suggestions && item.suggestions.filter(s => s.type === 'New Slot').length > 0 && (
                                                             <div className="flex-1 sm:ml-8 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
                                                                 <h5 className="text-xs font-bold text-blue-700 dark:text-blue-400 mb-2 flex items-center gap-1">
-                                                                    <Sparkles size={12} /> Suggestion: Merge Opportunity
+                                                                    <Sparkles size={12} /> Available Options (Click to Assign)
                                                                 </h5>
                                                                 <div className="space-y-2">
-                                                                    {item.suggestions.slice(0, 2).map((sugg, sIdx) => (
-                                                                        <div key={sIdx} className="text-xs text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                                                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></span>
+                                                                    {item.suggestions.filter(s => s.type === 'New Slot').slice(0, 3).map((sugg, sIdx) => (
+                                                                        <button
+                                                                            key={sIdx}
+                                                                            onClick={() => handleManualResolve(fail.routineId, item, sugg)}
+                                                                            className="w-full text-left flex items-center justify-between p-2 hover:bg-white dark:hover:bg-slate-800 rounded border border-transparent hover:border-blue-200 transition-all group/btn"
+                                                                        >
                                                                             <div>
-                                                                                <p>Check <strong>{sugg.routine}</strong></p>
-                                                                                <p className="opacity-80">
-                                                                                    {sugg.day} @ {sugg.time} in <span className="font-semibold">{sugg.room || 'No Room'}</span>
-                                                                                </p>
+                                                                                <span className="font-bold text-gray-800 dark:text-white text-sm">{sugg.day}</span>
+                                                                                <span className="text-xs text-gray-500 block">{sugg.time} • {sugg.room || 'Any Room'}</span>
                                                                             </div>
-                                                                        </div>
+                                                                            <div className="text-blue-600 dark:text-blue-400 opacity-0 group-hover/btn:opacity-100 font-semibold text-xs">
+                                                                                Select
+                                                                            </div>
+                                                                        </button>
                                                                     ))}
                                                                 </div>
                                                             </div>
                                                         )}
 
-                                                        {(!item.suggestions || item.suggestions.length === 0) && (
+                                                        {(!item.suggestions || item.suggestions.filter(s => s.type === 'New Slot').length === 0) && (
                                                             <div className="text-sm text-gray-400 italic">
-                                                                No merge options found. Try manual assignment.
+                                                                No available slots found. Try manual assignment.
                                                             </div>
                                                         )}
                                                     </div>

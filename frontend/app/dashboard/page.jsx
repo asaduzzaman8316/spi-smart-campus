@@ -26,6 +26,7 @@ import DepartmentOverview from './DepartmentOverview';
 import InstituteOverview from './InstituteOverview';
 import TeacherOverview from './TeacherOverview';
 import { Menu } from 'lucide-react';
+import DownloadManager from './DownloadManager';
 
 const DashboardCard = ({ icon: Icon, label, description, onClick, colorClass }) => (
     <button
@@ -128,6 +129,8 @@ export default function DashboardPage() {
                 return <TeacherLoadViewer onBack={() => setActiveView('overview')} />;
             case 'quiz-manager':
                 return <QuizManager />;
+            case 'downloads':
+                return <DownloadManager />;
             default:
                 return <div>Select a view</div>;
         }
