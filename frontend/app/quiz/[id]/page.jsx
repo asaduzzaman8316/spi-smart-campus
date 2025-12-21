@@ -133,7 +133,7 @@ export default function QuizAccessPage() {
 
     return (
         <div className="min-h-screen bg-[#FFFBF2] dark:bg-[#0B1120] flex items-center justify-center p-4 font-sans max-w-full overflow-x-hidden">
-            <div className="w-full max-w-2xl bg-white dark:bg-[#1E293B] rounded-[2rem] md:rounded-[2.5rem] shadow-xl md:shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 relative flex flex-col max-h-[90vh]">
+            <div className="w-full max-w-2xl bg-white dark:bg-[#1E293B] rounded-4xl md:rounded-[2.5rem] shadow-xl md:shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 relative flex flex-col max-h-[90vh]">
 
                 {/* Progress Bar (Global) */}
                 <div className="h-2 bg-gray-100 dark:bg-gray-800 w-full shrink-0">

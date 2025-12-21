@@ -1,5 +1,5 @@
 'use client'
-import { Bookmark, CheckCircle2, Crown } from 'lucide-react'
+import ProfileCard from './ProfileCard'
 
 const DeveloperTeam = () => {
     const mentors = [
@@ -10,6 +10,7 @@ const DeveloperTeam = () => {
             image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop',
             bio: 'Guiding students with expertise in software engineering. Passionate about nurturing innovation and technical excellence.',
             verified: true,
+            link: ''
         },
         {
             id: 2,
@@ -18,97 +19,69 @@ const DeveloperTeam = () => {
             image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop',
             bio: 'Expert in Full-Stack Development and System Architecture. Committed to building scalable solutions.',
             verified: true,
+            link: ''
         },
     ]
 
     const teamLead = {
         id: 3,
-        name: 'Alex Thompson',
+        name: 'Md. Asaduzzaman',
         role: 'Team Lead & Full-Stack Developer',
-        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=500&fit=crop',
+        image: '/asad.png',
         bio: 'Leading the team with a strong vision and building scalable systems with modern technologies.',
         verified: true,
+        link: 'https://asaduzzaman-dev.vercel.app/'
     }
 
     const teamMembers = [
         {
             id: 4,
-            name: 'Maria Garcia',
+            name: 'Md. Shahriar Dristy',
             role: 'Frontend Developer',
-            image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=500&fit=crop',
+            image: '/disty.jpg',
             bio: 'UI/UX enthusiast specializing in React & Next.js.',
             verified: true,
+            link: ''
         },
         {
             id: 5,
-            name: 'James Wilson',
+            name: 'Md. Ismail Hossen',
             role: 'Backend Developer',
-            image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=500&fit=crop',
+            image: '/ismail.jpeg',
             bio: 'Building robust APIs with Node.js and MongoDB.',
-            verified: false,
+            verified: true,
+            link: ''
         },
         {
             id: 6,
-            name: 'Priya Sharma',
+            name: 'Md. Emran Ahmod',
             role: 'UI/UX Designer',
-            image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop',
+            image: '/imran.jpg',
             bio: 'Designing intuitive and delightful user experiences.',
             verified: true,
+            link: ''
         },
         {
             id: 7,
-            name: 'David Chen',
+            name: 'Md. Saikat Islam',
             role: 'Database Administrator',
-            image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=500&fit=crop',
+            image: '/saikat.jpg',
             bio: 'Optimizing databases for performance and scalability.',
-            verified: false,
+            verified: true,
+            link: 'https://tis-protfolio.vercel.app/'
         },
         {
             id: 8,
-            name: 'Emma Brown',
+            name: 'Md Mohosinath Mahomud',
             role: 'QA & Testing Specialist',
-            image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=500&fit=crop',
+            image: '/moho.jpg',
             bio: 'Ensuring quality with thorough testing strategies.',
             verified: true,
+            link: ''
         },
     ]
 
-    const ProfileCard = ({ person, badge }) => {
-        return (
-            <div className='group  relative w-full max-w-[360px] mx-auto'>
-                <div className='relative rounded-[28px] overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500'>
-                    <img
-                        src={person.image}
-                        alt={person.name}
-                        className='w-full h-[520px] object-cover group-hover:scale-110 transition-transform duration-700'
-                    />
-                    <div className='absolute inset-0 bg-linear-to-t from-black/90 via-black/50 to-black/20' />
-
-                    {badge && (
-                        <div className='absolute top-5 left-5'>
-                            <span className='flex items-center gap-1 bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold'>
-                                <Crown className='w-4 h-4' /> {badge}
-                            </span>
-                        </div>
-                    )}
-                    <div className='absolute bottom-0 p-6 text-white w-full'>
-                        <div className='flex items-center gap-2 mb-1'>
-                            <h3 className='text-xl font-bold'>{person.name}</h3>
-                            {person.verified && (
-                                <CheckCircle2 className='w-5 h-5 text-blue-400 fill-blue-400' />
-                            )}
-                        </div>
-                        <p className='text-sm text-gray-300 mb-2'>{person.role}</p>
-                        <p className='text-sm text-gray-400 line-clamp-2 mb-4'>{person.bio}</p>
-
-                        <button className='w-full bg-white/90 text-black py-2.5 rounded-xl font-semibold text-sm hover:bg-white transition'>
-                            View Profile
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
+    
 
     return (
         <>
