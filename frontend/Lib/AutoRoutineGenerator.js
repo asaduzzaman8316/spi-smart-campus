@@ -224,6 +224,12 @@ export const generateRoutine = (
         let score = 0;
         const location = room.location || ""; // e.g. "Computer Building", "Academic Building" (Admin)
 
+        // Normalization for robust matching
+        const norm = (str) => str ? str.toString().trim().toLowerCase() : "";
+        const rDept = norm(room.department);
+        const sDept = norm(subjectDepartment);
+        const cDept = norm(department); // Routine Department
+
         // *** NEW: Combined Class Prioritization (Big Capacity) ***
         const isCombinedAllocation = options.linkedRoutines && options.linkedRoutines.length > 0;
 
@@ -234,13 +240,11 @@ export const generateRoutine = (
             if (room.capacity) {
                 score += room.capacity * 2;
             }
-            // Small penalty for very small rooms in a merge scenario?
-            // Actually, adding capacity*2 is usually enough to float big rooms to top.
         }
 
         // 1. THEORY Logic
         if (!isLab) {
-            const isCstOrEmt = ["Computer", "Electromedical"].some(d => department.includes(d));
+            const isCstOrEmt = ["computer", "electromedical"].some(d => cDept.includes(d));
 
             if (isCstOrEmt) {
                 // Priority: Computer Building
@@ -254,8 +258,9 @@ export const generateRoutine = (
                 else score += 20;
             }
 
-            // Department Preference (if defined in room)
-            if (room.department === department) score += 100;
+            // Department Preference (Fuzzy Match)
+            // If room matches routine department
+            if (rDept === cDept || (rDept && cDept && rDept.includes(cDept))) score += 100;
 
             // Previous class continuity
             if (previousClassRoom && room.name === previousClassRoom) score += 5;
@@ -266,8 +271,21 @@ export const generateRoutine = (
             // Strict Dept Matching for Labs usually?
             // Or at least "isLab" must be true
             if (!room.isLab) return -1000;
-            if (room.department === subjectDepartment) score += 200; // Best match
-            if (room.department === department) score += 50; // Backup
+
+            // Logic Adjustment: Match Subject Department with Room Department
+            // "if the depertment lab is small (same) no problem asign this room"
+
+            // Check for Subject Department Match first (Priority 1)
+            const subjectMatch = sDept && (rDept === sDept || rDept.includes(sDept) || sDept.includes(rDept));
+
+            // Check for Routine Department Match (Priority 2)
+            const routineMatch = cDept && (rDept === cDept || rDept.includes(cDept) || cDept.includes(rDept));
+
+            if (subjectMatch) {
+                score += 200; // Best match: Room matches Subject (e.g. Java -> Computer Lab)
+            } else if (routineMatch) {
+                score += 50; // Backup: Room matches Class Department
+            }
         }
 
         return score;
@@ -653,7 +671,11 @@ export const generateRoutine = (
 
                     // Room Check (Find ANY valid room)
                     const availableRooms = rooms.filter(r => r.isLab);
-                    let foundRoom = null;
+                    let bestRoom = null;
+                    let bestScore = -10000;
+
+                    const subjectObj = subjects.find(s => s.name === item.subject);
+                    const subjectDept = subjectObj ? subjectObj.department : null;
 
                     for (const room of availableRooms) {
                         let roomBusy = false;
@@ -665,25 +687,31 @@ export const generateRoutine = (
                             }
                         }
                         if (!roomBusy) {
-                            foundRoom = room.name || room.number;
-                            break; // Found a room, so this slot is valid
+                            // Use same scoring logic as main placement
+                            const score = getRoomScore(room, currentRoutineConfig.department, true, null, subjectDept);
+                            if (score > bestScore) {
+                                bestScore = score;
+                                bestRoom = room;
+                            }
                         }
                     }
 
-                    if (foundRoom) {
-                        // Found a valid slot!
+                    if (bestRoom) {
+                        // Found a valid slot with the BEST room!
                         suggestions.push({
                             routine: "Available Slot",
                             day: dayName,
                             time: `${startSlot.start}-${endSlot.end}`,
-                            room: foundRoom,
+                            room: bestRoom.name || bestRoom.number,
                             type: 'New Slot'
                         });
                         // Don't show every possible slot for the day, maybe just the first one per day is enough?
                         // Or show all? Let's show first one per day to avoid spam.
                         break;
                     }
+
                 }
+
             });
         }
 
@@ -768,11 +796,19 @@ export const generateBatchRoutines = (
                 processedTechIds.add(techId);
                 partners.forEach(pid => processedTechIds.add(pid));
 
+                // Prepare Constraints from Blocked Times
+                const constraints = (assignment.blockedTimes || []).map(bt => ({
+                    teacher: assignment.teacherName,
+                    day: bt.day,
+                    startTime: bt.start,
+                    endTime: bt.end
+                }));
+
                 // 4. Generate Schedule for Primary (checking conflicts with Partners)
                 const { generatedDays, unplacedItems } = generateRoutine(
                     primaryRoutine,
                     [loadItem], // Only add this subject's load
-                    [],
+                    constraints, // Pass constraints
                     workingRoutines,
                     rooms,
                     [],
@@ -809,6 +845,12 @@ export const generateBatchRoutines = (
                     allFailures.push({
                         routineId: primaryRoutine.id || primaryRoutine._id, // Ensure we have the ID
                         routine: `${primaryRoutine.department} - ${primaryRoutine.semester} (${primaryRoutine.group})`,
+                        metadata: {
+                            department: primaryRoutine.department,
+                            semester: primaryRoutine.semester,
+                            shift: primaryRoutine.shift,
+                            group: primaryRoutine.group
+                        },
                         items: unplacedItems
                     });
                 }

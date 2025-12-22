@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Sparkles, User, Clock, Trash2, Layers, Plus, GitMerge } from 'lucide-react';
 import { DAYS } from '../constants';
 
@@ -26,6 +26,9 @@ const AutoGenerateModal = ({
     toggleTechnology,
     handleBatchGenerate
 }) => {
+    const [activeSubjectField, setActiveSubjectField] = useState(null);
+    const [activeBlockDropdown, setActiveBlockDropdown] = useState(null);
+
     if (!show) return null;
 
     return (
@@ -99,29 +102,40 @@ const AutoGenerateModal = ({
                                                         <X size={10} className="cursor-pointer" onClick={() => removeBlockedTime(assignment.id, btIdx)} />
                                                     </span>
                                                 ))}
-                                                <div className="relative group/blocked">
-                                                    <button className="text-xs font-semibold text-gray-500 hover:text-red-500 bg-gray-200 dark:bg-slate-700 px-2 py-1 rounded-md transition-colors flex items-center gap-1">
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => setActiveBlockDropdown(activeBlockDropdown === assignment.id ? null : assignment.id)}
+                                                        className="text-xs font-semibold text-gray-500 hover:text-red-500 bg-gray-200 dark:bg-slate-700 px-2 py-1 rounded-md transition-colors flex items-center gap-1"
+                                                    >
                                                         <Clock size={12} /> Block Time
                                                     </button>
-                                                    <div className="hidden group-hover/blocked:block absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl p-3 z-50">
-                                                        <h4 className="text-xs font-bold mb-2">Add Unavailability</h4>
-                                                        <select id={`day-${assignment.id}`} className="w-full text-xs p-1 mb-2 bg-gray-50 dark:bg-slate-900 border rounded">
-                                                            {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
-                                                        </select>
-                                                        <div className="flex gap-2 mb-2">
-                                                            <input type="time" id={`start-${assignment.id}`} className="w-1/2 text-xs p-1 bg-gray-50 dark:bg-slate-900 border rounded" />
-                                                            <input type="time" id={`end-${assignment.id}`} className="w-1/2 text-xs p-1 bg-gray-50 dark:bg-slate-900 border rounded" />
+                                                    {activeBlockDropdown === assignment.id && (
+                                                        <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl p-3 z-50">
+                                                            <div className="flex justify-between items-center mb-2">
+                                                                <h4 className="text-xs font-bold">Add Unavailability</h4>
+                                                                <button onClick={() => setActiveBlockDropdown(null)}><X size={12} /></button>
+                                                            </div>
+                                                            <select id={`day-${assignment.id}`} className="w-full text-xs p-1 mb-2 bg-gray-50 dark:bg-slate-900 border rounded">
+                                                                {DAYS.map(d => <option key={d} value={d}>{d}</option>)}
+                                                            </select>
+                                                            <div className="flex gap-2 mb-2">
+                                                                <input type="time" id={`start-${assignment.id}`} className="w-1/2 text-xs p-1 bg-gray-50 dark:bg-slate-900 border rounded" />
+                                                                <input type="time" id={`end-${assignment.id}`} className="w-1/2 text-xs p-1 bg-gray-50 dark:bg-slate-900 border rounded" />
+                                                            </div>
+                                                            <button
+                                                                onClick={() => {
+                                                                    const d = document.getElementById(`day-${assignment.id}`).value;
+                                                                    const s = document.getElementById(`start-${assignment.id}`).value;
+                                                                    const e = document.getElementById(`end-${assignment.id}`).value;
+                                                                    if (d && s && e) {
+                                                                        addBlockedTime(assignment.id, d, s, e);
+                                                                        setActiveBlockDropdown(null);
+                                                                    }
+                                                                }}
+                                                                className="w-full bg-red-500 text-white text-xs py-1 rounded"
+                                                            >Add Block</button>
                                                         </div>
-                                                        <button
-                                                            onClick={() => {
-                                                                const d = document.getElementById(`day-${assignment.id}`).value;
-                                                                const s = document.getElementById(`start-${assignment.id}`).value;
-                                                                const e = document.getElementById(`end-${assignment.id}`).value;
-                                                                if (d && s && e) addBlockedTime(assignment.id, d, s, e);
-                                                            }}
-                                                            className="w-full bg-red-500 text-white text-xs py-1 rounded"
-                                                        >Add Block</button>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             </div>
                                             <button
@@ -151,20 +165,26 @@ const AutoGenerateModal = ({
                                                         return (
                                                             <tr key={sub.id} className="hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors">
                                                                 <td className="px-3 py-3 align-top">
-                                                                    <div className="relative group/sub">
+                                                                    <div className="relative">
                                                                         <input
                                                                             type="text"
                                                                             value={sub.subject}
+                                                                            onFocus={() => setActiveSubjectField(`${assignment.id}-${sub.id}`)}
+                                                                            onBlur={() => setTimeout(() => setActiveSubjectField(null), 200)}
                                                                             onChange={(e) => updateAssignmentSubject(assignment.id, sub.id, 'subject', e.target.value)}
                                                                             placeholder="Search..."
                                                                             className="w-full p-2 bg-gray-50 dark:bg-slate-800 border rounded-lg border-gray-200 dark:border-slate-700 focus:ring-1 focus:ring-blue-500"
                                                                         />
-                                                                        {sub.subject && !subjects.find(s => s.name === sub.subject) && (
-                                                                            <div className="hidden group-hover/sub:block absolute top-full left-0 w-full bg-white dark:bg-slate-800 border rounded shadow-lg z-20 max-h-40 overflow-auto">
+                                                                        {activeSubjectField === `${assignment.id}-${sub.id}` && sub.subject && !subjects.find(s => s.name === sub.subject) && (
+                                                                            <div className="absolute top-full left-0 w-full bg-white dark:bg-slate-800 border rounded shadow-lg z-20 max-h-40 overflow-auto">
                                                                                 {subjects.filter(s => s.name.toLowerCase().includes(sub.subject.toLowerCase()) || (s.code && s.code.toString().includes(sub.subject))).map(s => (
                                                                                     <div
                                                                                         key={s.id}
-                                                                                        onClick={() => updateAssignmentSubject(assignment.id, sub.id, 'subject', s.name)}
+                                                                                        onMouseDown={(e) => {
+                                                                                            e.preventDefault(); // Prevent input blur
+                                                                                            updateAssignmentSubject(assignment.id, sub.id, 'subject', s.name);
+                                                                                            setActiveSubjectField(null); // Close manually
+                                                                                        }}
                                                                                         className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 cursor-pointer text-xs"
                                                                                     >
                                                                                         {s.name} <span className='text-gray-400'>({s.code})</span>

@@ -408,8 +408,27 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
     const handleManualResolve = async (routineId, item, suggestion) => {
         if (suggestion.type !== 'New Slot') { toast.info("Merge suggestions require manual handling."); return; }
-        const routineToUpdate = allRoutines.find(r => r.id === routineId);
-        if (!routineToUpdate) return;
+        
+        let routineToUpdate = allRoutines.find(r => r.id === routineId);
+
+        // Fallback: If routine not found (e.g. Temp ID mismatch), try to find by Metadata
+        if (!routineToUpdate) {
+            const failureRecord = generationFailures.find(f => f.routineId === routineId);
+            if (failureRecord && failureRecord.metadata) {
+                const { department, semester, shift, group } = failureRecord.metadata;
+                routineToUpdate = allRoutines.find(r => 
+                    r.department === department && 
+                    Number(r.semester) === Number(semester) && 
+                    r.shift === shift && 
+                    r.group === group
+                );
+            }
+        }
+
+        if (!routineToUpdate) {
+            toast.error("Could not find the original routine to update.");
+            return;
+        }
         const [startTime, endTime] = suggestion.time.split("-");
         const updatedRoutine = {
             ...routineToUpdate,
