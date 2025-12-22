@@ -44,7 +44,7 @@ export const metadata = {
     siteName: "SPI Smart Campus",
     images: [
       {
-        url: '/sy.png',
+        url: '/logo1.png',
         width: 800,
         height: 600,
         alt: 'Sylhet Polytechnic Institute Logo',
@@ -57,10 +57,10 @@ export const metadata = {
     card: "summary_large_image",
     title: "SPI Smart Campus",
     description: "Official digital portal for Sylhet Polytechnic Institute.",
-    images: ['/sy.png'],
+    images: ['/logo1.png'],
   },
   icons: {
-    icon: '/sy.png',
+    icon: '/logo2.png',
   },
   robots: {
     index: true,

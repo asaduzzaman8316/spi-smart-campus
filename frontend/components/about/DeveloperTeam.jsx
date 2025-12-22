@@ -54,6 +54,15 @@ const DeveloperTeam = () => {
         },
         {
             id: 6,
+            name: 'Mohammad Mohsin',
+            role: 'Backend Developer',
+            image: '/mohosin.jpeg',
+            bio: 'Building robust APIs with Node.js and MongoDB.',
+            verified: true,
+            link: ''
+        },
+        {
+            id: 7,
             name: 'Md. Emran Ahmod',
             role: 'UI/UX Designer',
             image: '/imran.jpg',
@@ -62,7 +71,16 @@ const DeveloperTeam = () => {
             link: ''
         },
         {
-            id: 7,
+            id: 8,
+            name: 'Bushra Begum',
+            role: 'Logo Designer',
+            image: '/busra.jpg',
+            bio: 'Designing logos that communicate brand values with clarity and style.',
+            verified: true,
+            link: ''
+        },
+        {
+            id: 9,
             name: 'Md. Saikat Islam',
             role: 'Database Administrator',
             image: '/saikat.png',
@@ -71,14 +89,14 @@ const DeveloperTeam = () => {
             link: 'https://tis-protfolio.vercel.app/'
         },
         {
-            id: 8,
+            id: 10,
             name: 'Md Mohosinath Mahomud',
             role: 'QA & Testing Specialist',
             image: '/mohos.jpg',
             bio: 'Ensuring quality with thorough testing strategies.',
             verified: true,
             link: ''
-        },
+        }
     ]
 
 

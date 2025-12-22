@@ -213,7 +213,7 @@ export default function TeacherRoutine({ onBack }) {
 
                     if (slotData) {
                         const maxSpan = Math.max(...slotData.map(d => d.colSpan));
-                        const content = slotData.map(d => `${d.header}\n${d.subject}\n${d.room}`).join('\n---\n');
+                        const content = slotData.map(d => `${d.header}\n\n${d.subject}\n\n[T]${user.name}\n\nRM: ${d.room}`).join('\n---\n');
                         row.push({
                             content,
                             colSpan: maxSpan,
@@ -234,10 +234,70 @@ export default function TeacherRoutine({ onBack }) {
                 head: [headers, subHeaders],
                 body: body,
                 theme: 'grid',
-                styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak', minCellHeight: 14, textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.1 },
-                headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], halign: 'center', fontStyle: 'bold' },
-                columnStyles: { 0: { fontStyle: 'bold', fillColor: [250, 250, 250], cellWidth: 25, halign: 'center', valign: 'middle' } },
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2,
+                    overflow: 'linebreak',
+                    minCellHeight: 22, // Reduced row height
+                    textColor: [0, 0, 0],
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.1,
+                    fillColor: [250, 250, 250] // Light gray for odd rows
+                },
+                headStyles: {
+                    fillColor: [250, 250, 250],
+                    textColor: [0, 0, 0],
+                    halign: 'center',
+                    fontStyle: 'bold',
+                    lineWidth: 0.1,
+                    lineColor: [0, 0, 0],
+                    minCellHeight: 12
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', fillColor: [250, 250, 250], cellWidth: 25, halign: 'center', valign: 'middle' },
+                    1: { cellWidth: 36 },
+                    2: { cellWidth: 36 },
+                    3: { cellWidth: 36 },
+                    4: { cellWidth: 36 },
+                    5: { cellWidth: 36 },
+                    6: { cellWidth: 36 },
+                    7: { cellWidth: 36 }
+                },
                 margin: { left: 10, right: 10 },
+                tableWidth: 'fixed',
+                didParseCell: function (data) {
+                    if (data.section === 'body' && data.column.index > 0 && data.cell.raw && data.cell.raw.content !== '---') {
+                        // Hide default text drawing to prevent "doubling" or "shadows"
+                        data.cell.styles.textColor = [255, 255, 255];
+                    }
+                },
+                didDrawCell: function (data) {
+                    if (data.section === 'body' && data.column.index > 0 && data.cell.raw && data.cell.raw.content !== '---') {
+                        const doc = data.doc;
+                        const cell = data.cell;
+                        const lines = cell.text;
+
+                        const fontSize = cell.styles.fontSize;
+                        const lineHeight = (fontSize * 1.2) / doc.internal.scaleFactor;
+                        const totalHeight = lines.length * lineHeight;
+                        let y = cell.y + (cell.height / 2) - (totalHeight / 2) + lineHeight;
+
+                        lines.forEach((line) => {
+                            const isTeacher = line.includes('[T]');
+                            const cleanLine = line.replace('[T]', '');
+
+                            if (isTeacher) { // Teacher name line
+                                doc.setFont('helvetica', 'italic');
+                                doc.setTextColor(100, 100, 100);
+                            } else {
+                                doc.setFont('helvetica', 'bold');
+                                doc.setTextColor(0, 0, 0);
+                            }
+                            doc.text(cleanLine, cell.x + cell.width / 2, y, { align: 'center' });
+                            y += lineHeight;
+                        });
+                    }
+                },
                 didDrawPage: (data) => { currentY = data.cursor.y + 15; }
             });
         });

@@ -44,19 +44,11 @@ export default function Header() {
                         <Link href="/">
                             <div className="relative w-10 h-10">
                                 <Image
-                                    src="/logo-dark.png"
-                                    width={40}
-                                    height={40}
+                                    src="/logo1.png"
+                                    width={50}
+                                    height={50}
                                     alt='SPI Smart Campus Logo'
-                                    className='absolute inset-0 w-full h-full rounded-full object-cover hidden dark:block'
-                                    priority
-                                />
-                                <Image
-                                    src="/logo-light.png"
-                                    width={40}
-                                    height={40}
-                                    alt='SPI Smart Campus Logo'
-                                    className='absolute inset-0 w-full h-full rounded-full object-cover block dark:hidden'
+                                    className='absolute inset-0 w-full h-full rounded-full object-cover '
                                     priority
                                 />
                             </div>

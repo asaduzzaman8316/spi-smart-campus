@@ -5,6 +5,7 @@ import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { toast } from 'react-toastify';
 import { fetchRoutines, fetchTeachers, fetchPaginatedRooms, fetchDepartments } from '../../Lib/api';
+import Loader1 from '@/components/Ui/Loader1';
 
 const DownloadManager = () => {
     const [activeTab, setActiveTab] = useState('all'); // 'all', 'teacher', 'room'
@@ -202,7 +203,7 @@ const DownloadManager = () => {
             const extraInfo = filterType === 'teacher' ? g.room : g.teacher;
 
             return {
-                text: `${header}\n${subjectInfo}\n${extraInfo || ''}`,
+                text: `${header}\n\n${subjectInfo}\n\n[T]${extraInfo || ''}`,
                 colSpan: g.colSpan
             };
         });
@@ -250,26 +251,69 @@ const DownloadManager = () => {
                 styles: {
                     fontSize: 7.5,
                     cellPadding: 2,
-                    minCellHeight: 14,
+                    minCellHeight: 22,
                     valign: 'middle',
                     halign: 'center',
                     lineWidth: 0.1,
                     lineColor: [0, 0, 0],
                     textColor: [0, 0, 0],
-                    overflow: 'linebreak'
+                    overflow: 'linebreak',
+                    fillColor: [250, 250, 250]
                 },
                 headStyles: {
-                    fillColor: [240, 240, 240],
+                    fillColor: [250, 250, 250],
                     textColor: [0, 0, 0],
                     fontStyle: 'bold',
                     lineWidth: 0.1,
-                    lineColor: [0, 0, 0]
+                    lineColor: [0, 0, 0],
+                    minCellHeight: 12
                 },
                 columnStyles: {
-                    0: { fontStyle: 'bold', fillColor: [250, 250, 250], cellWidth: 22, halign: 'center' }
+                    0: { fontStyle: 'bold', fillColor: [250, 250, 250], cellWidth: 22, halign: 'center' },
+                    1: { cellWidth: 36.4 },
+                    2: { cellWidth: 36.4 },
+                    3: { cellWidth: 36.4 },
+                    4: { cellWidth: 36.4 },
+                    5: { cellWidth: 36.4 },
+                    6: { cellWidth: 36.4 },
+                    7: { cellWidth: 36.4 }
                 },
                 alternateRowStyles: {
                     fillColor: [255, 255, 255]
+                },
+                tableWidth: 'fixed',
+                didParseCell: function (data) {
+                    if (data.section === 'body' && data.column.index > 0 && data.cell.raw && data.cell.raw.content !== '---') {
+                        // Hide default text drawing to prevent "doubling" or "shadows"
+                        data.cell.styles.textColor = [255, 255, 255];
+                    }
+                },
+                didDrawCell: function (data) {
+                    if (data.section === 'body' && data.column.index > 0 && data.cell.raw && data.cell.raw.content !== '---') {
+                        const doc = data.doc;
+                        const cell = data.cell;
+                        const lines = cell.text;
+
+                        const fontSize = cell.styles.fontSize;
+                        const lineHeight = (fontSize * 1.2) / doc.internal.scaleFactor;
+                        const totalHeight = lines.length * lineHeight;
+                        let y = cell.y + (cell.height / 2) - (totalHeight / 2) + lineHeight;
+
+                        lines.forEach((line) => {
+                            const isTeacher = line.includes('[T]');
+                            const cleanLine = line.replace('[T]', '');
+
+                            if (isTeacher) { // Teacher name line
+                                doc.setFont('helvetica', 'italic');
+                                doc.setTextColor(100, 100, 100);
+                            } else {
+                                doc.setFont('helvetica', 'bold');
+                                doc.setTextColor(0, 0, 0);
+                            }
+                            doc.text(cleanLine, cell.x + cell.width / 2, y, { align: 'center' });
+                            y += lineHeight;
+                        });
+                    }
                 }
             });
         };
@@ -381,7 +425,7 @@ const DownloadManager = () => {
                         if (cls) {
                             const spanInfo = getClassSpanInfo(cls, currentSlots);
                             row.push({
-                                content: `${cls.subjectCode}\n${cls.subject}\n${cls.teacher}\n${cls.room}`,
+                                content: `${cls.subjectCode}\n\n${cls.subject}\n\n[T]${cls.teacher}\n\n${cls.room}`,
                                 colSpan: spanInfo.colSpan,
                                 styles: { fontStyle: 'bold' }
                             });
@@ -402,11 +446,10 @@ const DownloadManager = () => {
     };
 
     if (loading) return (
-        <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FF5C35]"></div>
+        <div>
+            <Loader1 />
         </div>
     );
-
     return (
         <div className="p-4 md:p-8 space-y-8 animate-fade-in">
             {/* Header Section */}

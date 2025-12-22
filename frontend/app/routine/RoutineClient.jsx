@@ -205,7 +205,7 @@ export default function RoutineDisplay() {
           }
 
           row.push({
-            content: `${classInfo.subjectCode}\n${classInfo.subject}\n${classInfo.teacher || ''}\n${roomStr}`,
+            content: `${classInfo.subjectCode}\n\n${classInfo.subject}\n\n[T]${classInfo.teacher || ''}\n\n${roomStr}`,
             colSpan: colspan,
             styles: {
               halign: 'center',
@@ -239,20 +239,65 @@ export default function RoutineDisplay() {
         textColor: [0, 0, 0], // Black text
         valign: 'middle',
         halign: 'center',
-        fillColor: [245, 245, 245] // Light gray background for odd rows (1, 3, 5)
+        fillColor: [250, 250, 250], // Light gray for odd rows
+        minCellHeight: 22 // Reduced row height as requested
       },
       headStyles: {
-        fillColor: [255, 255, 255], // White background
+        fillColor: [250, 250, 250], // Very light gray for head
         textColor: [0, 0, 0], // Black text
         fontStyle: 'bold',
         lineWidth: 0.2,
-        lineColor: [0, 0, 0]
+        lineColor: [0, 0, 0],
+        minCellHeight: 10 // Smaller height for header row
+      },
+      columnStyles: {
+        0: { cellWidth: 22, fontStyle: 'bold' }, // Day column
+        1: { cellWidth: 36.4 },
+        2: { cellWidth: 36.4 },
+        3: { cellWidth: 36.4 },
+        4: { cellWidth: 36.4 },
+        5: { cellWidth: 36.4 },
+        6: { cellWidth: 36.4 },
+        7: { cellWidth: 36.4 }
       },
       alternateRowStyles: {
-        fillColor: [255, 255, 255] // White background for even rows (2, 4)
+        fillColor: [255, 255, 255] // Maintain white background
       },
       margin: { left: 10, right: 10 },
-      tableWidth: 'auto'
+      tableWidth: 'fixed',
+      didParseCell: function (data) {
+        if (data.section === 'body' && data.column.index > 0 && data.cell.raw && data.cell.raw.content !== '---') {
+          // Hide default text drawing to prevent "doubling" or "shadows"
+          data.cell.styles.textColor = [255, 255, 255];
+        }
+      },
+      didDrawCell: function (data) {
+        if (data.section === 'body' && data.column.index > 0 && data.cell.raw && data.cell.raw.content !== '---') {
+          const doc = data.doc;
+          const cell = data.cell;
+          const lines = cell.text;
+
+          const fontSize = cell.styles.fontSize;
+          const lineHeight = (fontSize * 1.2) / doc.internal.scaleFactor;
+          const totalHeight = lines.length * lineHeight;
+          let y = cell.y + (cell.height / 2) - (totalHeight / 2) + lineHeight;
+
+          lines.forEach((line) => {
+            const isTeacher = line.includes('[T]');
+            const cleanLine = line.replace('[T]', '');
+
+            if (isTeacher) {
+              doc.setFont('helvetica', 'italic');
+              doc.setTextColor(100, 100, 100);
+            } else {
+              doc.setFont('helvetica', 'bold');
+              doc.setTextColor(0, 0, 0);
+            }
+            doc.text(cleanLine, cell.x + cell.width / 2, y, { align: 'center' });
+            y += lineHeight;
+          });
+        }
+      }
     });
 
     doc.save(`Routine_${filteredRoutine.department}_Sem${filteredRoutine.semester}.pdf`);
