@@ -7,7 +7,7 @@ const DeveloperTeam = () => {
             id: 1,
             name: 'Ruma Akter',
             role: 'Instructor & Head of the Dept.',
-            image: 'https://sylhet.polytech.gov.bd/sites/default/files/files/sylhet.polytech.gov.bd/teacher_list/a38f81c0_bfd0_4247_a0f0_75c6b010e3ad/2025-02-04-12-05-294aa908f58539454f9bd3efcdfd47c8.jpg',
+            image: '/mem1.png',
             bio: 'Guiding students with expertise in software engineering. Passionate about nurturing innovation and technical excellence.',
             verified: true,
             link: ''
@@ -74,7 +74,7 @@ const DeveloperTeam = () => {
             id: 8,
             name: 'Bushra Begum',
             role: 'Logo Designer',
-            image: '/busra.jpg',
+            image: '/busra.png',
             bio: 'Designing logos that communicate brand values with clarity and style.',
             verified: true,
             link: ''

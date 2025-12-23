@@ -34,12 +34,12 @@ export default function InstituteOverview({ setActiveView }) {
                 setLoading(true);
 
                 // 1. Fetch Basic Data
-                const [teachersData, departmentsData, noticesResp, complaintsResp, routinesData] = await Promise.all([
+                const [teachersData, departmentsData, noticesResp, complaintsResp, loadAnalysisResp] = await Promise.all([
                     fetchTeachers(''),
                     fetchDepartments(),
                     fetchNotices(''),
                     api.get('/complaints'),
-                    fetchRoutines()
+                    analyzeLoad('', '', '') // Fetch institute-wide load analysis
                 ]);
 
                 // Process Teachers
@@ -52,32 +52,12 @@ export default function InstituteOverview({ setActiveView }) {
                 // Process Notices
                 const allNotices = noticesResp.data || [];
 
-                // Process Load (Calculate per department)
-                const routines = routinesData || [];
-                const departmentLoadMap = {};
-                let instituteTotalLoad = 0;
+                // Process Load from analyzeLoad API
+                const loadData = loadAnalysisResp.data || {};
+                const instituteTotalLoad = loadData.summary ? loadData.summary.totalPeriods : 0;
 
-                routines.forEach(routine => {
-                    const dept = routine.department;
-                    if (!departmentLoadMap[dept]) departmentLoadMap[dept] = 0;
-
-                    routine.days.forEach(day => {
-                        day.classes.forEach(cls => {
-                            // Basic load calculation: 1 class = 1 period (theory), Lab = 2?
-                            // reusing logic from LoadAnalysis roughly
-                            const start = new Date(`2000-01-01 ${cls.startTime}`);
-                            const end = new Date(`2000-01-01 ${cls.endTime}`);
-                            const diffMinutes = (end - start) / 60000;
-                            let periods = 1;
-                            if (diffMinutes > 50) periods = 2;
-
-                            departmentLoadMap[dept] += periods;
-                            instituteTotalLoad += periods;
-                        });
-                    });
-                });
-
-                // Top Departments by Load
+                // Department breakdown for chart
+                const departmentLoadMap = loadData.summary ? loadData.summary.departmentLoads : {};
                 const sortedDeptLoads = Object.entries(departmentLoadMap)
                     .map(([name, load]) => ({ name, load }))
                     .sort((a, b) => b.load - a.load)
@@ -94,7 +74,6 @@ export default function InstituteOverview({ setActiveView }) {
                     .map(([name, count]) => ({ name, count }))
                     .sort((a, b) => b.count - a.count)
                     .slice(0, 5);
-
 
                 setStats({
                     teachers: allTeachers.length,
@@ -126,7 +105,7 @@ export default function InstituteOverview({ setActiveView }) {
 
     if (loading) {
         return (
-            <Loader1/>
+            <Loader1 />
         );
     }
 
@@ -148,7 +127,7 @@ export default function InstituteOverview({ setActiveView }) {
                     <div className="flex gap-3">
                         <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl text-white">
                             <div className="text-xs text-orange-200 uppercase tracking-wider font-bold">Total Departments</div>
-                            <div className="text-2xl font-bold">{stats.departments -1}</div>
+                            <div className="text-2xl font-bold">{stats.departments - 1}</div>
                         </div>
                     </div>
                 </div>
@@ -161,7 +140,7 @@ export default function InstituteOverview({ setActiveView }) {
                     value={stats.teachers}
                     icon={Users}
                     color="blue"
-                    // trend={`${stats.tempTeachers} Guest`}
+                // trend={`${stats.tempTeachers} Guest`}
                 />
                 <StatCard
                     label="System Load"

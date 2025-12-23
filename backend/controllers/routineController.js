@@ -188,8 +188,9 @@ const analyzeLoad = async (req, res) => {
             'Non Tech': 'Non-Tech'
         };
 
-        // Map to store teacher assignments
-        const teacherMap = new Map();
+        // Step 1: Identify all unique sessions across all routines
+        // A session is unique if: Day, StartTime, EndTime, Teacher, Subject, SubjectCode are the same.
+        const sessionsMap = new Map(); // Key: day-startTime-endTime-teacher-subject, Value: session data
 
         routines.forEach(routine => {
             routine.days.forEach(day => {
@@ -200,47 +201,74 @@ const analyzeLoad = async (req, res) => {
                     const periods = Math.round(duration / 45);
                     const isPractical = duration >= 90;
 
-                    const key = `${cls.teacher}-${cls.subject}-${cls.subjectCode || ''}`;
+                    // Unique session key
+                    const sessionKey = `${day.name}-${cls.startTime}-${cls.endTime}-${cls.teacher}-${cls.subject}-${cls.subjectCode || ''}`;
 
-                    if (!teacherMap.has(key)) {
-                        teacherMap.set(key, {
+                    if (!sessionsMap.has(sessionKey)) {
+                        sessionsMap.set(sessionKey, {
                             teacherName: cls.teacher,
                             subject: cls.subject,
                             subjectCode: cls.subjectCode || '',
-                            groupsMap: new Map(), // Use Map for grouping by Sem/Dept
-                            theoryPeriods: 0,
-                            practicalPeriods: 0,
-                            theoryCount: 0,
-                            practicalCount: 0,
-                            rooms: new Set()
+                            day: day.name,
+                            startTime: cls.startTime,
+                            endTime: cls.endTime,
+                            isPractical,
+                            periods: periods || 1, // Default 1 period for theory if duration < 45
+                            room: cls.room,
+                            groups: new Set()
                         });
                     }
 
-                    const entry = teacherMap.get(key);
-
-                    // Grouping Logic
+                    const session = sessionsMap.get(sessionKey);
                     const shortDept = DEPT_SHORT_NAMES[routine.department] || routine.department.substring(0, 3).toUpperCase();
-                    const groupKey = `${routine.semester}/${shortDept}`; // e.g., "2/CST"
-
-                    if (!entry.groupsMap.has(groupKey)) {
-                        entry.groupsMap.set(groupKey, new Set());
-                    }
-                    entry.groupsMap.get(groupKey).add(routine.group);
-
-                    if (isPractical) {
-                        entry.practicalPeriods += periods;
-                        entry.practicalCount += 1;
-                    } else {
-                        entry.theoryPeriods += periods;
-                        entry.theoryCount += 1;
-                    }
-
-                    if (cls.room) entry.rooms.add(cls.room);
+                    const groupInfo = `${routine.semester}/${shortDept}/${routine.group}`;
+                    session.groups.add(groupInfo);
                 });
             });
         });
 
-        // Convert to array and format
+        // Step 2: Group unique sessions by Teacher-Subject
+        const teacherMap = new Map(); // Key: teacher-subject-code
+
+        sessionsMap.forEach(session => {
+            const key = `${session.teacherName}-${session.subject}-${session.subjectCode}`;
+            if (!teacherMap.has(key)) {
+                teacherMap.set(key, {
+                    teacherName: session.teacherName,
+                    subject: session.subject,
+                    subjectCode: session.subjectCode,
+                    theoryPeriods: 0,
+                    practicalPeriods: 0,
+                    theoryCount: 0,
+                    practicalCount: 0,
+                    rooms: new Set(),
+                    groupsMap: new Map() // semester/dept -> Set of groups
+                });
+            }
+            const entry = teacherMap.get(key);
+
+            if (session.isPractical) {
+                entry.practicalPeriods += session.periods;
+                entry.practicalCount += 1;
+            } else {
+                entry.theoryPeriods += session.periods;
+                entry.theoryCount += 1;
+            }
+
+            if (session.room) entry.rooms.add(session.room);
+
+            // Add groups from this session to the entry's groupsMap
+            session.groups.forEach(groupInfo => {
+                const parts = groupInfo.split('/'); // [sem, dept, group]
+                const groupKey = `${parts[0]}/${parts[1]}`;
+                if (!entry.groupsMap.has(groupKey)) {
+                    entry.groupsMap.set(groupKey, new Set());
+                }
+                entry.groupsMap.get(groupKey).add(parts[2]);
+            });
+        });
+
+        // Step 3: Convert to array and format
         const assignments = Array.from(teacherMap.values()).map(entry => {
             // Format Technology string: key-Group+Group (e.g., 2/CST-A1+B1)
             const techParts = [];
@@ -259,30 +287,51 @@ const analyzeLoad = async (req, res) => {
                 practicalPeriods: entry.practicalPeriods,
                 theoryCount: entry.theoryCount,
                 practicalCount: entry.practicalCount,
-                totalLoad: entry.theoryPeriods + entry.practicalPeriods, // Keep period load validation if needed
-                totalClasses: entry.theoryCount + entry.practicalCount, // New class count
-                rooms: Array.from(entry.rooms).join(', ')
+                totalLoad: entry.theoryPeriods + entry.practicalPeriods,
+                totalClasses: entry.theoryCount + entry.practicalCount,
+                rooms: Array.from(entry.rooms).sort().join(', ')
             };
         });
 
         assignments.sort((a, b) => a.teacherName.localeCompare(b.teacherName));
 
-        const uniqueTeachers = new Set(assignments.map(a => a.teacherName));
-        const totalPeriods = assignments.reduce((sum, a) => sum + a.totalLoad, 0);
-        const totalTheory = assignments.reduce((sum, a) => sum + a.theoryPeriods, 0);
-        const totalPractical = assignments.reduce((sum, a) => sum + a.practicalPeriods, 0);
+        const uniqueTeachersCount = new Set(assignments.map(a => a.teacherName)).size;
+
+        // Calculate Global Totals and Department Breakdown
+        let totalPeriods = 0;
+        let totalTheory = 0;
+        let totalPractical = 0;
+        const departmentLoads = {};
+
+        sessionsMap.forEach(s => {
+            totalPeriods += s.periods;
+            if (s.isPractical) totalPractical += s.periods;
+            else totalTheory += s.periods;
+
+            // Department breakdown
+            const sessionDepts = new Set();
+            s.groups.forEach(groupInfo => {
+                const parts = groupInfo.split('/');
+                sessionDepts.add(parts[1]); // Short name like CST, CT etc.
+            });
+
+            sessionDepts.forEach(dept => {
+                departmentLoads[dept] = (departmentLoads[dept] || 0) + s.periods;
+            });
+        });
 
         res.json({
             success: true,
             data: {
                 assignments,
                 summary: {
-                    totalTeachers: uniqueTeachers.size,
+                    totalTeachers: uniqueTeachersCount,
                     totalAssignments: assignments.length,
                     totalPeriods,
                     totalTheory,
                     totalPractical,
-                    averageLoad: uniqueTeachers.size > 0 ? (totalPeriods / uniqueTeachers.size).toFixed(1) : 0
+                    averageLoad: uniqueTeachersCount > 0 ? (totalPeriods / uniqueTeachersCount).toFixed(1) : 0,
+                    departmentLoads
                 },
                 filters: {
                     department: department || 'All',

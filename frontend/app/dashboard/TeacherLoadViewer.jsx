@@ -99,9 +99,9 @@ export default function TeacherLoadViewer({ onBack }) {
                     assignment => assignment.teacherName === teacherName
                 );
 
-                const totalTheory = teacherAssignments.reduce((sum, a) => sum + (a.theoryCount || 0), 0);
-                const totalLab = teacherAssignments.reduce((sum, a) => sum + (a.practicalCount || 0), 0);
-                const totalLoad = teacherAssignments.reduce((sum, a) => sum + (a.totalClasses || 0), 0);
+                const totalTheory = teacherAssignments.reduce((sum, a) => sum + (a.theoryPeriods || 0), 0);
+                const totalLab = teacherAssignments.reduce((sum, a) => sum + (a.practicalPeriods || 0), 0);
+                const totalLoad = teacherAssignments.reduce((sum, a) => sum + (a.totalLoad || 0), 0);
 
                 setLoadData({
                     assignments: teacherAssignments,
@@ -287,17 +287,17 @@ export default function TeacherLoadViewer({ onBack }) {
                                                 <div className="flex items-center gap-4 bg-white dark:bg-gray-800 p-3 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                                                     <div className="text-center w-12">
                                                         <p className="text-[10px] font-bold text-blue-500 uppercase">Thy</p>
-                                                        <p className="text-lg font-bold text-gray-900 dark:text-white leading-none mt-1">{assignment.theoryCount || 0}</p>
+                                                        <p className="text-lg font-bold text-gray-900 dark:text-white leading-none mt-1">{assignment.theoryPeriods || 0}</p>
                                                     </div>
                                                     <div className="w-px h-8 bg-gray-100 dark:bg-gray-700"></div>
                                                     <div className="text-center w-12">
                                                         <p className="text-[10px] font-bold text-purple-500 uppercase">Lab</p>
-                                                        <p className="text-lg font-bold text-gray-900 dark:text-white leading-none mt-1">{assignment.practicalCount || 0}</p>
+                                                        <p className="text-lg font-bold text-gray-900 dark:text-white leading-none mt-1">{assignment.practicalPeriods || 0}</p>
                                                     </div>
                                                     <div className="w-px h-8 bg-gray-100 dark:bg-gray-700"></div>
                                                     <div className="text-center w-12">
                                                         <p className="text-[10px] font-bold text-[#FF5C35] uppercase">Tot</p>
-                                                        <p className="text-lg font-bold text-[#FF5C35] leading-none mt-1">{assignment.totalClasses || 0}</p>
+                                                        <p className="text-lg font-bold text-[#FF5C35] leading-none mt-1">{assignment.totalLoad || 0}</p>
                                                     </div>
                                                 </div>
                                             </div>

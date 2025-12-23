@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { fetchDepartments, fetchTeachers, fetchRoutines } from '../../Lib/api';
+import { fetchDepartments, analyzeLoad } from '../../Lib/api';
 import { BarChart3, Download, Filter, Users, BookOpen, Clock, FileText } from 'lucide-react';
 import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
@@ -70,119 +70,19 @@ export default function LoadAnalysis() {
 
         setLoading(true);
         try {
-            // 1. Fetch Teachers for the selected department
-            const teachers = await fetchTeachers('', selectedDepartment);
+            // Use the centralized analyzeLoad API
+            const result = await analyzeLoad(selectedDepartment, selectedSemester, selectedShift);
 
-            // 2. Fetch ALL Routines (no filters)
-            const routines = await fetchRoutines();
-
-            // 3. Process Data
-            const assignments = [];
-            let totalTheory = 0;
-            let totalPractical = 0;
-
-            teachers.forEach(teacher => {
-                const teacherName = teacher.name;
-                const teacherNickName = teacher.nickName || "";
-
-                // Track subjects for this teacher to consolidate rows
-                // key: subjectCode-classType (e.g. 66611-T)
-                const subjectMap = {};
-
-                // Iterate ALL routines
-                routines.forEach(routine => {
-                    // Filter routines based on user selection
-                    if (selectedSemester && routine.semester !== Number(selectedSemester)) return;
-                    if (selectedShift && routine.shift !== selectedShift) return;
-
-                    routine.days.forEach(day => {
-                        day.classes.forEach(cls => {
-                            // Check if this teacher takes this class
-                            // Match by name or perhaps regex if needed, but exact match is standard here
-                            if (cls.teacher === teacherName || cls.teacher === teacherNickName) {
-
-                                const key = `${cls.subjectCode}-${cls.subject}`;
-
-                                if (!subjectMap[key]) {
-                                    subjectMap[key] = {
-                                        teacherName: teacherName,
-                                        subject: cls.subject,
-                                        subjectCode: cls.subjectCode,
-                                        technologies: new Set(), // Changed to Set for multiple
-                                        theoryPeriods: 0,
-                                        practicalPeriods: 0,
-                                        theoryCount: 0,     // NEW: Track counts
-                                        practicalCount: 0,  // NEW: Track counts
-                                        totalLoad: 0,
-                                        rooms: new Set()
-                                    };
-                                }
-
-                                // Format: Sem/DeptShort-Group (e.g. 2/CST-A1)
-                                const shortDept = getDeptShortName(routine.department);
-                                const techStr = `${routine.semester}/${shortDept}-${routine.group}`;
-                                subjectMap[key].technologies.add(techStr);
-
-                                // Calculate periods
-                                // Simple logic: 1 class = 1 period? 
-                                // Or based on duration? Usually 45min = 1 period.
-                                // Let's try to infer or just count 1 for now, as existing API likely does.
-                                // But wait, standard load calculation usually counts number of classes.
-                                // Let's check duration. 
-                                // Calculate duration in minutes (Standardized with Backend)
-                                const [startH, startM] = cls.startTime.split(':').map(Number);
-                                const [endH, endM] = cls.endTime.split(':').map(Number);
-                                let startMinutes = startH * 60 + startM;
-                                let endMinutes = endH * 60 + endM;
-
-                                if (endMinutes < startMinutes) endMinutes += 24 * 60;
-
-                                const duration = endMinutes - startMinutes;
-                                const periods = Math.round(duration / 45);
-                                const isPractical = duration >= 90; // 90+ mins = Practical/Lab
-
-                                if (isPractical) {
-                                    subjectMap[key].practicalPeriods += periods; // Keep total duration
-                                    subjectMap[key].practicalCount += 1;         // Count Class
-                                } else {
-                                    subjectMap[key].theoryPeriods += periods;    // Keep total duration
-                                    subjectMap[key].theoryCount += 1;            // Count Class
-                                }
-
-                                subjectMap[key].rooms.add(cls.room);
-                            }
-                        });
-                    });
+            if (result.success && result.data) {
+                setLoadData({
+                    assignments: result.data.assignments,
+                    summary: result.data.summary
                 });
-
-                // Convert map to array rows
-                Object.values(subjectMap).forEach(item => {
-                    // Update Total Load to use COUNTS not PERIODS
-                    item.totalLoad = item.theoryCount + item.practicalCount;
-
-                    // Join unique technologies with comma/newline? Comma for now to save space, or newline for list
-                    item.technology = Array.from(item.technologies).join(', '); // Comma separated as per image
-                    item.rooms = Array.from(item.rooms).filter(Boolean).join(', ');
-
-                    totalTheory += item.theoryCount;       // Use Count
-                    totalPractical += item.practicalCount; // Use Count
-
-                    assignments.push(item);
-                });
-            });
-
-            const summary = {
-                totalTeachers: teachers.length,
-                totalAssignments: assignments.length,
-                totalTheory,
-                totalPractical,
-                totalPeriods: totalTheory + totalPractical,
-                averageLoad: teachers.length ? ((totalTheory + totalPractical) / teachers.length).toFixed(2) : 0
-            };
-
-            setLoadData({ assignments, summary });
-            toast.success('Global load analysis completed!');
-
+                toast.success('Load analysis completed!');
+            } else {
+                setLoadData(null);
+                toast.info('No routine data found for these filters');
+            }
         } catch (error) {
             console.error(error);
             toast.error('Failed to analyze load');
@@ -256,13 +156,13 @@ export default function LoadAnalysis() {
                 row.push(assignment.technology);
 
                 // Col 6: T
-                row.push({ content: assignment.theoryCount, styles: { halign: 'center' } });
+                row.push({ content: assignment.theoryPeriods || 0, styles: { halign: 'center' } });
 
                 // Col 7: P
-                row.push({ content: assignment.practicalCount, styles: { halign: 'center' } });
+                row.push({ content: assignment.practicalPeriods || 0, styles: { halign: 'center' } });
 
                 // Col 8: Load (Subject Total)
-                row.push({ content: assignment.totalLoad, styles: { halign: 'center' } });
+                row.push({ content: assignment.totalLoad || 0, styles: { halign: 'center' } });
 
                 // Col 9: Total Load (Teacher Total - RowSpan)
                 if (index === 0) {
@@ -552,14 +452,14 @@ export default function LoadAnalysis() {
                                                 </div>
                                             </td>
                                             <td className="p-6 text-center font-medium text-slate-600 dark:text-slate-400">
-                                                {assignment.theoryCount}
+                                                {assignment.theoryPeriods || 0}
                                             </td>
                                             <td className="p-6 text-center font-medium text-slate-600 dark:text-slate-400">
-                                                {assignment.practicalCount}
+                                                {assignment.practicalPeriods || 0}
                                             </td>
                                             <td className="p-6 text-center">
                                                 <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-lg shadow-slate-900/20">
-                                                    {assignment.totalLoad}
+                                                    {assignment.totalLoad || 0}
                                                 </span>
                                             </td>
                                             <td className="p-6">

@@ -67,10 +67,10 @@ export default function AdminProfile() {
                     assignment => assignment.teacherName === user.name
                 );
 
-                // Calculate totals (Using Class Counts NOT Periods)
-                const totalTheory = userAssignments.reduce((sum, a) => sum + (a.theoryCount || 0), 0);
-                const totalLab = userAssignments.reduce((sum, a) => sum + (a.practicalCount || 0), 0);
-                const totalLoad = userAssignments.reduce((sum, a) => sum + (a.totalClasses || 0), 0);
+                // Calculate totals (Using Periods for Load)
+                const totalTheory = userAssignments.reduce((sum, a) => sum + (a.theoryPeriods || 0), 0);
+                const totalLab = userAssignments.reduce((sum, a) => sum + (a.practicalPeriods || 0), 0);
+                const totalLoad = userAssignments.reduce((sum, a) => sum + (a.totalLoad || 0), 0);
 
                 setLoadData({
                     assignments: userAssignments,
@@ -471,15 +471,15 @@ export default function AdminProfile() {
                                                     <div className="flex items-center gap-4 ml-4">
                                                         <div className="text-center">
                                                             <p className="text-xs text-gray-500 dark:text-gray-400">Theory</p>
-                                                            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{assignment.theoryCount || 0}</p>
+                                                            <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{assignment.theoryPeriods || 0}</p>
                                                         </div>
                                                         <div className="text-center">
                                                             <p className="text-xs text-gray-500 dark:text-gray-400">Lab</p>
-                                                            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{assignment.practicalCount || 0}</p>
+                                                            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{assignment.practicalPeriods || 0}</p>
                                                         </div>
                                                         <div className="text-center">
                                                             <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                                                            <p className="text-lg font-bold text-[#FF5C35]">{assignment.totalClasses || 0}</p>
+                                                            <p className="text-lg font-bold text-[#FF5C35]">{assignment.totalLoad || 0}</p>
                                                         </div>
                                                     </div>
                                                 </div>
