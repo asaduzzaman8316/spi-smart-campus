@@ -59,7 +59,7 @@ const ClassItem = ({
                         className="w-full text-sm font-medium bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-gray-900 dark:text-white rounded-lg p-2.5 border focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
                     >
                         <option className='text-gray-500' value="">Select Subject</option>
-                        {subjects.map((sub, sIndex) => (
+                        {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map((sub, sIndex) => (
                             <option className='text-gray-900 dark:text-white bg-white dark:bg-slate-800' key={sIndex} value={sub.name}>{sub.name}</option>
                         ))}
                     </select>

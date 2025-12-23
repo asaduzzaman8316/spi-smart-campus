@@ -148,6 +148,17 @@ export default function QuizManager() {
         }
     };
 
+    const getAvailableGroups = (deptName, shift) => {
+        if (!shift) return ['A1', 'B1', 'A2', 'B2', 'C1', 'C2'];
+        const isCivil = deptName?.toLowerCase().includes('civil');
+        if (shift === '1st') {
+            return isCivil ? ['A1', 'B1', 'C1'] : ['A1', 'B1'];
+        } else if (shift === '2nd') {
+            return isCivil ? ['A2', 'B2', 'C2'] : ['A2', 'B2'];
+        }
+        return ['A1', 'B1', 'A2', 'B2', 'C1', 'C2'];
+    };
+
     const handleDelete = (id) => {
         setQuizToDelete(id);
         setShowDeleteModal(true);
@@ -201,7 +212,7 @@ export default function QuizManager() {
         }
     }, [resultFilters]);
 
-    if (loading) return <Loader1/>;
+    if (loading) return <Loader1 />;
 
     return (
         <div className="space-y-6 pb-20 md:pb-0">
@@ -280,7 +291,7 @@ export default function QuizManager() {
                                 <select required className="w-full p-3 rounded-xl bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-gray-700"
                                     value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })}>
                                     <option value="">Select Subject</option>
-                                    {subjects.map(s => <option key={s._id} value={s.name}>{s.name} ({s.code})</option>)}
+                                    {[...subjects].sort((a, b) => a.name.localeCompare(b.name)).map(s => <option key={s._id} value={s.name}>{s.name} ({s.code})</option>)}
                                 </select>
                             </div>
 
@@ -296,7 +307,7 @@ export default function QuizManager() {
                                 <select required className="w-full p-3 rounded-xl bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-gray-700"
                                     value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
                                     <option value="">Select Department</option>
-                                    {departments.map(d => <option key={d._id} value={d.name}>{d.name}</option>)}
+                                    {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map(d => <option key={d._id} value={d.name}>{d.name}</option>)}
                                 </select>
                             </div>
                             <div>
@@ -318,10 +329,10 @@ export default function QuizManager() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-2">Group</label>
-                                <select required className="w-full p-3 rounded-xl bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-gray-700"
+                                <select required className="w-full p-3 rounded-xl bg-gray-50 dark:bg-[#0F172A] border border-gray-200 dark:border-gray-700 outline-none focus:ring-2 focus:ring-[#FF5C35]"
                                     value={formData.group} onChange={e => setFormData({ ...formData, group: e.target.value })}>
                                     <option value="">Select Group</option>
-                                    {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(g => (
+                                    {getAvailableGroups(formData.department, formData.shift).map(g => (
                                         <option key={g} value={g}>{g}</option>
                                     ))}
                                 </select>
@@ -414,7 +425,7 @@ export default function QuizManager() {
                         <select className="bg-gray-50 dark:bg-gray-900 border-none rounded-lg px-4 py-2 min-w-[150px]"
                             value={resultFilters.department} onChange={e => setResultFilters({ ...resultFilters, department: e.target.value })}>
                             <option value="All">All Departments</option>
-                            {departments.map(d => <option key={d._id} value={d.name}>{d.name}</option>)}
+                            {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map(d => <option key={d._id} value={d.name}>{d.name}</option>)}
                         </select>
                         <select className="bg-gray-50 dark:bg-gray-900 border-none rounded-lg px-4 py-2 min-w-[150px]"
                             value={resultFilters.semester} onChange={e => setResultFilters({ ...resultFilters, semester: e.target.value })}>
@@ -426,6 +437,13 @@ export default function QuizManager() {
                             <option value="All">All Shifts</option>
                             <option value="1st">1st Shift</option>
                             <option value="2nd">2nd Shift</option>
+                        </select>
+                        <select className="bg-gray-50 dark:bg-gray-900 border-none rounded-lg px-4 py-2 min-w-[150px]"
+                            value={resultFilters.group} onChange={e => setResultFilters({ ...resultFilters, group: e.target.value })}>
+                            <option value="All">All Groups</option>
+                            {getAvailableGroups(resultFilters.department, resultFilters.shift).map(g => (
+                                <option key={g} value={g}>{g}</option>
+                            ))}
                         </select>
                     </div>
 

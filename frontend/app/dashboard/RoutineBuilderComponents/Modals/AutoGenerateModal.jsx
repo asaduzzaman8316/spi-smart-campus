@@ -62,7 +62,7 @@ const AutoGenerateModal = ({
                             <User className="absolute left-3 top-3.5 text-gray-400" size={18} />
                             {showTeacherDropdown && (
                                 <div className="absolute top-full left-0 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl max-h-60 overflow-y-auto z-50">
-                                    {teachers.filter(t => t.name.toLowerCase().includes(teacherSearchTerm.toLowerCase())).map(t => (
+                                    {teachers.filter(t => t.name.toLowerCase().includes(teacherSearchTerm.toLowerCase())).sort((a, b) => a.name.localeCompare(b.name)).map(t => (
                                         <div
                                             key={t.id}
                                             onClick={() => addTeacherAssignment(t)}
@@ -177,7 +177,7 @@ const AutoGenerateModal = ({
                                                                         />
                                                                         {activeSubjectField === `${assignment.id}-${sub.id}` && sub.subject && !subjects.find(s => s.name === sub.subject) && (
                                                                             <div className="absolute top-full left-0 w-full bg-white dark:bg-slate-800 border rounded shadow-lg z-20 max-h-40 overflow-auto">
-                                                                                {subjects.filter(s => s.name.toLowerCase().includes(sub.subject.toLowerCase()) || (s.code && s.code.toString().includes(sub.subject))).map(s => (
+                                                                                {subjects.filter(s => s.name.toLowerCase().includes(sub.subject.toLowerCase()) || (s.code && s.code.toString().includes(sub.subject))).sort((a, b) => a.name.localeCompare(b.name)).map(s => (
                                                                                     <div
                                                                                         key={s.id}
                                                                                         onMouseDown={(e) => {

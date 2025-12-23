@@ -38,7 +38,7 @@ const ConfigPanels = ({
                             disabled={isEditMode}
                         >
                             <option value="">Select Department</option>
-                            {departments.slice(0, 7).map((dept, index) => (
+                            {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map((dept, index) => (
                                 <option key={index} value={dept.name}>{dept.name}</option>
                             ))}
                         </select>
@@ -111,7 +111,7 @@ const ConfigPanels = ({
                             className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                         >
                             <option value="">All Departments</option>
-                            {departments.map((dept, index) => (
+                            {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map((dept, index) => (
                                 <option key={index} value={dept.name}>{dept.name}</option>
                             ))}
                         </select>
@@ -153,7 +153,7 @@ const ConfigPanels = ({
                             className="w-full outline-none bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-200 dark:border-slate-700 rounded-lg p-2.5 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                         >
                             <option value="">All Departments</option>
-                            {departments.map((dept, index) => (
+                            {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map((dept, index) => (
                                 <option key={index} value={dept.name}>{dept.name}</option>
                             ))}
                         </select>

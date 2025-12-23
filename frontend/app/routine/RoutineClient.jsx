@@ -8,7 +8,7 @@ import autoTable from 'jspdf-autotable';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
-const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
+const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
 const SHIFTS = ["1st", "2nd"];
 const GROUPS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
@@ -348,7 +348,7 @@ export default function RoutineDisplay() {
                 className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
               >
                 <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Department</option>
-                {departments.slice(0, 7).map(dept => (
+                {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map(dept => (
                   <option key={dept.id} value={dept.name} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                     {dept.name}
                   </option>
@@ -398,11 +398,16 @@ export default function RoutineDisplay() {
                 className="w-full bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF5C35] transition-all"
               >
                 <option value="" className="bg-white dark:bg-slate-900 text-gray-500">Select Group</option>
-                {GROUPS.filter(grp => {
-                  if (selectedShift === "1st") return ["A1", "B1"].includes(grp);
-                  if (selectedShift === "2nd") return ["A2", "B2"].includes(grp);
-                  return true;
-                }).map(grp => (
+                {(() => {
+                  const isCivil = selectedDepartment?.toLowerCase().includes('civil');
+                  if (selectedShift === "1st") {
+                    return isCivil ? ["A1", "B1", "C1"] : ["A1", "B1"];
+                  }
+                  if (selectedShift === "2nd") {
+                    return isCivil ? ["A2", "B2", "C2"] : ["A2", "B2"];
+                  }
+                  return GROUPS;
+                })().map(grp => (
                   <option key={grp} value={grp} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
                     Group {grp}
                   </option>

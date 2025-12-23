@@ -281,7 +281,7 @@ export default function ComplaintPage() {
                                                 onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                                             >
                                                 <option value="">Select Dept</option>
-                                                {departments.map(dept => (
+                                                {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map(dept => (
                                                     <option key={dept._id} value={dept.name}>
                                                         {dept.name}
                                                     </option>

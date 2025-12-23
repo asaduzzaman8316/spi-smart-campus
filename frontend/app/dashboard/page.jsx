@@ -11,6 +11,7 @@ import TeacherAccountManager from "./TeacherAccountManager";
 import TeacherRoutine from "./TeacherRoutine";
 import TeacherToday from "./TeacherToday";
 import QuizManager from './QuizManager';
+import QuestionManager from './QuestionManager';
 
 import AdminProfile from "./AdminProfile";
 import AdminManager from "./AdminManager";
@@ -129,6 +130,8 @@ export default function DashboardPage() {
                 return <TeacherLoadViewer onBack={() => setActiveView('overview')} />;
             case 'quiz-manager':
                 return <QuizManager />;
+            case 'question-bank':
+                return <QuestionManager />;
             case 'downloads':
                 return <DownloadManager />;
             default:

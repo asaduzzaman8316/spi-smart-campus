@@ -25,14 +25,13 @@ export default function TeacherToday({ onBack }) {
 
             try {
                 const routines = await fetchRoutines();
-                const classes = [];
-
+                const routineClasses = [];
                 routines.forEach(routine => {
                     const daySchedule = routine.days.find(d => d.name === dayName);
                     if (daySchedule && daySchedule.classes) {
                         daySchedule.classes.forEach(cls => {
                             if (cls.teacher === user.name) {
-                                classes.push({
+                                routineClasses.push({
                                     ...cls,
                                     department: routine.department,
                                     semester: routine.semester,
@@ -44,8 +43,26 @@ export default function TeacherToday({ onBack }) {
                     }
                 });
 
-                classes.sort((a, b) => a.startTime.localeCompare(b.startTime));
-                setTodayClasses(classes);
+                // Group by Subject, Room, Day, Time to merge groups (A1/B1)
+                const grouped = {};
+                routineClasses.forEach(c => {
+                    const key = `${c.subjectCode}-${c.startTime}-${c.room}`;
+                    if (!grouped[key]) {
+                        grouped[key] = { ...c, groups: [c.group] };
+                    } else {
+                        if (!grouped[key].groups.includes(c.group)) {
+                            grouped[key].groups.push(c.group);
+                        }
+                    }
+                });
+
+                const finalClasses = Object.values(grouped).map(c => ({
+                    ...c,
+                    group: c.groups.sort().join(' / ')
+                }));
+
+                finalClasses.sort((a, b) => a.startTime.localeCompare(b.startTime));
+                setTodayClasses(finalClasses);
             } catch (error) {
                 console.error("Error loading today's classes:", error);
             } finally {

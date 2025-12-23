@@ -21,6 +21,7 @@ const DownloadManager = () => {
     const [selectedDept, setSelectedDept] = useState('');
     const [selectedSemester, setSelectedSemester] = useState('');
     const [selectedShift, setSelectedShift] = useState('');
+    const [selectedGroup, setSelectedGroup] = useState('');
 
     // Teacher/Room Selection States
     const [selectedTeacherIds, setSelectedTeacherIds] = useState([]);
@@ -29,6 +30,7 @@ const DownloadManager = () => {
     // Constants
     const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
     const SHIFTS = ["1st", "2nd"];
+    const GROUPS = ["A1", "A2", "B1", "B2", "C1", "C2"];
     const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
 
     // Time Slots for both shifts
@@ -79,11 +81,11 @@ const DownloadManager = () => {
     }, []);
 
     // Filtered Lists
-    const filteredTeachers = selectedDept
+    const filteredTeachers = (selectedDept
         ? teachers.filter(t => t.department === selectedDept)
-        : teachers;
+        : teachers).sort((a, b) => a.name.localeCompare(b.name));
 
-    const labRooms = rooms.filter(r => r.isLab || r.type === 'Lab');
+    const labRooms = rooms.filter(r => r.isLab || r.type === 'Lab').sort((a, b) => (a.number || a.name).localeCompare(b.number || b.name));
 
     // Selection Handlers
     const toggleTeacher = (id) => {
@@ -400,6 +402,7 @@ const DownloadManager = () => {
             if (selectedDept) filteredRoutines = filteredRoutines.filter(r => r.department === selectedDept);
             if (selectedSemester) filteredRoutines = filteredRoutines.filter(r => r.semester == selectedSemester);
             if (selectedShift) filteredRoutines = filteredRoutines.filter(r => r.shift === selectedShift);
+            if (selectedGroup && selectedGroup !== 'All') filteredRoutines = filteredRoutines.filter(r => r.group === selectedGroup);
 
             if (filteredRoutines.length === 0) {
                 toast.warning("No routines match the filters.");
@@ -507,7 +510,7 @@ const DownloadManager = () => {
                                     onChange={(e) => setSelectedDept(e.target.value)}
                                 >
                                     <option value="">All Departments</option>
-                                    {departments.map((d, i) => <option key={i} value={d.name}>{d.name}</option>)}
+                                    {selectedDept === 'NONE' ? null : [...departments].sort((a, b) => a.name.localeCompare(b.name)).map((d, i) => <option key={i} value={d.name}>{d.name}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-2">
@@ -530,6 +533,30 @@ const DownloadManager = () => {
                                 >
                                     <option value="">All Shifts</option>
                                     {SHIFTS.map(s => <option key={s} value={s}>{s} Shift</option>)}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-gray-500 dark:text-gray-400 ml-1">Group</label>
+                                <select
+                                    className="w-full p-4 rounded-2xl border-2 border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:border-[#FF5C35] outline-hidden transition-all font-medium text-gray-900 dark:text-white"
+                                    value={selectedGroup}
+                                    onChange={(e) => setSelectedGroup(e.target.value)}
+                                >
+                                    <option value="">All Groups</option>
+                                    {(() => {
+                                        const isCivil = selectedDept?.toLowerCase().includes('civil');
+                                        if (selectedShift === "1st") {
+                                            return isCivil ? ["A1", "B1", "C1"] : ["A1", "B1"];
+                                        }
+                                        if (selectedShift === "2nd") {
+                                            return isCivil ? ["A2", "B2", "C2"] : ["A2", "B2"];
+                                        }
+                                        return GROUPS;
+                                    })().map(grp => (
+                                        <option key={grp} value={grp}>
+                                            Group {grp}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
@@ -555,7 +582,7 @@ const DownloadManager = () => {
                                 onChange={(e) => { setSelectedDept(e.target.value); setSelectedTeacherIds([]); }}
                             >
                                 <option value="">Select Department to Load Teachers</option>
-                                {departments.map((d, i) => <option key={i} value={d.name}>{d.name}</option>)}
+                                {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map((d, i) => <option key={i} value={d.name}>{d.name}</option>)}
                             </select>
                         </div>
 

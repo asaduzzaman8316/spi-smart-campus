@@ -262,3 +262,30 @@ export const fetchQuizResults = async (id, filters = {}) => {
     const { data } = await api.get(`/quizzes/${id}/results?${params.toString()}`);
     return data;
 };
+// Questions (Question Bank)
+export const fetchQuestions = async (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.keys(filters).forEach(key => {
+        if (filters[key] && filters[key] !== 'All') {
+            params.append(key, filters[key]);
+        }
+    });
+
+    const { data } = await api.get(`/questions?${params.toString()}`);
+    return data;
+};
+
+export const createQuestion = async (questionData) => {
+    const { data } = await api.post('/questions', questionData);
+    return data;
+};
+
+export const updateQuestion = async (id, questionData) => {
+    const { data } = await api.put(`/questions/${id}`, questionData);
+    return data;
+};
+
+export const deleteQuestion = async (id) => {
+    const { data } = await api.delete(`/questions/${id}`);
+    return data;
+};

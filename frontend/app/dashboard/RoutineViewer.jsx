@@ -196,7 +196,7 @@ export default function RoutineViewer({ onBack, onEdit }) {
         group: ''
     });
 
-    const SEMESTERS = [1, 2, 3, 4, 5, 6, 7];
+    const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
     const SHIFTS = ["1st", "2nd"];
     const GROUPS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
@@ -451,7 +451,7 @@ export default function RoutineViewer({ onBack, onEdit }) {
                             className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-sm p-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                         >
                             <option value="">All Departments</option>
-                            {departments.slice(0, 7).map((dept, index) => (
+                            {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map((dept, index) => (
                                 <option key={index} value={dept.name}>{dept.name}</option>
                             ))}
                         </select>
@@ -492,9 +492,20 @@ export default function RoutineViewer({ onBack, onEdit }) {
                             onChange={handleFilterChange}
                             className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg text-sm p-2.5 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                         >
-                            <option value="">All</option>
-                            {GROUPS.map((grp, index) => (
-                                <option key={index} value={grp}>{grp}</option>
+                            <option value="" className="bg-white dark:bg-slate-900 text-gray-500">All Groups</option>
+                            {(() => {
+                                const isCivil = filters.department?.toLowerCase().includes('civil');
+                                if (filters.shift === "1st") {
+                                    return isCivil ? ["A1", "B1", "C1"] : ["A1", "B1"];
+                                }
+                                if (filters.shift === "2nd") {
+                                    return isCivil ? ["A2", "B2", "C2"] : ["A2", "B2"];
+                                }
+                                return GROUPS;
+                            })().map(grp => (
+                                <option key={grp} value={grp} className="bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
+                                    Group {grp}
+                                </option>
                             ))}
                         </select>
                     </div>

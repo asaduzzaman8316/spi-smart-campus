@@ -108,12 +108,20 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     fetchRoutines()
                 ]);
 
-                setTeachers(Array.isArray(teachersData) ? teachersData.map(d => ({ ...d, id: d._id })) : (teachersData.data || []).map(d => ({ ...d, id: d._id })));
+                setTeachers(
+                    (Array.isArray(teachersData) ? teachersData : (teachersData.data || []))
+                        .map(d => ({ ...d, id: d._id }))
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                );
                 setRooms(Array.isArray(roomsData)
                     ? roomsData.map(d => ({ ...d, id: d._id, isLab: d.type === 'Lab' }))
                     : (roomsData.data || []).map(d => ({ ...d, id: d._id, isLab: d.type === 'Lab' }))
                 );
-                setSubjects(Array.isArray(subjectsData) ? subjectsData.map(d => ({ ...d, id: d._id })) : (subjectsData.data || []).map(d => ({ ...d, id: d._id })));
+                setSubjects(
+                    (Array.isArray(subjectsData) ? subjectsData : (subjectsData.data || []))
+                        .map(d => ({ ...d, id: d._id }))
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                );
                 setDepartments(Array.isArray(departmentsData) ? departmentsData.map(d => ({ ...d, id: d._id })) : (departmentsData.data || []).map(d => ({ ...d, id: d._id })));
                 setAllRoutines(Array.isArray(routinesData) ? routinesData.map(d => ({ ...d, id: d._id })) : (routinesData.data || []).map(d => ({ ...d, id: d._id })));
             } catch (error) {
@@ -408,7 +416,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
 
     const handleManualResolve = async (routineId, item, suggestion) => {
         if (suggestion.type !== 'New Slot') { toast.info("Merge suggestions require manual handling."); return; }
-        
+
         let routineToUpdate = allRoutines.find(r => r.id === routineId);
 
         // Fallback: If routine not found (e.g. Temp ID mismatch), try to find by Metadata
@@ -416,10 +424,10 @@ export default function RoutineBuilder({ onBack, initialData }) {
             const failureRecord = generationFailures.find(f => f.routineId === routineId);
             if (failureRecord && failureRecord.metadata) {
                 const { department, semester, shift, group } = failureRecord.metadata;
-                routineToUpdate = allRoutines.find(r => 
-                    r.department === department && 
-                    Number(r.semester) === Number(semester) && 
-                    r.shift === shift && 
+                routineToUpdate = allRoutines.find(r =>
+                    r.department === department &&
+                    Number(r.semester) === Number(semester) &&
+                    r.shift === shift &&
                     r.group === group
                 );
             }

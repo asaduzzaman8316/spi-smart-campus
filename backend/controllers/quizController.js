@@ -37,12 +37,13 @@ const createQuiz = async (req, res) => {
 // @access  Public
 const getQuizzes = async (req, res) => {
     try {
-        const { department, semester, shift } = req.query;
+        const { department, semester, shift, group } = req.query;
         let query = {};
 
-        if (department) query.department = department;
-        if (semester) query.semester = semester;
-        if (shift) query.shift = shift;
+        if (department && department !== 'All') query.department = department;
+        if (semester && semester !== 'All') query.semester = semester;
+        if (shift && shift !== 'All') query.shift = shift;
+        if (group && group !== 'All') query.group = group;
 
         const quizzes = await Quiz.find(query)
             .select('-accessCode -questions.correctAnswer')
@@ -225,12 +226,13 @@ const submitQuiz = async (req, res) => {
 // @access  Private
 const getQuizResults = async (req, res) => {
     try {
-        const { department, semester, shift } = req.query;
+        const { department, semester, shift, group } = req.query;
         let query = { quizId: req.params.id };
 
-        if (department) query.department = department;
-        if (semester) query.semester = semester;
-        if (shift) query.shift = shift;
+        if (department && department !== 'All') query.department = department;
+        if (semester && semester !== 'All') query.semester = semester;
+        if (shift && shift !== 'All') query.shift = shift;
+        if (group && group !== 'All') query.group = group;
 
         const submissions = await Submission.find(query).sort('-score');
         const quiz = await Quiz.findById(req.params.id);

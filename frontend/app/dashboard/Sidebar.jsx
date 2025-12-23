@@ -1,4 +1,4 @@
-import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut, Shield, ChevronLeft, ChevronRight, Calendar, BarChart3, Bell, BrainCircuit, Download } from 'lucide-react';
+import { Home, PlusCircle, List, Users, Briefcase, BookOpen, Building, User, LogOut, Shield, ChevronLeft, ChevronRight, Calendar, BarChart3, Bell, BrainCircuit, Download, FileText } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -32,6 +32,7 @@ export default function Sidebar({ isOpen, setIsOpen, activeView, setActiveView, 
         { id: 'today-routine', label: "Today's Schedule", icon: Briefcase, roles: ['teacher', 'admin', 'super_admin'] },
         { id: 'profile', label: 'Profile', icon: User, roles: ['teacher', 'admin', 'super_admin'] },
         { id: 'quiz-manager', label: 'Quiz Manager', icon: BrainCircuit, roles: ['teacher', 'admin', 'super_admin'] },
+        { id: 'question-bank', label: 'Question Bank', icon: FileText, roles: ['teacher', 'admin', 'super_admin'] },
         { id: 'downloads', label: 'Download Center', icon: Download, roles: ['admin', 'super_admin'] },
         { id: 'admins', label: 'Manage Admins', icon: Shield, roles: ['super_admin'] },
     ];

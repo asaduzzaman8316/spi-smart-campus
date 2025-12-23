@@ -44,7 +44,7 @@ const RefactorModal = ({ show, onClose, onRefactor, config, setConfig, departmen
                                     className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
                                 >
                                     <option value="">Select Department</option>
-                                    {departments.map((dept, index) => (
+                                    {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map((dept, index) => (
                                         <option key={index} value={dept.name}>{dept.name}</option>
                                     ))}
                                 </select>

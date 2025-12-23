@@ -56,7 +56,7 @@ export default function TeacherManager({ onBack }) {
                 department: t.department || ''
             }));
 
-            setTeachers(teachersData);
+            setTeachers(teachersData.sort((a, b) => a.name.localeCompare(b.name)));
         } catch (error) {
             console.error("Error fetching teachers:", error);
             toast.error("Failed to load teachers");
@@ -221,7 +221,7 @@ export default function TeacherManager({ onBack }) {
                         className="px-6 py-4 bg-white dark:bg-card-bg border border-gray-100 dark:border-gray-800 rounded-2xl text-gray-900 dark:text-white focus:outline-none focus:border-[#FF5C35] shadow-sm"
                     >
                         <option value="">All Departments</option>
-                        {departments.map(dept => (
+                        {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map(dept => (
                             <option key={dept.id} value={dept.name}>{dept.name}</option>
                         ))}
                     </select>
@@ -424,7 +424,7 @@ export default function TeacherManager({ onBack }) {
                                         className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:border-emerald-500"
                                     >
                                         <option value="">Select Department</option>
-                                        {departments.map(dept => (
+                                        {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map(dept => (
                                             <option key={dept.id} value={dept.name}>{dept.name}</option>
                                         ))}
                                     </select>

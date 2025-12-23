@@ -26,6 +26,8 @@ const DEPT_MAP = {
     "Electromechanical": "EMT"
 };
 
+export const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
+
 const TIME_SLOTS = {
     "1st": [
         { label: "08:00 - 08:45", start: "08:00", end: "08:45" },
@@ -150,7 +152,7 @@ export default function TeacherRoutine({ onBack }) {
 
         return Object.values(grouped).map(g => {
             const deptShort = getDeptShortHand(g.department);
-            const groupsStr = g.groups.sort().join('/');
+            const groupsStr = g.groups.sort().join(' / ');
             return {
                 header: `${g.semester}/${deptShort}/${groupsStr}`,
                 subject: g.subjectCode || g.subject,

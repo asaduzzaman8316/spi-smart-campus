@@ -80,6 +80,7 @@ app.use('/api/notices', require('./routes/noticeRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/complaints', require('./routes/complaintRoutes'));
 app.use('/api/quizzes', require('./routes/quizRoutes'));
+app.use('/api/questions', require('./routes/questionRoutes'));
 
 app.use(notFound);
 app.use(errorHandler);
