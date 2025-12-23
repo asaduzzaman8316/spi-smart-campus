@@ -16,7 +16,7 @@ api.interceptors.request.use(
         }
 
         // Add API Key
-        config.headers['x-api-key'] = process.env.NEXT_PUBLIC_APP_API_KEY;
+        config.headers['x-api-key'] = process.env.NEXT_PUBLIC_APP_API_TOKEN;
 
         return config;
     },
