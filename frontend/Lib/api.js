@@ -14,6 +14,10 @@ api.interceptors.request.use(
                 config.headers.Authorization = `Bearer ${token}`;
             }
         }
+
+        // Add API Key
+        config.headers['x-api-key'] = process.env.NEXT_PUBLIC_APP_API_KEY;
+
         return config;
     },
     (error) => {

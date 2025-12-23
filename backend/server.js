@@ -7,6 +7,7 @@ const morgan = require('morgan');
 
 const connectDB = require('./config/db');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const apiKeyMiddleware = require('./middleware/apiKeyMiddleware');
 
 dotenv.config();
 // connectDB(); // Removed immediate call for serverless compatibility
@@ -57,6 +58,9 @@ app.use(cors({
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'] // Explicit methods
 }));
+
+// Apply API Key Protection to all routes below
+app.use(apiKeyMiddleware);
 
 app.get('/', (req, res) => {
     res.json({
