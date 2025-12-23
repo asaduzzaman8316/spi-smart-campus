@@ -22,7 +22,15 @@ export const generateRoutine = (
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
     let generatedDays;
 
-    // Initialize with existing data if present to support "Adding" load rather than overwriting
+    const shuffleArray = (arr) => {
+        const array = [...arr];
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    };
+
     if (currentRoutineConfig.days && currentRoutineConfig.days.length > 0) {
         // Deep copy existing days
         generatedDays = JSON.parse(JSON.stringify(currentRoutineConfig.days));
@@ -66,7 +74,7 @@ export const generateRoutine = (
         return Math.max(getMin(s1), getMin(s2)) < Math.min(getMin(e1), getMin(e2));
     };
 
-    const isTeacherBusy = (teacherName, dayName, start, end, subjectToMerge = null, typeToMerge = null) => {
+    const isTeacherBusy = (teacherName, dayName, start, end, subjectToMerge = null, typeToMerge = null, ignoreIds = []) => {
         // 1. Check User Constraints
         const userConstraint = constraints.find(c =>
             c.teacher === teacherName &&
@@ -84,6 +92,7 @@ export const generateRoutine = (
             if (!dayData) continue;
 
             for (const cls of dayData.classes) {
+                if (ignoreIds.includes(cls.id)) continue;
                 if (cls.teacher === teacherName && isOverlapping(cls.startTime, cls.endTime, start, end)) {
                     // MERGE LOGIC: If same subject, same teacher, SAME TYPE, and combineClasses is enabled
                     if (options.combineClasses && subjectToMerge && cls.subject === subjectToMerge) {
@@ -102,6 +111,7 @@ export const generateRoutine = (
         // 3. Check Current Generated Local State
         const currentDay = generatedDays.find(d => d.name === dayName);
         for (const cls of currentDay.classes) {
+            if (ignoreIds.includes(cls.id)) continue;
             if (cls.teacher === teacherName && isOverlapping(cls.startTime, cls.endTime, start, end)) {
                 return true;
             }
@@ -110,13 +120,14 @@ export const generateRoutine = (
         return false;
     };
 
-    const isRoomBusy = (roomName, dayName, start, end) => {
+    const isRoomBusy = (roomName, dayName, start, end, ignoreIds = []) => {
         // 1. Check Other Routines
         for (const r of allRoutines) {
             if (r.id === currentRoutineConfig.id) continue;
             const dayData = r.days.find(d => d.name === dayName);
             if (dayData) {
                 for (const cls of dayData.classes) {
+                    if (ignoreIds.includes(cls.id)) continue;
                     if (cls.room === roomName && isOverlapping(cls.startTime, cls.endTime, start, end)) {
                         return true;
                     }
@@ -126,6 +137,7 @@ export const generateRoutine = (
         // 2. Check Current Generated Local State
         const currentDay = generatedDays.find(d => d.name === dayName);
         for (const cls of currentDay.classes) {
+            if (ignoreIds.includes(cls.id)) continue;
             if (cls.room === roomName && isOverlapping(cls.startTime, cls.endTime, start, end)) {
                 return true;
             }
@@ -282,9 +294,12 @@ export const generateRoutine = (
             const routineMatch = cDept && (rDept === cDept || rDept.includes(cDept) || cDept.includes(rDept));
 
             if (subjectMatch) {
-                score += 200; // Best match: Room matches Subject (e.g. Java -> Computer Lab)
+                score += 500; // MUCH HIGHER priority: Room matches Subject (e.g. Java -> Computer Lab)
             } else if (routineMatch) {
-                score += 50; // Backup: Room matches Class Department
+                score += 100; // Backup: Room matches Class Department
+            } else if (rDept && sDept) {
+                // If departments are specified but don't match, give a penalty
+                score -= 100;
             }
         }
 
@@ -332,29 +347,19 @@ export const generateRoutine = (
     });
 
     // Prioritize Labs (Harder to place)
-    toPlace.sort((a, b) => {
-        if (a.type === 'Lab' && b.type !== 'Lab') return -1;
-        if (a.type !== 'Lab' && b.type === 'Lab') return 1;
-        return 0;
-    });
-
-    const labs = toPlace.filter(x => x.type === 'Lab');
-    const theories = toPlace.filter(x => x.type === 'Theory');
+    // Randomize Theory and Lab items to ensure non-serial assignment
+    const labs = shuffleArray(toPlace.filter(x => x.type === 'Lab'));
+    const theories = shuffleArray(toPlace.filter(x => x.type === 'Theory'));
 
     // Track items that couldn't be placed
     const unplacedItems = [];
 
     labs.forEach(lab => {
         let placed = false;
-        const slotsNeeded = lab.duration;
+        let slotsNeeded = lab.duration;
 
-        // Strategy: 
-        // 1. Try days that DO NOT have a lab yet.
-        // 2. If all days have a lab, DO NOT AUTO-ASSIGN (per user request: "show a model").
-        //    Instead, we leave it as unplaced with a specific reason handled by UI.
-
-        // Sort days: Days with NO Lab first.
-        const sortedDays = [...days].sort((a, b) => {
+        // --- ROUND 1: Try finding a slot that respects "One Lab Per Day" ---
+        const sortedDays = shuffleArray([...days]).sort((a, b) => {
             const dayA = generatedDays.find(d => d.name === a);
             const dayB = generatedDays.find(d => d.name === b);
             const hasLabA = dayA.classes.some(c => c.type === 'Lab');
@@ -363,264 +368,286 @@ export const generateRoutine = (
             return hasLabA ? 1 : -1; // No Lab comes first
         });
 
-        // Loop days
-        for (const dayName of sortedDays) {
-            if (placed) break;
-
+        const tryPlaceLab = (dayName, duration) => {
             const dayObj = generatedDays.find(d => d.name === dayName);
-            const hasExistingLab = dayObj.classes.some(c => c.type === 'Lab');
+            if (isConstraintViolated(dayName, lab.subject, lab.totalLoad)) return false;
 
-            // SKIP if day already has a lab (Enforce distribution)
-            // If all days have labs, this loop will finish with placed=false, 
-            // result in unplaced item, effectively prompting user intervention via "Failures"
-            if (hasExistingLab) continue;
+            // Shift-specific logic: Randomize slot order too
+            const slotIndices = Array.from({ length: slots.length - duration + 1 }, (_, i) => i);
+            const shuffledSlotIndices = shuffleArray(slotIndices);
 
-            // CONSTRAINT CHECK: Check Load Constraint
-            if (isConstraintViolated(dayName, lab.subject, lab.totalLoad)) continue;
-
-            for (let s = 0; s <= slots.length - slotsNeeded; s++) {
+            for (const s of shuffledSlotIndices) {
                 const startSlot = slots[s];
-                const endSlot = slots[s + slotsNeeded - 1]; // Inclusive
+                const endSlot = slots[s + duration - 1];
 
-                // Check if Group is Busy (Self-Overlap)
                 if (isGroupBusy(dayName, startSlot.start, endSlot.end)) continue;
 
-                // Check Teacher Availability for WHOLE block
+                // VARIATION: Random start offset for empty days to allow T start or Gap start
+                const dayObj = generatedDays.find(d => d.name === dayName);
+                if (dayObj.classes.length === 0 && Math.random() > 0.5 && s === 0 && duration < 5) {
+                    // Skip setting at indices 0 and 1 randomly to allow Theory classes to be at the start
+                    continue;
+                }
+
                 let teacherConflict = false;
-                for (let check = 0; check < slotsNeeded; check++) {
-                    const checkSlot = slots[s + check];
-                    if (isTeacherBusy(lab.teacher, dayName, checkSlot.start, checkSlot.end, lab.subject, lab.type)) {
+                for (let k = 0; k < duration; k++) {
+                    if (isTeacherBusy(lab.teacher, dayName, slots[s + k].start, slots[s + k].end, lab.subject, lab.type)) {
                         teacherConflict = true;
                         break;
                     }
                 }
                 if (teacherConflict) continue;
 
-                // Linked Routine Check
                 if (isLinkedRoutineBusy(dayName, startSlot.start, endSlot.end)) continue;
 
-                // Check Merge Opportunity First
-                let chosenRoomName = null;
-                let isMerged = false;
-
+                // Room Check
                 const subjectObj = subjects.find(s => s.name === lab.subject);
                 const subjectDept = subjectObj ? subjectObj.department : null;
-
                 const mergeRoom = findMergeRoom(lab.teacher, lab.subject, lab.type, dayName, startSlot.start, endSlot.end);
 
-                if (mergeRoom) {
-                    chosenRoomName = mergeRoom;
-                    isMerged = true;
-                } else {
-                    // Find Room
+                let chosenRoom = mergeRoom;
+                let isMerged = !!mergeRoom;
+
+                if (!chosenRoom) {
                     let bestRoom = null;
                     let bestScore = -10000;
-
                     const availableRooms = rooms.filter(r => r.isLab);
-
                     for (const room of availableRooms) {
                         let roomConflict = false;
-                        for (let check = 0; check < slotsNeeded; check++) {
-                            const checkSlot = slots[s + check];
-                            if (isRoomBusy(room.name || room.number, dayName, checkSlot.start, checkSlot.end)) {
+                        for (let k = 0; k < duration; k++) {
+                            if (isRoomBusy(room.name || room.number, dayName, slots[s + k].start, slots[s + k].end)) {
                                 roomConflict = true;
                                 break;
                             }
                         }
                         if (roomConflict) continue;
-
                         const score = getRoomScore(room, currentRoutineConfig.department, true, null, subjectDept);
                         if (score > bestScore) {
                             bestScore = score;
                             bestRoom = room;
                         }
                     }
-                    if (bestRoom) chosenRoomName = bestRoom.name || bestRoom.number;
+                    if (bestRoom) chosenRoom = bestRoom.name || bestRoom.number;
                 }
 
-                if (chosenRoomName) {
-                    addClass(dayName, { start: startSlot.start, end: endSlot.end }, lab, chosenRoomName, isMerged);
+                if (chosenRoom) {
+                    addClass(dayName, { start: startSlot.start, end: endSlot.end }, { ...lab, duration }, chosenRoom, isMerged);
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // Try Round 1 (1 Lab per day)
+        for (const d of sortedDays) {
+            const dayObj = generatedDays.find(x => x.name === d);
+            if (dayObj.classes.some(c => c.type === 'Lab')) continue;
+            if (tryPlaceLab(d, slotsNeeded)) {
+                placed = true;
+                break;
+            }
+        }
+
+        // --- ROUND 2: Try ANY day (Allow 2 Labs per day) ---
+        if (!placed) {
+            for (const d of shuffleArray([...days])) {
+                if (tryPlaceLab(d, slotsNeeded)) {
                     placed = true;
                     break;
                 }
             }
         }
 
-        /* 
-           REMOVED: Fallback logic (reducing labs) and Must-Assign Fallback.
-           Per requirement, if we can't find a "One Lab Per Day" slot or free slot, we STOP and leave it unplaced
-           so the user is prompted (by seeing it in the unplaced list) to manually assign.
-        */
+        // --- ROUND 3: Make Space (Move Theory classes) to keep 3 periods ---
+        if (!placed && slotsNeeded === 3) {
+            for (const dName of shuffleArray([...days])) {
+                const dayObj = generatedDays.find(d => d.name === dName);
+                if (dayObj.classes.some(c => c.type === 'Lab') && labs.length <= 5) continue;
+
+                for (let s = 0; s <= slots.length - slotsNeeded; s++) {
+                    const blockSlots = slots.slice(s, s + slotsNeeded);
+                    const classesToMove = dayObj.classes.filter(c =>
+                        c.type === 'Theory' &&
+                        blockSlots.some(bs => isOverlapping(c.startTime, c.endTime, bs.start, bs.end))
+                    );
+                    const nonTheoryBlockers = dayObj.classes.filter(c =>
+                        c.type !== 'Theory' &&
+                        blockSlots.some(bs => isOverlapping(c.startTime, c.endTime, bs.start, bs.end))
+                    );
+
+                    if (nonTheoryBlockers.length === 0 && classesToMove.length > 0) {
+                        let teacherConflict = false;
+                        for (const bs of blockSlots) {
+                            if (isTeacherBusy(lab.teacher, dName, bs.start, bs.end, lab.subject, lab.type)) {
+                                teacherConflict = true;
+                                break;
+                            }
+                        }
+                        if (teacherConflict) continue;
+
+                        let bestRoom = null;
+                        let bestScore = -1000;
+                        const availableRooms = rooms.filter(r => r.isLab);
+                        for (const room of availableRooms) {
+                            let roomConflict = false;
+                            for (const bs of blockSlots) {
+                                if (isRoomBusy(room.name || room.number, dName, bs.start, bs.end)) {
+                                    roomConflict = true;
+                                    break;
+                                }
+                            }
+                            if (!roomConflict) {
+                                const subjectObj = subjects.find(sj => sj.name === lab.subject);
+                                const sDept = subjectObj ? subjectObj.department : null;
+                                const score = getRoomScore(room, currentRoutineConfig.department, true, null, sDept);
+                                if (score > bestScore) {
+                                    bestScore = score;
+                                    bestRoom = room;
+                                }
+                            }
+                        }
+
+                        if (bestRoom) {
+                            dayObj.classes = dayObj.classes.filter(c => !classesToMove.includes(c));
+                            classesToMove.forEach(c => theories.push({ ...c, theoryCount: 1, labCount: 0, type: 'Theory', duration: 1 }));
+                            addClass(dName, { start: blockSlots[0].start, end: blockSlots[blockSlots.length - 1].end }, lab, bestRoom.name || bestRoom.number);
+                            placed = true;
+                            break;
+                        }
+                    }
+                }
+                if (placed) break;
+            }
+        }
+
+        // --- ROUND 4: Try Reducing Duration (3 -> 2 periods) ---
+        if (!placed && slotsNeeded === 3) {
+            for (const d of shuffleArray([...days])) {
+                if (tryPlaceLab(d, 2)) {
+                    placed = true;
+                    break;
+                }
+            }
+        }
 
         if (!placed) unplacedItems.push({ ...lab, reason: 'No Lab Slot/Teacher Busy' });
     });
 
-    theories.forEach(theory => {
+    const theoriesToPlace = [...theories];
+    let thIdx = 0;
+    while (thIdx < theoriesToPlace.length) {
+        const theory = theoriesToPlace[thIdx];
         let placed = false;
 
-        // Sort days by current load (Ascending) to balance the schedule
-        // This ensures we try to place the theory class in the day with the FEWEST classes first.
-        const sortedDaysForTheory = [...days].sort((a, b) => {
-            const dayA = generatedDays.find(d => d.name === a);
-            const dayB = generatedDays.find(d => d.name === b);
-            return dayA.classes.length - dayB.classes.length;
-        });
+        const tryPlaceTheory = (dayName, mustBeAdjacent = false) => {
+            if (isConstraintViolated(dayName, theory.subject, theory.totalLoad)) return false;
+            const dayObj = generatedDays.find(d => d.name === dayName);
 
-        for (const day of sortedDaysForTheory) {
-            if (placed) break;
-            // CONSTRAINT CHECK: Check Load Constraint
-            if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
+            const shuffledSlots = shuffleArray(slots);
 
-            for (const slot of slots) {
-                if (placed) break;
+            for (const slot of shuffledSlots) {
+                const sIdx = slots.findIndex(s => s.start === slot.start);
 
-                // Check if Group is Busy (Self-Overlap) - ADDED FIX
-                if (isGroupBusy(day, slot.start, slot.end)) continue;
+                if (mustBeAdjacent && dayObj.classes.length > 0) {
+                    const isAdj = dayObj.classes.some(c => {
+                        const csIdx = slots.findIndex(s => s.start === c.startTime);
+                        const ceIdx = slots.findIndex(s => s.end === c.endTime);
+                        return sIdx === csIdx - 1 || sIdx === ceIdx + 1;
+                    });
+                    if (!isAdj) continue;
+                }
 
-                // Teacher Check
-                if (isTeacherBusy(theory.teacher, day, slot.start, slot.end, theory.subject)) continue;
-
-                // Linked Routine Check
-                if (isLinkedRoutineBusy(day, slot.start, slot.end)) continue;
-
-                // Merge Check
-                let chosenRoomName = null;
-                let isMerged = false;
-                const mergeRoom = findMergeRoom(theory.teacher, theory.subject, theory.type, day, slot.start, slot.end);
+                if (isGroupBusy(dayName, slot.start, slot.end)) continue;
+                if (isTeacherBusy(theory.teacher, dayName, slot.start, slot.end, theory.subject)) continue;
+                if (isLinkedRoutineBusy(dayName, slot.start, slot.end)) continue;
 
                 const subjectObj = subjects.find(s => s.name === theory.subject);
                 const subjectDept = subjectObj ? subjectObj.department : null;
+                const mergeRoom = findMergeRoom(theory.teacher, theory.subject, theory.type, dayName, slot.start, slot.end);
 
-                if (mergeRoom) {
-                    chosenRoomName = mergeRoom;
-                    isMerged = true;
-                } else {
-                    // Find Room
+                let chosenRoom = mergeRoom;
+                if (!chosenRoom) {
                     let bestRoom = null;
                     let bestScore = -10000;
-
                     const availableRooms = rooms.filter(r => !r.isLab);
-
                     for (const room of availableRooms) {
-                        if (isRoomBusy(room.name || room.number, day, slot.start, slot.end)) continue;
+                        if (isRoomBusy(room.name || room.number, dayName, slot.start, slot.end)) continue;
                         const score = getRoomScore(room, currentRoutineConfig.department, false, null, subjectDept);
                         if (score > bestScore) {
                             bestScore = score;
                             bestRoom = room;
                         }
                     }
-                    if (bestRoom) chosenRoomName = bestRoom.name || bestRoom.number;
+                    if (bestRoom) chosenRoom = bestRoom.name || bestRoom.number;
                 }
 
-                if (chosenRoomName) {
-                    addClass(day, slot, theory, chosenRoomName, isMerged);
-                    placed = true;
+                if (chosenRoom) {
+                    addClass(dayName, slot, theory, chosenRoom, !!mergeRoom);
+                    return true;
                 }
+            }
+            return false;
+        };
+
+        const populatedDays = shuffleArray(days.filter(d => generatedDays.find(gd => gd.name === d).classes.length > 0));
+        for (const d of populatedDays) {
+            if (tryPlaceTheory(d, true)) { placed = true; break; }
+        }
+
+        if (!placed) {
+            const emptyDays = shuffleArray(days.filter(d => generatedDays.find(gd => gd.name === d).classes.length === 0));
+            for (const d of emptyDays) {
+                if (tryPlaceTheory(d, false)) { placed = true; break; }
             }
         }
 
-        // Fallback 1: Try Reducing Existing Labs of SAME subject (3 -> 2 periods) to free up space
         if (!placed) {
-            // Helper to reduce logic
-            const reduceLabs = () => {
-                let reduced = false;
-                generatedDays.forEach(d => {
-                    d.classes.forEach(c => {
-                        if (c.subject === theory.subject && c.type === 'Lab') {
-                            // Check duration. 3 periods (135m) -> 2 periods (90m)
-                            // We need to map time to slots to be precise, or just check standard durations.
-                            // 1st Shift: 
-                            // 3 periods: 08:00-10:15 (135m), 10:15-12:30 (135m).
-                            // 2 periods: 08:00-09:30, 10:15-11:45.
-                            // We need to find the "end slot" and move it back one.
-
-                            const startIdx = slots.findIndex(s => s.start === c.startTime);
-                            const endIdx = slots.findIndex(s => s.end === c.endTime);
-
-                            if (startIdx !== -1 && endIdx !== -1) {
-                                const duration = endIdx - startIdx + 1;
-                                if (duration === 3) {
-                                    // Reduce to 2
-                                    const newEndSlot = slots[startIdx + 1]; // Start + 1 = 2nd slot
-                                    if (newEndSlot) {
-                                        c.endTime = newEndSlot.end;
-                                        reduced = true;
-                                    }
-                                }
-                            }
-                        }
-                    });
-                });
-                return reduced;
-            };
-
-            if (reduceLabs()) {
-                // Retry Placement Logic (Recursion or simpler retry?)
-                // Simple Retry of the main loop logic for this item
-                for (const day of sortedDaysForTheory) {
-                    if (placed) break;
-                    if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
-
-                    for (const slot of slots) {
-                        if (placed) break;
-                        // Check if Group is Busy (Self-Overlap) - ADDED FIX
-                        if (isGroupBusy(day, slot.start, slot.end)) continue;
-
-                        if (isTeacherBusy(theory.teacher, day, slot.start, slot.end, theory.subject, theory.type)) continue;
-                        if (isLinkedRoutineBusy(day, slot.start, slot.end)) continue;
-
-                        // Strict Room Check only now
-                        let chosenRoomName = null;
-                        const availableRooms = rooms.filter(r => !r.isLab);
-                        for (const room of availableRooms) {
-                            if (isRoomBusy(room.name || room.number, day, slot.start, slot.end)) continue;
-                            const score = getRoomScore(room, currentRoutineConfig.department, false, null); // Simplified score
-                            if (score > -100) { // Just valid
-                                chosenRoomName = room.name || room.number;
-                                break;
-                            }
-                        }
-
-                        if (chosenRoomName) {
-                            addClass(day, slot, theory, chosenRoomName, false);
-                            placed = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Final Fallback: "Must be assigned" - If room is the only blocker, try 'Unplaced'
-        if (!placed) {
-            for (const day of sortedDaysForTheory) {
-                if (placed) break;
-                if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
-                if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
-                for (const slot of slots) {
-                    // Check if Group is Busy (Self-Overlap) - ADDED FIX
-                    if (isGroupBusy(day, slot.start, slot.end)) continue;
-
-                    if (isTeacherBusy(theory.teacher, day, slot.start, slot.end, theory.subject, theory.type)) continue;
-                    if (isLinkedRoutineBusy(day, slot.start, slot.end)) continue;
-                    // Force Place
-                    addClass(day, slot, theory, "Unplaced", false);
-                    placed = true;
-                    break;
-                }
+            for (const d of shuffleArray(days)) {
+                if (tryPlaceTheory(d, false)) { placed = true; break; }
             }
         }
 
         if (!placed) unplacedItems.push({ ...theory, reason: 'No Theory Slot/Teacher Busy' });
+        thIdx++;
+    }
+
+    days.forEach(dayName => {
+        const day = generatedDays.find(d => d.name === dayName);
+        if (day.classes.length <= 1) return;
+
+        let improved = true;
+        while (improved) {
+            improved = false;
+            day.classes.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+            for (let i = 1; i < day.classes.length; i++) {
+                const prev = day.classes[i - 1];
+                const curr = day.classes[i];
+                const prevEndIdx = slots.findIndex(s => s.end === prev.endTime);
+                const currStartIdx = slots.findIndex(s => s.start === curr.startTime);
+
+                if (currStartIdx > prevEndIdx + 1) {
+                    const duration = slots.findIndex(s => s.end === curr.endTime) - currStartIdx + 1;
+                    const nsIdx = currStartIdx - 1;
+                    const neIdx = nsIdx + duration - 1;
+                    const ns = slots[nsIdx].start;
+                    const ne = slots[neIdx].end;
+
+                    if (!isTeacherBusy(curr.teacher, dayName, ns, ne, null, null, [curr.id]) &&
+                        !isRoomBusy(curr.room, dayName, ns, ne, [curr.id])) {
+                        curr.startTime = ns;
+                        curr.endTime = ne;
+                        improved = true;
+                    }
+                }
+            }
+        }
     });
 
-    // --- Generate Merge Suggestions & Available Options for Unplaced Items ---
     const failuresWithSuggestions = unplacedItems.map(item => {
         const suggestions = [];
-
-        // 1. Merge Suggestions: Look for existing class in OTHER routines
         allRoutines.forEach(r => {
             if (r.shift !== currentRoutineConfig.shift) return;
-
             r.days.forEach(d => {
                 d.classes.forEach(c => {
                     if (c.teacher === item.teacher && c.subject === item.subject) {
@@ -636,93 +663,59 @@ export const generateRoutine = (
             });
         });
 
-        // 2. New Slot Suggestions: Check if we can fit it in CURRENT routine (ignoring "1 Lab Per Day" rule)
-        // This answers the user request: "show the day where can assign... then user select the day"
         if (item.type === 'Lab') {
-            const slotsNeeded = item.duration || (item.labCount === 2 ? 2 : 3); // Default based on load if duration missing
-
+            const slotsNeeded = item.duration || (item.labCount === 2 ? 2 : 3);
             days.forEach(dayName => {
-                // Check if this day actually has space/teacher/room availability
-                // We re-run the check logic but WITHOUT:
-                // a) "One Lab Per Day" check (we want to suggest it even if it breaks this soft rule)
-                // b) "Duplicate Subject" check is strict, but maybe we show it as option anyway? 
-                //    Actually user said "same subject same day practical and theory... can not assign".
-                //    But "assign 2 practical class in same day" (same subject?) -> usually different subjects.
-                //    Let's assume different subject.
-
-                // Constraint Check (Strict Subject/Type uniqueness)
-                // If it violates strict constraint, we probably shouldn't suggest it unless it's the SAME subject lab we are trying to place?
-                // Actually if unplaced item is "Subject A", and "Subject A" is already on Monday, we shouldn't suggest Monday.
                 if (isConstraintViolated(dayName, item.subject, item.totalLoad)) return;
-
                 const day = generatedDays.find(d => d.name === dayName);
                 if (!day) return;
-
                 for (let s = 0; s <= slots.length - slotsNeeded; s++) {
-                    const startSlot = slots[s];
-                    const endSlot = slots[s + slotsNeeded - 1];
-
-                    if (isGroupBusy(dayName, startSlot.start, endSlot.end)) continue;
-
-                    // Teacher Check (Full block)
+                    const ss = slots[s];
+                    const es = slots[s + slotsNeeded - 1];
+                    if (isGroupBusy(dayName, ss.start, es.end)) continue;
                     let teacherBusy = false;
                     for (let k = 0; k < slotsNeeded; k++) {
-                        const chk = slots[s + k];
-                        if (isTeacherBusy(item.teacher, dayName, chk.start, chk.end, item.subject, item.type)) {
+                        if (isTeacherBusy(item.teacher, dayName, slots[s + k].start, slots[s + k].end, item.subject, item.type)) {
                             teacherBusy = true;
                             break;
                         }
                     }
                     if (teacherBusy) continue;
-
-                    if (isLinkedRoutineBusy(dayName, startSlot.start, endSlot.end)) continue;
-
-                    // Room Check (Find ANY valid room)
-                    const availableRooms = rooms.filter(r => r.isLab);
+                    if (isLinkedRoutineBusy(dayName, ss.start, es.end)) continue;
                     let bestRoom = null;
                     let bestScore = -10000;
-
-                    const subjectObj = subjects.find(s => s.name === item.subject);
-                    const subjectDept = subjectObj ? subjectObj.department : null;
-
+                    const availableRooms = rooms.filter(r => r.isLab);
                     for (const room of availableRooms) {
                         let roomBusy = false;
                         for (let k = 0; k < slotsNeeded; k++) {
-                            const chk = slots[s + k];
-                            if (isRoomBusy(room.name || room.number, dayName, chk.start, chk.end)) {
+                            if (isRoomBusy(room.name || room.number, dayName, slots[s + k].start, slots[s + k].end)) {
                                 roomBusy = true;
                                 break;
                             }
                         }
                         if (!roomBusy) {
-                            // Use same scoring logic as main placement
-                            const score = getRoomScore(room, currentRoutineConfig.department, true, null, subjectDept);
+                            const subObj = subjects.find(sj => sj.name === item.subject);
+                            const sd = subObj ? subObj.department : null;
+                            const score = getRoomScore(room, currentRoutineConfig.department, true, null, sd);
                             if (score > bestScore) {
                                 bestScore = score;
                                 bestRoom = room;
                             }
                         }
                     }
-
                     if (bestRoom) {
-                        // Found a valid slot with the BEST room!
                         suggestions.push({
                             routine: "Available Slot",
                             day: dayName,
-                            time: `${startSlot.start}-${endSlot.end}`,
+                            time: `${ss.start}-${es.end}`,
                             room: bestRoom.name || bestRoom.number,
                             type: 'New Slot'
                         });
-                        // Don't show every possible slot for the day, maybe just the first one per day is enough?
-                        // Or show all? Let's show first one per day to avoid spam.
                         break;
                     }
-
                 }
-
             });
         }
-
         return {
             ...item,
             reason: suggestions.length > 0 ? "Options Available (Manual Select)" : "No Time / Teacher Busy",
