@@ -458,7 +458,15 @@ export const generateRoutine = (
     theories.forEach(theory => {
         let placed = false;
 
-        for (const day of days) {
+        // Sort days by current load (Ascending) to balance the schedule
+        // This ensures we try to place the theory class in the day with the FEWEST classes first.
+        const sortedDaysForTheory = [...days].sort((a, b) => {
+            const dayA = generatedDays.find(d => d.name === a);
+            const dayB = generatedDays.find(d => d.name === b);
+            return dayA.classes.length - dayB.classes.length;
+        });
+
+        for (const day of sortedDaysForTheory) {
             if (placed) break;
             // CONSTRAINT CHECK: Check Load Constraint
             if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
@@ -549,7 +557,7 @@ export const generateRoutine = (
             if (reduceLabs()) {
                 // Retry Placement Logic (Recursion or simpler retry?)
                 // Simple Retry of the main loop logic for this item
-                for (const day of days) {
+                for (const day of sortedDaysForTheory) {
                     if (placed) break;
                     if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
 
@@ -584,7 +592,7 @@ export const generateRoutine = (
 
         // Final Fallback: "Must be assigned" - If room is the only blocker, try 'Unplaced'
         if (!placed) {
-            for (const day of days) {
+            for (const day of sortedDaysForTheory) {
                 if (placed) break;
                 if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
                 if (isConstraintViolated(day, theory.subject, theory.totalLoad)) continue;
