@@ -124,7 +124,7 @@ export default function Hero() {
                         <div className="py-2 animate-infinite-scroll flex gap-8 whitespace-nowrap">
                             {/* Duplicate content enough times to ensure seamless loop */}
                             {[...Array(4)].map((_, i) => (
-                                <Link key={i} href={`/notices/${recentNotice._id}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                                <Link key={i} href={`/notices`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                                     <span className="text-sm font-bold text-[#FF5C35]">New:</span>
                                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                                         {recentNotice.title.replace(/<[^>]*>?/gm, '')} <span className="text-gray-400 mx-2">•</span> {recentNotice.category}

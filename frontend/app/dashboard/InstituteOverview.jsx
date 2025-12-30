@@ -127,7 +127,7 @@ export default function InstituteOverview({ setActiveView }) {
                     <div className="flex gap-3">
                         <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl text-white">
                             <div className="text-xs text-orange-200 uppercase tracking-wider font-bold">Total Departments</div>
-                            <div className="text-2xl font-bold">{stats.departments - 1}</div>
+                            <div className="text-2xl font-bold">{7}</div>
                         </div>
                     </div>
                 </div>

@@ -13,6 +13,15 @@ const DeveloperTeam = () => {
             link: ''
         },
         {
+            id: 21,
+            name: 'Md. Borhan Uddin',
+            role: 'Instructor & Head of the Dept.',
+            image: '/borhan.jpeg',
+            bio: 'Guiding students with expertise in software engineering. Passionate about nurturing innovation and technical excellence.',
+            verified: true,
+            link: ''
+        },
+        {
             id: 2,
             name: 'Md Sydur Rahman',
             role: 'Junior Instructor',
@@ -111,7 +120,7 @@ const DeveloperTeam = () => {
 
                     {/* Mentors aligned right */}
                     <div className='flex justify-center mb-24'>
-                        <div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
+                        <div className='grid grid-cols-1 md:grid-cols-3 gap-12'>
                             {mentors.map(m => (
                                 <ProfileCard key={m.id} person={m} badge='Mentor' />
                             ))}
