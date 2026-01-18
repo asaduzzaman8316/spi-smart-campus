@@ -25,12 +25,15 @@ const ControlHeader = ({
                 >
                     <Sparkles size={18} className="mr-2" /> Auto Generate
                 </button>
+
                 <button
                     onClick={onRefactorAll}
-                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md flex items-center justify-center transition-colors shadow-sm"
+                    title="Shuffle all classes to different slots (keeps same number of classes)"
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md flex items-center justify-center transition-colors shadow-sm"
                 >
-                    <RefreshCcw size={18} className="mr-2" /> Refactor All
+                    <RefreshCcw size={18} className="mr-2" /> Shuffle
                 </button>
+
 
                 <button
                     onClick={() => setIsPreviewMode(!isPreviewMode)}

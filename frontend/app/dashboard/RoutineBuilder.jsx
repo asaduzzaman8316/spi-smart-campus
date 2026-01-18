@@ -1,9 +1,9 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchTeachers, fetchRooms, fetchSubjects, fetchDepartments, fetchRoutines, createRoutine } from '../../Lib/api';
+import { fetchTeachers, fetchRooms, fetchSubjects, fetchDepartments, fetchRoutines, createRoutine, updateRoutine } from '../../Lib/api';
 import { toast } from 'react-toastify';
-import { generateBatchRoutines, generateRoutine, refactorRoutine } from '../../Lib/AutoRoutineGenerator';
+import { generateBatchRoutines, generateRoutine, refactorRoutine, regenerateAllRoutines } from '../../Lib/AutoRoutineGenerator';
 
 // Modular Components
 import { DAYS, INITIAL_ROUTINE, SEMESTERS, SHIFTS, GROUPS } from './RoutineBuilderComponents/constants';
@@ -19,6 +19,7 @@ import FailuresModal from './RoutineBuilderComponents/Modals/FailuresModal';
 import AutoGenerateModal from './RoutineBuilderComponents/Modals/AutoGenerateModal';
 import TechSelectionModal from './RoutineBuilderComponents/Modals/TechSelectionModal';
 import BatchMergeModal from './RoutineBuilderComponents/Modals/BatchMergeModal';
+import WarningsModal from './RoutineBuilderComponents/Modals/WarningsModal';
 
 export default function RoutineBuilder({ onBack, initialData }) {
     const router = useRouter();
@@ -32,6 +33,9 @@ export default function RoutineBuilder({ onBack, initialData }) {
     const [showShiftSelectionModal, setShowShiftSelectionModal] = useState(false);
     const [generationFailures, setGenerationFailures] = useState([]); // Array of { routine, items: [] }
     const [showFailuresModal, setShowFailuresModal] = useState(false);
+
+    const [generationWarnings, setGenerationWarnings] = useState([]);
+    const [showWarningsModal, setShowWarningsModal] = useState(false);
 
     const [departments, setDepartments] = useState([]);
     const [teachers, setTeachers] = useState([]);
@@ -60,7 +64,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
     // Refactor State
     const [showRefactorModal, setShowRefactorModal] = useState(false);
     const [isRefactoring, setIsRefactoring] = useState(false);
-    const [refactorConfig, setRefactorConfig] = useState({ reduceLab: false, targetDept: '' });
+    const [refactorConfig, setRefactorConfig] = useState({});
 
     const [teacherFilterDept, setTeacherFilterDept] = useState('');
     const [roomFilterType, setRoomFilterType] = useState('');
@@ -399,7 +403,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
             const freshRoutinesResponse = await fetchRoutines();
             const freshRoutines = Array.isArray(freshRoutinesResponse) ? freshRoutinesResponse.map(d => ({ ...d, id: d._id })) : (freshRoutinesResponse.data || []).map(d => ({ ...d, id: d._id }));
             setAllRoutines(freshRoutines);
-            const { routines: updatedRoutines, failures } = generateBatchRoutines(assignments, freshRoutines, rooms, subjects);
+            const { routines: updatedRoutines, failures, warnings } = generateBatchRoutines(assignments, freshRoutines, rooms, subjects);
             let saveCount = 0;
             for (const r of updatedRoutines) {
                 if (!r.department || !r.semester || !r.shift || !r.group) continue;
@@ -407,8 +411,15 @@ export default function RoutineBuilder({ onBack, initialData }) {
                 saveCount++;
             }
             setShowAutoModal(false);
+
             if (failures.length > 0) { setGenerationFailures(failures); setShowFailuresModal(true); toast.warning(`Generated with issues. ${failures.length} assignments failed.`); }
             else { toast.success(`Generated & Saved ${saveCount} routines successfully!`); }
+
+            if (warnings && warnings.length > 0) {
+                setGenerationWarnings(warnings);
+                setShowWarningsModal(true);
+            }
+
             const newRoutines = await fetchRoutines();
             setAllRoutines(Array.isArray(newRoutines) ? newRoutines.map(d => ({ ...d, id: d._id })) : (newRoutines.data || []).map(d => ({ ...d, id: d._id })));
         } catch (err) { toast.error(`Batch generation failed: ${err.message}`); }
@@ -456,15 +467,44 @@ export default function RoutineBuilder({ onBack, initialData }) {
     const handleRefactor = async () => {
         setIsRefactoring(true);
         try {
-            const routinesToProcess = (refactorConfig.reduceLab && refactorConfig.targetDept) ? allRoutines.filter(r => r.department === refactorConfig.targetDept) : allRoutines;
-            const { routines: updatedRoutines, changes, message } = refactorRoutine(routinesToProcess, { ...refactorConfig, allRoutines: allRoutines, rooms: rooms });
-            if (changes === 0) { toast.info("No changes needed."); return; }
-            for (const r of updatedRoutines) { await createRoutine({ ...r, lastUpdated: Date.now() }); }
-            toast.success(message);
+            const routinesToProcess = allRoutines;
+
+            // USE NEW REGENERATE LOGIC
+            // Note: regenerateAllRoutines extracts load from 'routinesToProcess' and generates fresh
+            const { routines: updatedRoutines, failures, warnings } = regenerateAllRoutines(routinesToProcess, rooms, subjects);
+
+            let saveCount = 0;
+            for (const r of updatedRoutines) {
+                // Use Update if an ID exists (preserved from canonical), else Create (shouldn't happen in Shuffle)
+                if (r.id) {
+                    await updateRoutine(r.id, { ...r, lastUpdated: Date.now() });
+                } else {
+                    await createRoutine({ ...r, lastUpdated: Date.now() });
+                }
+                saveCount++;
+            }
+
+            toast.success(`Refactored (Regenerated) ${saveCount} routines!`);
+
             const newRoutines = await fetchRoutines();
             setAllRoutines(Array.isArray(newRoutines) ? newRoutines.map(d => ({ ...d, id: d._id })) : (newRoutines.data || []).map(d => ({ ...d, id: d._id })));
+
+            // Handle Failures & Warnings just like Batch Gen
+            if (failures && failures.length > 0) {
+                setGenerationFailures(failures);
+                setShowFailuresModal(true);
+                toast.warning(`${failures.length} assignments failed during refactor.`);
+            }
+            if (warnings && warnings.length > 0) {
+                setGenerationWarnings(warnings);
+                setShowWarningsModal(true);
+            }
+
             setShowRefactorModal(false);
-        } catch (err) { toast.error("Refactor failed."); } finally { setIsRefactoring(false); }
+        } catch (err) {
+            console.error(err);
+            toast.error("Refactor failed.");
+        } finally { setIsRefactoring(false); }
     };
 
     const handleSave = async () => {
@@ -498,7 +538,7 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     isEditMode={isEditMode}
                     onBack={onBack}
                     onAutoGenerate={() => setShowShiftSelectionModal(true)}
-                    onRefactorAll={() => setShowRefactorModal(true)}
+                    onRefactorAll={handleRefactor}
                     isPreviewMode={isPreviewMode}
                     setIsPreviewMode={setIsPreviewMode}
                     onSave={handleSave}
@@ -567,21 +607,19 @@ export default function RoutineBuilder({ onBack, initialData }) {
                     onSelect={(shift) => { setBatchShift(shift); setShowShiftSelectionModal(false); setShowAutoModal(true); }}
                 />
 
-                <RefactorModal
-                    show={showRefactorModal}
-                    onClose={() => setShowRefactorModal(false)}
-                    onRefactor={handleRefactor}
-                    config={refactorConfig}
-                    setConfig={setRefactorConfig}
-                    departments={departments}
-                    isRefactoring={isRefactoring}
-                />
+
 
                 <FailuresModal
                     show={showFailuresModal}
                     onClose={() => setShowFailuresModal(false)}
                     failures={generationFailures}
                     onManualResolve={handleManualResolve}
+                />
+
+                <WarningsModal
+                    show={showWarningsModal}
+                    onClose={() => setShowWarningsModal(false)}
+                    warnings={generationWarnings}
                 />
 
                 <AutoGenerateModal

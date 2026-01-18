@@ -21,36 +21,7 @@ const RefactorModal = ({ show, onClose, onRefactor, config, setConfig, departmen
                         Refactoring attempts to resolve 'Unplaced' classes by reshuffling rooms and time slots.
                     </p>
 
-                    <div className="space-y-3 pt-2">
-                        <label className="flex items-center gap-3 p-3 border border-gray-200 dark:border-slate-700 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-                            <input
-                                type="checkbox"
-                                checked={config.reduceLab}
-                                onChange={(e) => setConfig(prev => ({ ...prev, reduceLab: e.target.checked }))}
-                                className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                            />
-                            <div>
-                                <span className="font-semibold text-gray-900 dark:text-white text-sm block">Reduce Lab Duration</span>
-                                <span className="text-xs text-gray-500 block">Reduce 3-period labs to 2 periods to free up space (Department specific).</span>
-                            </div>
-                        </label>
 
-                        {config.reduceLab && (
-                            <div className="animate-in slide-in-from-top-2 duration-200">
-                                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5 ml-1">Target Department</label>
-                                <select
-                                    value={config.targetDept}
-                                    onChange={(e) => setConfig(prev => ({ ...prev, targetDept: e.target.value }))}
-                                    className="w-full p-2.5 bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 rounded-lg text-sm"
-                                >
-                                    <option value="">Select Department</option>
-                                    {[...departments].sort((a, b) => a.name.localeCompare(b.name)).map((dept, index) => (
-                                        <option key={index} value={dept.name}>{dept.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 <div className="p-4 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-3 bg-gray-50 dark:bg-slate-800 rounded-b-xl">
@@ -62,7 +33,7 @@ const RefactorModal = ({ show, onClose, onRefactor, config, setConfig, departmen
                     </button>
                     <button
                         onClick={onRefactor}
-                        disabled={isRefactoring || (config.reduceLab && !config.targetDept)}
+                        disabled={isRefactoring}
                         className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isRefactoring ? (

@@ -1,3 +1,34 @@
+// Helper: Enforce Contiguity
+const checkContiguity = (daysState, slots, dayName, startIdx, duration) => {
+    const day = daysState.find(d => d.name === dayName);
+    if (!day || !day.classes || day.classes.length === 0) return true;
+
+    const endIdx = startIdx + duration - 1;
+    const currentIndices = new Set();
+    day.classes.forEach(c => {
+        const cs = slots.findIndex(s => s.start === c.startTime);
+        const ce = slots.findIndex(s => s.end === c.endTime);
+        if (cs !== -1 && ce !== -1) {
+            for (let i = cs; i <= ce; i++) currentIndices.add(i);
+        }
+    });
+
+    if (currentIndices.size === 0) return true;
+
+    // Proposed new state: current + new
+    const combinedIndices = new Set(currentIndices);
+    for (let i = startIdx; i <= endIdx; i++) {
+        combinedIndices.add(i);
+    }
+
+    const sorted = Array.from(combinedIndices).sort((a, b) => a - b);
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+
+    // If (max - min + 1) matches the number of unique indices, it's one contiguous block
+    return (max - min + 1) === sorted.length;
+};
+
 export const generateRoutine = (
     currentRoutineConfig, // { department, semester, shift, group }
     loadItems,            // [{ subject, teacher, theoryCount, labCount }]
@@ -21,6 +52,7 @@ export const generateRoutine = (
 
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"];
     let generatedDays;
+    const warnings = []; // Track warnings like compression (3 -> 2 periods)
 
     const shuffleArray = (arr) => {
         const array = [...arr];
@@ -382,12 +414,7 @@ export const generateRoutine = (
 
                 if (isGroupBusy(dayName, startSlot.start, endSlot.end)) continue;
 
-                // VARIATION: Random start offset for empty days to allow T start or Gap start
-                const dayObj = generatedDays.find(d => d.name === dayName);
-                if (dayObj.classes.length === 0 && Math.random() > 0.5 && s === 0 && duration < 5) {
-                    // Skip setting at indices 0 and 1 randomly to allow Theory classes to be at the start
-                    continue;
-                }
+                if (!checkContiguity(generatedDays, slots, dayName, s, duration)) continue;
 
                 let teacherConflict = false;
                 for (let k = 0; k < duration; k++) {
@@ -520,15 +547,7 @@ export const generateRoutine = (
             }
         }
 
-        // --- ROUND 4: Try Reducing Duration (3 -> 2 periods) ---
-        if (!placed && slotsNeeded === 3) {
-            for (const d of shuffleArray([...days])) {
-                if (tryPlaceLab(d, 2)) {
-                    placed = true;
-                    break;
-                }
-            }
-        }
+
 
         if (!placed) unplacedItems.push({ ...lab, reason: 'No Lab Slot/Teacher Busy' });
     });
@@ -548,14 +567,7 @@ export const generateRoutine = (
             for (const slot of shuffledSlots) {
                 const sIdx = slots.findIndex(s => s.start === slot.start);
 
-                if (mustBeAdjacent && dayObj.classes.length > 0) {
-                    const isAdj = dayObj.classes.some(c => {
-                        const csIdx = slots.findIndex(s => s.start === c.startTime);
-                        const ceIdx = slots.findIndex(s => s.end === c.endTime);
-                        return sIdx === csIdx - 1 || sIdx === ceIdx + 1;
-                    });
-                    if (!isAdj) continue;
-                }
+                if (!checkContiguity(generatedDays, slots, dayName, sIdx, 1)) continue;
 
                 if (isGroupBusy(dayName, slot.start, slot.end)) continue;
                 if (isTeacherBusy(theory.teacher, dayName, slot.start, slot.end, theory.subject)) continue;
@@ -611,34 +623,117 @@ export const generateRoutine = (
         thIdx++;
     }
 
+    // --- COMPACTION: BIDIRECTIONAL SLIDE (No Middle Gaps) ---
+    // User Requirement: Gaps allowed only at START or END. No gaps between classes.
     days.forEach(dayName => {
         const day = generatedDays.find(d => d.name === dayName);
         if (day.classes.length <= 1) return;
 
         let improved = true;
-        while (improved) {
+        let iterations = 0;
+
+        while (improved && iterations < 10) { // Limit iterations to prevent infinite loops
             improved = false;
+            iterations++;
+
+            // Sort by start time to ensures we process gaps in order
             day.classes.sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-            for (let i = 1; i < day.classes.length; i++) {
-                const prev = day.classes[i - 1];
-                const curr = day.classes[i];
+            for (let i = 0; i < day.classes.length - 1; i++) {
+                const prev = day.classes[i];
+                const curr = day.classes[i + 1];
+
                 const prevEndIdx = slots.findIndex(s => s.end === prev.endTime);
                 const currStartIdx = slots.findIndex(s => s.start === curr.startTime);
 
+                // Check for Gap
                 if (currStartIdx > prevEndIdx + 1) {
-                    const duration = slots.findIndex(s => s.end === curr.endTime) - currStartIdx + 1;
-                    const nsIdx = currStartIdx - 1;
-                    const neIdx = nsIdx + duration - 1;
-                    const ns = slots[nsIdx].start;
-                    const ne = slots[neIdx].end;
 
-                    if (!isTeacherBusy(curr.teacher, dayName, ns, ne, null, null, [curr.id]) &&
-                        !isRoomBusy(curr.room, dayName, ns, ne, [curr.id])) {
-                        curr.startTime = ns;
-                        curr.endTime = ne;
-                        improved = true;
+                    // STRATEGY 1: SLIDE UP (Left) - Move 'curr' backwards to touch 'prev'
+                    // Target for 'curr': Start at prevEndIdx + 1
+                    const currDuration = slots.findIndex(s => s.end === curr.endTime) - currStartIdx + 1;
+                    const newCurrStartIdx = prevEndIdx + 1;
+                    const newCurrEndIdx = newCurrStartIdx + currDuration - 1;
+
+                    if (newCurrEndIdx < slots.length) {
+                        const ns = slots[newCurrStartIdx].start;
+                        const ne = slots[newCurrEndIdx].end;
+
+                        // Check Conflicts for 'curr' at new time
+                        let busy = false;
+                        if (isTeacherBusy(curr.teacher, dayName, ns, ne, null, null, [curr.id])) busy = true;
+                        else if (isRoomBusy(curr.room, dayName, ns, ne, [curr.id])) busy = true;
+                        else if (isLinkedRoutineBusy(dayName, ns, ne)) busy = true;
+
+                        if (!busy) {
+                            curr.startTime = ns;
+                            curr.endTime = ne;
+                            improved = true;
+                            // We made a move, sort and restart to ensure consistency
+                            break;
+                        }
                     }
+
+                    // STRATEGY 2: SLIDE DOWN (Right) - Move 'prev' forwards to touch 'curr'
+                    // Only try this if we can't move left.
+                    // This pushes 'prev' to end at currStartIdx - 1
+                    const prevDuration = prevEndIdx - slots.findIndex(s => s.start === prev.startTime) + 1;
+                    const newPrevEndIdx = currStartIdx - 1;
+                    const newPrevStartIdx = newPrevEndIdx - prevDuration + 1;
+
+                    if (newPrevStartIdx >= 0) {
+                        const ns = slots[newPrevStartIdx].start;
+                        const ne = slots[newPrevEndIdx].end;
+
+                        // Check Conflicts for 'prev' at new time
+                        let busy = false;
+                        if (isTeacherBusy(prev.teacher, dayName, ns, ne, null, null, [prev.id])) busy = true;
+                        else if (isRoomBusy(prev.room, dayName, ns, ne, [prev.id])) busy = true;
+                        else if (isLinkedRoutineBusy(dayName, ns, ne)) busy = true;
+
+                        if (!busy) {
+                            prev.startTime = ns;
+                            prev.endTime = ne;
+                            improved = true;
+                            break; // Restart loop
+                        }
+                    }
+
+                    // STRATEGY 3: FILL FROM FUTURE (Reorder)
+                    // If we can't slide, try to find a later class that fits in the gap.
+                    const gapSize = currStartIdx - (prevEndIdx + 1); // logic in slot counts
+
+                    // We need a class that fits in 'gapSize' slots
+                    // Start checking from i + 2 (class after 'curr')
+                    for (let k = i + 2; k < day.classes.length; k++) {
+                        const futureClass = day.classes[k];
+                        const fDuration = slots.findIndex(s => s.end === futureClass.endTime) - slots.findIndex(s => s.start === futureClass.startTime) + 1;
+
+                        if (fDuration <= gapSize) {
+                            // Try to move futureClass to prevEndIdx + 1
+                            const targetStartIdx = prevEndIdx + 1;
+                            const targetEndIdx = targetStartIdx + fDuration - 1;
+
+                            const ns = slots[targetStartIdx].start;
+                            const ne = slots[targetEndIdx].end;
+
+                            // Check conflicts for futureClass at this new time
+                            let fBusy = false;
+                            if (isTeacherBusy(futureClass.teacher, dayName, ns, ne, null, null, [futureClass.id])) fBusy = true;
+                            else if (isRoomBusy(futureClass.room, dayName, ns, ne, [futureClass.id])) fBusy = true;
+                            else if (isLinkedRoutineBusy(dayName, ns, ne)) fBusy = true;
+
+                            if (!fBusy) {
+                                // Move it!
+                                futureClass.startTime = ns;
+                                futureClass.endTime = ne;
+                                improved = true;
+                                // Break inner loop and restart main loop (resort will handle order)
+                                break;
+                            }
+                        }
+                    }
+                    if (improved) break; // Break from the 'i' loop to resort
                 }
             }
         }
@@ -723,7 +818,7 @@ export const generateRoutine = (
         };
     });
 
-    return { generatedDays, unplacedItems: failuresWithSuggestions };
+    return { generatedDays, unplacedItems: failuresWithSuggestions, warnings };
 };
 
 
@@ -737,6 +832,7 @@ export const generateBatchRoutines = (
     // 1. Create a working copy of all routines
     let workingRoutines = JSON.parse(JSON.stringify(allExistingRoutines));
     let allFailures = [];
+    let allWarnings = [];
 
     // Helper to find or create
     const getRoutine = (techId) => {
@@ -773,7 +869,8 @@ export const generateBatchRoutines = (
                 subject: sub.subject,
                 teacher: assignment.teacherName,
                 theoryCount: sub.theory,
-                labCount: sub.lab
+                labCount: sub.lab,
+                duration: sub.duration
             };
 
             const processedTechIds = new Set();
@@ -806,7 +903,7 @@ export const generateBatchRoutines = (
                 }));
 
                 // 4. Generate Schedule for Primary (checking conflicts with Partners)
-                const { generatedDays, unplacedItems } = generateRoutine(
+                const { generatedDays, unplacedItems, warnings } = generateRoutine(
                     primaryRoutine,
                     [loadItem], // Only add this subject's load
                     constraints, // Pass constraints
@@ -855,11 +952,18 @@ export const generateBatchRoutines = (
                         items: unplacedItems
                     });
                 }
+
+                if (warnings && warnings.length > 0) {
+                    allWarnings.push({
+                        routine: `${primaryRoutine.department} - ${primaryRoutine.semester} (${primaryRoutine.group})`,
+                        items: warnings
+                    });
+                }
             }
         }
     }
 
-    return { routines: workingRoutines, failures: allFailures };
+    return { routines: workingRoutines, failures: allFailures, warnings: allWarnings };
 };
 
 export const refactorRoutine = (routines, config) => {
@@ -997,47 +1101,55 @@ export const refactorRoutine = (routines, config) => {
 
                                 // Check Teacher & Room availability
                                 if (config.rooms) {
+
                                     const availableRooms = config.rooms.filter(r =>
                                         (cls.type === 'Lab' ? r.isLab : !r.isLab)
                                     );
 
-                                    for (const room of availableRooms) {
-                                        const roomName = room.name || room.number;
 
-                                        // 1. External Busy
-                                        if (isSlotBusy(cls.teacher, roomName, dName, tryStart, tryEnd, routine.id)) continue;
 
-                                        // 2. Internal Busy (Check targetDay for OTHER classes)
-                                        let internalConflict = false;
-                                        if (targetDay) {
-                                            for (const existing of targetDay.classes) {
-                                                if (existing.id === cls.id) continue; // Skip self if on same day
-                                                if (isOverlapping(existing.startTime, existing.endTime, tryStart, tryEnd)) {
-                                                    internalConflict = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        if (internalConflict) continue;
 
-                                        // Found a spot!
-                                        // Remove from old day
-                                        day.classes = day.classes.filter(x => x.id !== cls.id);
 
-                                        // Add to new day
-                                        const newCls = { ...cls, startTime: tryStart, endTime: tryEnd, room: roomName };
+            for (const room of availableRooms) {
+                const roomName = room.name || room.number;
 
-                                        if (!targetDay) { // Should not happen if we init days
-                                            // Handle case
-                                        } else {
-                                            targetDay.classes.push(newCls);
-                                            targetDay.classes.sort((a, b) => a.startTime.localeCompare(b.startTime));
-                                        }
+                // 1. External Busy
+                if (isSlotBusy(cls.teacher, roomName, dName, tryStart, tryEnd, routine.id)) continue;
 
-                                        totalChanges++;
-                                        break outerLoop; // Move to next unplaced item
-                                    }
-                                }
+                // 2. Internal Busy (Check targetDay for OTHER classes)
+                let internalConflict = false;
+                if (targetDay) {
+                    for (const existing of targetDay.classes) {
+                        if (existing.id === cls.id) continue; // Skip self if on same day
+                        if (isOverlapping(existing.startTime, existing.endTime, tryStart, tryEnd)) {
+                            internalConflict = true;
+                            break;
+                        }
+                    }
+                }
+                if (internalConflict) continue;
+                
+                // --- MODIFICATION: ENFORCE CONTIGUITY ---
+                if (!checkContiguity(routine.days, slots, dName, s, needed)) continue;
+
+                // Found a spot!
+                // Remove from old day
+                day.classes = day.classes.filter(x => x.id !== cls.id);
+
+                // Add to new day
+                const newCls = { ...cls, startTime: tryStart, endTime: tryEnd, room: roomName };
+
+                if (!targetDay) { // Should not happen if we init days
+                    // Handle case
+                } else {
+                    targetDay.classes.push(newCls);
+                    targetDay.classes.sort((a, b) => a.startTime.localeCompare(b.startTime));
+                }
+
+                totalChanges++;
+                break outerLoop; // Move to next unplaced item
+            }
+        }
                             }
                         }
                     }
@@ -1046,9 +1158,153 @@ export const refactorRoutine = (routines, config) => {
         });
     });
 
-    return {
-        routines: refactoredRoutines,
-        changes: totalChanges,
-        message: `Refactor complete. ${totalChanges} adjustments made.`
-    };
+return {
+    routines: refactoredRoutines,
+    changes: totalChanges,
+    message: `Refactor complete. ${totalChanges} adjustments made.`
+};
+};
+
+
+// --- REGENERATE ALL (Refactor By Reset) ---
+export const regenerateAllRoutines = (allRoutines, rooms, subjects) => {
+    // 1. Group Routines by Logical Target (Dept/Sem/Shift/Group)
+    const logicalRoutinesMap = new Map(); // Key: "Dept|Sem|Shift|Group", Value: { canonicalId, canonicalRoutine, classes: [] }
+
+    const getTechId = (r) => `${r.department}|${r.semester}|${r.shift}|${r.group}`;
+
+    allRoutines.forEach(r => {
+        const key = getTechId(r);
+        if (!logicalRoutinesMap.has(key)) {
+            logicalRoutinesMap.set(key, {
+                canonicalId: r.id || r._id,
+                canonicalRoutine: r,
+                classes: []
+            });
+        }
+        const entry = logicalRoutinesMap.get(key);
+        r.days.forEach(d => {
+            d.classes.forEach(c => {
+                 entry.classes.push({ ...c, day: d.name });
+            });
+        });
+    });
+
+    // 2. Extract Assignments (Reconstruct Load & Merges)
+    // Structure: Map<TeacherName, Map<SubjectName, Array<ClassInstance>>>
+    const teacherLoadMap = new Map();
+
+    logicalRoutinesMap.forEach((entry, techId) => {
+        const { classes, canonicalId } = entry;
+        
+        classes.forEach(c => {
+            if (!c.subject || !c.teacher) return;
+
+            const getMin = (t) => {
+                const [h, m] = t.split(':').map(Number);
+                return h * 60 + m;
+            };
+            const durationMin = getMin(c.endTime) - getMin(c.startTime);
+            // Round to nearest period (assuming 45 min blocks, but safeguarding small misalignments)
+            const durationPeriods = Math.max(1, Math.round(durationMin / 40)); 
+
+            if (!teacherLoadMap.has(c.teacher)) teacherLoadMap.set(c.teacher, new Map());
+            const subjMap = teacherLoadMap.get(c.teacher);
+
+            if (!subjMap.has(c.subject)) subjMap.set(c.subject, []);
+            const instances = subjMap.get(c.subject);
+
+            instances.push({
+                routineId: canonicalId,
+                techId: techId,
+                day: c.day,
+                startTime: c.startTime,
+                endTime: c.endTime,
+                type: c.type,
+                duration: durationPeriods
+            });
+        });
+    });
+
+    const assignments = []; 
+
+    teacherLoadMap.forEach((subjMap, teacherName) => {
+        const assignment = {
+            id: Date.now() + Math.random(),
+            teacherId: `REF_${teacherName}`,
+            teacherName: teacherName,
+            subjects: [],
+            blockedTimes: []
+        };
+
+        subjMap.forEach((instances, subjectName) => {
+            let theoryCount = 0;
+            let labCount = 0;
+            const techSet = new Set();
+            const mergedGroups = {};
+
+            // Group instances by TIME to detect Merges
+            const timeGroups = new Map(); // Key: "Day|Start", Value: [instances]
+
+            instances.forEach(inst => {
+                const timeKey = `${inst.day}|${inst.startTime}`;
+                if (!timeGroups.has(timeKey)) timeGroups.set(timeKey, []);
+                timeGroups.get(timeKey).push(inst);
+            });
+
+            // Analyze Time Groups
+            timeGroups.forEach((groupInstances) => {
+                const first = groupInstances[0];
+                const isLab = first.type === 'Lab' || first.type === 'Practical';
+                
+                // Determine duration of this block (Max of instances involved)
+                const duration = Math.max(...groupInstances.map(i => i.duration));
+
+                if (isLab) {
+                    labCount += duration; // Add actual periods (e.g. +3)
+                } else {
+                    theoryCount += duration; // Add actual periods (usually +1)
+                }
+
+                // Identify Technologies involved (Merges)
+                const distinctTechs = new Set(groupInstances.map(g => g.techId));
+                distinctTechs.forEach(t => techSet.add(t));
+                const involvedTechs = Array.from(distinctTechs);
+
+                if (involvedTechs.length > 1) {
+                    involvedTechs.forEach(source => {
+                        if (!mergedGroups[source]) mergedGroups[source] = [];
+                        involvedTechs.forEach(target => {
+                            if (source !== target && !mergedGroups[source].includes(target)) {
+                                mergedGroups[source].push(target);
+                            }
+                        });
+                    });
+                }
+            });
+
+            assignment.subjects.push({
+                id: Date.now() + Math.random(),
+                subject: subjectName,
+                theory: theoryCount,
+                lab: labCount,
+                technologies: Array.from(techSet),
+                mergedGroups: mergedGroups
+            });
+        });
+
+        if (assignment.subjects.length > 0) {
+            assignments.push(assignment);
+        }
+    });
+
+    // 3. Prepare Fresh Routines (Unique class containers with ID preserved)
+    const freshRoutines = Array.from(logicalRoutinesMap.values()).map(entry => ({
+        ...entry.canonicalRoutine,
+         days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"].map(d => ({ name: d, classes: [] })),
+         id: entry.canonicalId
+    }));
+
+    // 4. Call Batch Generator
+    return generateBatchRoutines(assignments, freshRoutines, rooms, subjects);
 };
