@@ -263,6 +263,34 @@ export const generateRoutine = (
         });
     };
 
+    // --- PHASE 0: Curriculum Activities Injection (Thursday) ---
+    // User Rule: 1st Shift -> Last Period, 2nd Shift -> First Period.
+    // Must be added BEFORE main placement to block the slot.
+    
+    // Find Thursday
+    const thursday = generatedDays.find(d => d.name === "Thursday");
+    if (thursday) {
+         const caSlot = currentRoutineConfig.shift === "1st" 
+            ? slots[slots.length - 1] // Last Period
+            : slots[0];               // First Period
+
+         if (caSlot) {
+             const caClass = {
+                 id: "CA_" + Math.random().toString(36).substr(2, 9),
+                 startTime: caSlot.start,
+                 endTime: caSlot.end,
+                 subject: "Curriculum Activities",
+                 subjectCode: "CA",
+                 teacher: "", // Blank teacher
+                 room: "Field",
+                 isMerged: false,
+                 type: "Activity" // Special type
+             };
+             // Push directly. No conflict check needed as it's the first thing added.
+             thursday.classes.push(caClass);
+         }
+    }
+
     // --- Building Constraint Logic ---
     const getRoomScore = (room, department, isLab, previousClassRoom, subjectDepartment = null) => {
         let score = 0;
@@ -386,18 +414,47 @@ export const generateRoutine = (
     // Track items that couldn't be placed
     const unplacedItems = [];
 
+    // --- Helper: Day Sorting for Load Balancing (Sun/Mon Priority) ---
+    const getDayLoad = (dayName) => {
+        const d = generatedDays.find(x => x.name === dayName);
+        return d.classes.reduce((sum, c) => sum + (c.type === 'Lab' ? (c.duration || 2) : 1), 0);
+    };
+
+    const sortDaysByPriority = (daysArr) => {
+        // Shuffle first to ensure randomness among equal priorities
+        const shuffled = shuffleArray([...daysArr]);
+        return shuffled.sort((a, b) => {
+            const isAhHigh = (a === "Sunday" || a === "Monday");
+            const isBHigh = (b === "Sunday" || b === "Monday");
+            const loadA = getDayLoad(a);
+            const loadB = getDayLoad(b);
+
+            // If One is Sun/Mon and other isn't
+            // And Load is low (< 5), prioritize it
+            if (isAhHigh && !isBHigh && loadA < 5) return -1;
+            if (isBHigh && !isAhHigh && loadB < 5) return 1;
+
+            // If both Sun/Mon, prefer lower load
+            if (isAhHigh && isBHigh) return loadA - loadB;
+
+            return 0;
+        });
+    };
+
+
     labs.forEach(lab => {
         let placed = false;
         let slotsNeeded = lab.duration;
 
         // --- ROUND 1: Try finding a slot that respects "One Lab Per Day" ---
-        const sortedDays = shuffleArray([...days]).sort((a, b) => {
+        const sortedDays = sortDaysByPriority([...days]).sort((a, b) => {
+             // Secondary Sort: Avoid days with existing Labs (Strict Rule)
             const dayA = generatedDays.find(d => d.name === a);
             const dayB = generatedDays.find(d => d.name === b);
             const hasLabA = dayA.classes.some(c => c.type === 'Lab');
             const hasLabB = dayB.classes.some(c => c.type === 'Lab');
             if (hasLabA === hasLabB) return 0;
-            return hasLabA ? 1 : -1; // No Lab comes first
+            return hasLabA ? 1 : -1; 
         });
 
         const tryPlaceLab = (dayName, duration) => {
@@ -477,7 +534,9 @@ export const generateRoutine = (
 
         // --- ROUND 2: Try ANY day (Allow 2 Labs per day) ---
         if (!placed) {
-            for (const d of shuffleArray([...days])) {
+            // Re-sort without "No Lab" preference, just Load Priority
+            const anyDays = sortDaysByPriority([...days]);
+            for (const d of anyDays) {
                 if (tryPlaceLab(d, slotsNeeded)) {
                     placed = true;
                     break;
@@ -487,7 +546,7 @@ export const generateRoutine = (
 
         // --- ROUND 3: Make Space (Move Theory classes) to keep 3 periods ---
         if (!placed && slotsNeeded === 3) {
-            for (const dName of shuffleArray([...days])) {
+            for (const dName of sortDaysByPriority([...days])) {
                 const dayObj = generatedDays.find(d => d.name === dName);
                 if (dayObj.classes.some(c => c.type === 'Lab') && labs.length <= 5) continue;
 
@@ -562,7 +621,8 @@ export const generateRoutine = (
             if (isConstraintViolated(dayName, theory.subject, theory.totalLoad)) return false;
             const dayObj = generatedDays.find(d => d.name === dayName);
 
-            const shuffledSlots = shuffleArray(slots);
+            // CHANGED: Revert to Random Shuffle
+            const shuffledSlots = shuffleArray(slots); 
 
             for (const slot of shuffledSlots) {
                 const sIdx = slots.findIndex(s => s.start === slot.start);
@@ -600,21 +660,24 @@ export const generateRoutine = (
             }
             return false;
         };
-
-        const populatedDays = shuffleArray(days.filter(d => generatedDays.find(gd => gd.name === d).classes.length > 0));
+        
+        // Priority 1: Populated Days (Contiguity) + Sun/Mon Priority
+        const populatedDays = sortDaysByPriority(days.filter(d => generatedDays.find(gd => gd.name === d).classes.length > 0));
         for (const d of populatedDays) {
             if (tryPlaceTheory(d, true)) { placed = true; break; }
         }
 
         if (!placed) {
-            const emptyDays = shuffleArray(days.filter(d => generatedDays.find(gd => gd.name === d).classes.length === 0));
+            // Priority 2: Empty Days (Sun/Mon Priority applies)
+            const emptyDays = sortDaysByPriority(days.filter(d => generatedDays.find(gd => gd.name === d).classes.length === 0));
             for (const d of emptyDays) {
                 if (tryPlaceTheory(d, false)) { placed = true; break; }
             }
         }
 
         if (!placed) {
-            for (const d of shuffleArray(days)) {
+            // Final Attempt
+            for (const d of sortDaysByPriority(days)) {
                 if (tryPlaceTheory(d, false)) { placed = true; break; }
             }
         }

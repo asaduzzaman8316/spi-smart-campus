@@ -8,7 +8,7 @@ import {
     Building,
     FileText
 } from 'lucide-react';
-import api, { fetchNotices, fetchTeachers, fetchRoutines, fetchDepartments } from '../../Lib/api';
+import api, { fetchNotices, fetchTeachers, fetchRoutines, fetchDepartments, analyzeLoad } from '../../Lib/api';
 import { useRouter } from 'next/navigation';
 import Loader1 from '@/components/Ui/Loader1';
 
